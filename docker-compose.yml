@@ -1,0 +1,22 @@
+version: '3.4'
+
+services:
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017
+
+  rabbit:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+
+  file-service:
+    build: .
+    environment:
+      PORT: 8000
+      MONGO_URI: mongodb://mongo
+      MONGO_QUOTA_COLLECTION_NAME: quota
+    ports:
+      - 8000:8000
