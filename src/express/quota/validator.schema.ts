@@ -1,13 +1,35 @@
 import * as Joi from 'joi';
+import config from '../../config';
+import { GB } from '../../utils/fs';
 
-// GET /api/quota?userId=1234
-const getQuotaByUserIdRequestSchema = Joi.object({
-    query: {
-        userId: Joi.string().uuid().required(),
+// Validate the createQuota request
+export const createQuotaRequestSchema = Joi.object({
+    body: {
+        userId: Joi.string().hex().length(24).required(),
+        limit: Joi.number().max(config.quota.maxLimitAllowed * GB),
     },
-    body: {},
+    query: {},
     params: {},
 });
 
-export { getQuotaByUserIdRequestSchema };
-export default { getQuotaByUserIdRequestSchema }; // TODO: remove when you have more than one function
+// Validate the getQuotaByUserId request
+export const getQuotaByUserIdRequestSchema = Joi.object({
+    params: {
+        userId: Joi.string().hex().length(24).required(),
+    },
+    query: {},
+    body: {},
+});
+
+// Validate the updateQuota request
+export const updateQuotaRequestSchema = Joi.object({
+    params: {
+        userId: Joi.string().hex().length(24).required(),
+    },
+    body: {
+        limit: Joi.number()
+            .optional()
+            .max(config.quota.maxLimitAllowed * GB),
+    },
+    query: {},
+});

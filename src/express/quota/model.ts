@@ -3,12 +3,24 @@ import config from '../../config';
 import { mongoDuplicateKeyError } from './errors';
 import { IQuota } from './interface';
 
-const QuotaSchema = new mongoose.Schema(
+export const QuotaSchema = new mongoose.Schema(
     {
-        // TODO
+        userId: {
+            type: String,
+            required: true,
+            unique: true,
+        },
+        limit: {
+            type: Number,
+            required: true,
+        },
+        used: {
+            type: Number,
+            default: 0,
+        },
     },
     {
-        timestamps: true,
+        timestamps: false,
         versionKey: false,
     },
 );
