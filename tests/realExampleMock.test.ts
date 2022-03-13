@@ -45,6 +45,7 @@ describe('example unit tests', () => {
             it('should fail validation, userId not match mongo objectId', () => {
                 return request(app).post('/api/quota').send({ userId: 'abc' }).expect(400);
             });
+
             it('should fail validation, limit field is greater than max limit', () => {
                 return request(app)
                     .post('/api/quota')
@@ -54,6 +55,7 @@ describe('example unit tests', () => {
                     })
                     .expect(400);
             });
+
             it('should fail validation, the used field should be zero', () => {
                 return request(app)
                     .post('/api/quota')
@@ -63,6 +65,7 @@ describe('example unit tests', () => {
                     })
                     .expect(400);
             });
+
             it('should pass validation, create the limit and used field automatic', async () => {
                 const { body: createdQuota } = await request(app)
                     .post('/api/quota')
@@ -75,6 +78,7 @@ describe('example unit tests', () => {
                 expect(createdQuota.used).toBe(0);
             });
         });
+
         describe('GET', () => {
             it('should fail validation, userId not match mongo objectId', () => {
                 return request(app).get('/api/quota/abc').expect(400);
@@ -100,38 +104,58 @@ describe('example unit tests', () => {
                 expect(getQuotaByUserId.used).toBe(0);
             });
         });
+
         describe('PATCH', () => {
             it('should fail validation, userId not match mongo objectId', () => {
-                return request(app).patch('/api/quota/abc').expect(400);
+                return request(app).patch('/api/quota/!34ffdg/limit').expect(400);
             });
-            it('should fail validation, limit field is greater than the max', () => {
-                return request(app)
-                    .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d')
-                    .send({ limit: config.quota.maxLimitAllowed * GB + 1 })
-                    .expect(400);
-            });
-            it('should pass validation, update the quota', async () => {
-                await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
+        });
 
-                const { body: updatedQuota } = await request(app)
-                    .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d')
-                    .send({ limit: config.quota.defaultLimit * GB + 1 })
-                    .expect(200);
-                expect(updatedQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');
-                expect(updatedQuota.limit).toBe(config.quota.defaultLimit * GB + 1);
-            });
-            it('should pass validation, create new quota if the userId not found', async () => {
-                const { body: updatedQuota } = await request(app)
-                    .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d')
-                    .send({ limit: config.quota.defaultLimit * GB + 5 * GB })
-                    .expect(200);
-                expect(updatedQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');
-                expect(updatedQuota.limit).toBe(config.quota.defaultLimit * GB + 5 * GB);
-            });
-            it('should create a new quota and then create another quota with the same id and fail it because its duplicte', async () => {
-                await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
-                await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(400);
-            });
+        it('should fail validation, limit field is greater than the max', () => {
+            return request(app)
+                .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
+                .send({ limit: config.quota.maxLimitAllowed * GB + 1 })
+                .expect(400);
+        });
+
+        it('should pass validation, update the quota limit', async () => {
+            await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
+
+            const { body: updatedQuota } = await request(app)
+                .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
+                .send({ limit: config.quota.defaultLimit * GB + 1 })
+                .expect(200);
+            expect(updatedQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');
+            expect(updatedQuota.limit).toBe(config.quota.defaultLimit * GB + 1);
+        });
+
+        it('should pass validation , raiseUp the used field', async () => {
+            await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
+
+            const { body: quotaBeforeUpdate } = await request(app)
+                .get('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d')
+                .expect(200);
+
+            const { body: updatedQuota } = await request(app)
+                .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/used')
+                .send({ raiseBy: 12 })
+                .expect(200);
+            expect(updatedQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');
+            expect(updatedQuota.used).toBe(quotaBeforeUpdate.used + 12);
+        });
+
+        it('should pass validation, create new quota if the userId not found', async () => {
+            const { body: updatedQuota } = await request(app)
+                .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
+                .send({ limit: config.quota.defaultLimit * GB + 5 * GB })
+                .expect(200);
+            expect(updatedQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');
+            expect(updatedQuota.limit).toBe(config.quota.defaultLimit * GB + 5 * GB);
+        });
+
+        it('should create a new quota and then create another quota with the same id and fail it because its duplicte', async () => {
+            await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
+            await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(400);
         });
     });
 });

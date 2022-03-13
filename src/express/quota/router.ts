@@ -17,10 +17,17 @@ quotaRouter.get(
     ValidateRequest(QuotaValidator.getQuotaByUserIdRequestSchema),
     wrapController(QuotaController.getQuotaByUserId),
 );
+
 quotaRouter.patch(
-    '/:userId',
-    ValidateRequest(QuotaValidator.updateQuotaRequestSchema),
+    '/:userId/limit',
+    ValidateRequest(QuotaValidator.updateQuotaLimitRequestSchema),
     wrapController(QuotaController.updateQuotaLimit),
+);
+
+quotaRouter.patch(
+    '/:userId/used',
+    ValidateRequest(QuotaValidator.raiseQuotaUsedRequestSchema),
+    wrapController(QuotaController.raiseQuoataUsed),
 );
 
 export default quotaRouter;

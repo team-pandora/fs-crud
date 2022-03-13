@@ -1,3 +1,4 @@
+// import { number } from 'joi';
 import * as mongoose from 'mongoose';
 import config from '../../config';
 import { GB } from '../../utils/fs';
@@ -22,4 +23,5 @@ export const defaultNewQuota = {
 
 export interface IQuotaUpdate {
     limit?: number;
+    used?: number;
 }

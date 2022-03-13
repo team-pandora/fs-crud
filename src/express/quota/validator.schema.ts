@@ -22,7 +22,7 @@ export const getQuotaByUserIdRequestSchema = Joi.object({
 });
 
 // Validate the updateQuota request
-export const updateQuotaRequestSchema = Joi.object({
+export const updateQuotaLimitRequestSchema = Joi.object({
     params: {
         userId: Joi.string().hex().length(24).required(),
     },
@@ -30,6 +30,16 @@ export const updateQuotaRequestSchema = Joi.object({
         limit: Joi.number()
             .optional()
             .max(config.quota.maxLimitAllowed * GB),
+    },
+    query: {},
+});
+
+export const raiseQuotaUsedRequestSchema = Joi.object({
+    params: {
+        userId: Joi.string().hex().length(24).required(),
+    },
+    body: {
+        raiseBy: Joi.number().required(),
     },
     query: {},
 });
