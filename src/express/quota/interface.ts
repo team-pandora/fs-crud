@@ -8,20 +8,16 @@ export interface IQuota {
     userId: string;
     used: number;
     limit: number;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface INewQuota {
     userId: string;
     limit?: number;
-    used: number;
 }
 
 export const defaultNewQuota = {
     limit: config.quota.defaultLimit * GB,
     used: 0,
 };
-
-export interface IQuotaUpdate {
-    limit?: number;
-    used?: number;
-}

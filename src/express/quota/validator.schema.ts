@@ -6,7 +6,10 @@ import { GB } from '../../utils/fs';
 export const createQuotaRequestSchema = Joi.object({
     body: {
         userId: Joi.string().hex().length(24).required(),
-        limit: Joi.number().max(config.quota.maxLimitAllowed * GB),
+        limit: Joi.number()
+            .min(config.quota.minLimitAllowed * GB)
+            .max(config.quota.maxLimitAllowed * GB)
+            .optional(),
     },
     query: {},
     params: {},
@@ -28,8 +31,9 @@ export const updateQuotaLimitRequestSchema = Joi.object({
     },
     body: {
         limit: Joi.number()
-            .optional()
-            .max(config.quota.maxLimitAllowed * GB),
+            .min(config.quota.minLimitAllowed * GB)
+            .max(config.quota.maxLimitAllowed * GB)
+            .required(),
     },
     query: {},
 });
