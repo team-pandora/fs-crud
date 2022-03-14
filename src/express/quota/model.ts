@@ -16,7 +16,7 @@ export const QuotaSchema = new mongoose.Schema(
         },
         used: {
             type: Number,
-            default: 0,
+            required: true,
         },
     },
     {
@@ -24,6 +24,8 @@ export const QuotaSchema = new mongoose.Schema(
         versionKey: false,
     },
 );
+
+QuotaSchema.index({ userId: 1 });
 
 function errorHandler(error: any, _res: any, next: any) {
     if (error.code === 11000) {

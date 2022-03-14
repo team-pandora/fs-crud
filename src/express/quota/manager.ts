@@ -1,15 +1,23 @@
 import { substractObjectFields } from '../../utils/object';
-import { defaultNewQuota, INewQuota } from './interface';
+import { defaultNewQuota, INewQuota, IQuota } from './interface';
 import QuotaModel from './model';
 
-// Creating a new Quota with a defaultNewQuota and if the user want a  different limit the quoata object will  run over the defaultNewQuota
-const createQuota = async (quota: INewQuota) => {
+/**
+ * Create a new Quota with default values if not provided.
+ * @param {INewQuota} quota - The new quota object.
+ * @returns {Promise<IQuota>} - Promise object containing the created Quota.
+ */
+const createQuota = (quota: INewQuota): Promise<IQuota> => {
     const newQuota: INewQuota = { ...defaultNewQuota, ...quota };
     return QuotaModel.create(newQuota);
 };
 
-// Get the quota by userId and if not exist create a new one with the defaultNewQuota
-const getQuotaByUserId = async (userId: string) => {
+/**
+ * Get the quota by userId, create new with default values if does not exist.
+ * @param {string} userId - The userId to get the quota.
+ * @returns {Promise<IQuota>} - Promise object containing the Quota.
+ */
+const getQuotaByUserId = (userId: string): Promise<IQuota> => {
     return QuotaModel.findOneAndUpdate(
         { userId },
         { $setOnInsert: defaultNewQuota },
@@ -17,8 +25,13 @@ const getQuotaByUserId = async (userId: string) => {
     ).exec();
 };
 
-// Update the quota limit and if not exist use the upsert true and setOnInsert the quota by using the substractObjectFields function to handle the problem of conflicing between the defaultNewQuota and the new limit
-const updateQuotaLimit = async (userId: string, limit: number) => {
+/**
+ * Update the quota limit, create new with default values and provided limit if does not exist.
+ * @param {string} userId - The userId to update the quota.
+ * @param {number} limit  - The new limit.
+ * @returns {Promise<IQuota>} - Promise object containing the Quota.
+ */
+const updateQuotaLimit = (userId: string, limit: number): Promise<IQuota> => {
     return QuotaModel.findOneAndUpdate(
         { userId },
         { $set: { limit }, $setOnInsert: substractObjectFields(defaultNewQuota, { limit }) },
@@ -26,8 +39,13 @@ const updateQuotaLimit = async (userId: string, limit: number) => {
     ).exec();
 };
 
-// Update the used field by adding the raiseBy value and if not exist do the same as in updateLimit
-const raiseQuoataUsed = async (userId: string, raiseBy: number) => {
+/**
+ * Raise the used field of the quota by the amount provided.
+ * @param {string} userId - The userId to raise the quota.
+ * @param {number} raiseBy - The amount to raise the quota.
+ * @returns {Promise<IQuota>} - Promise object containing the Quota.
+ */
+const raiseQuoataUsed = (userId: string, raiseBy: number): Promise<IQuota> => {
     return QuotaModel.findOneAndUpdate(
         { userId },
         {
