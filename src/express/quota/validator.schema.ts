@@ -1,6 +1,7 @@
 import * as Joi from 'joi';
 import config from '../../config';
-import { GB } from '../../utils/fs';
+
+const { minLimitAllowedInGb, maxLimitAllowedInGb } = config.quota;
 
 /**
  * POST /api/quota
@@ -9,10 +10,7 @@ import { GB } from '../../utils/fs';
 export const createQuotaRequestSchema = Joi.object({
     body: {
         userId: Joi.string().hex().length(24).required(),
-        limit: Joi.number()
-            .min(config.quota.minLimitAllowed * GB)
-            .max(config.quota.maxLimitAllowed * GB)
-            .optional(),
+        limit: Joi.number().min(minLimitAllowedInGb).max(maxLimitAllowedInGb).optional(),
     },
     query: {},
     params: {},
@@ -38,10 +36,7 @@ export const updateQuotaLimitRequestSchema = Joi.object({
         userId: Joi.string().hex().length(24).required(),
     },
     body: {
-        limit: Joi.number()
-            .min(config.quota.minLimitAllowed * GB)
-            .max(config.quota.maxLimitAllowed * GB)
-            .required(),
+        limit: Joi.number().min(minLimitAllowedInGb).max(maxLimitAllowedInGb).required(),
     },
     query: {},
 });

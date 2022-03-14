@@ -1,5 +1,6 @@
+import { defaultNewQuota } from '../../config/defaults';
 import { substractObjectFields } from '../../utils/object';
-import { defaultNewQuota, INewQuota, IQuota } from './interface';
+import { INewQuota, IQuota } from './interface';
 import QuotaModel from './model';
 
 /**

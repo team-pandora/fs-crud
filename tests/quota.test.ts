@@ -3,7 +3,8 @@ import * as mongoose from 'mongoose';
 import * as request from 'supertest';
 import config from '../src/config';
 import Server from '../src/express/server';
-import { GB } from '../src/utils/fs';
+
+const { defaultLimitInGb, maxLimitAllowedInGb } = config.quota;
 
 jest.setTimeout(30000);
 
@@ -51,7 +52,7 @@ describe('example unit tests', () => {
                     .post('/api/quota')
                     .send({
                         userId: '5d7e4d4e4f7c8e8d4f7c8e8d',
-                        limit: config.quota.maxLimitAllowed * GB + 1,
+                        limit: maxLimitAllowedInGb + 1,
                     })
                     .expect(400);
             });
@@ -74,7 +75,7 @@ describe('example unit tests', () => {
 
                 expect(mongoose.Types.ObjectId.isValid(createdQuota._id)).toBe(true);
                 expect(createdQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');
-                expect(createdQuota.limit).toBe(config.quota.defaultLimit * GB);
+                expect(createdQuota.limit).toBe(defaultLimitInGb);
                 expect(createdQuota.used).toBe(0);
             });
 
@@ -96,7 +97,7 @@ describe('example unit tests', () => {
                     .expect(200);
 
                 expect(mongoose.Types.ObjectId.isValid(getQuotaByUserId.userId)).toBe(true);
-                expect(getQuotaByUserId.limit).toBe(config.quota.defaultLimit * GB);
+                expect(getQuotaByUserId.limit).toBe(defaultLimitInGb);
                 expect(getQuotaByUserId.used).toBe(0);
             });
 
@@ -106,7 +107,7 @@ describe('example unit tests', () => {
                     .expect(200);
 
                 expect(mongoose.Types.ObjectId.isValid(getQuotaByUserId.userId)).toBe(true);
-                expect(getQuotaByUserId.limit).toBe(config.quota.defaultLimit * GB);
+                expect(getQuotaByUserId.limit).toBe(defaultLimitInGb);
                 expect(getQuotaByUserId.used).toBe(0);
             });
         });
@@ -119,7 +120,7 @@ describe('example unit tests', () => {
             it('should fail validation, limit field is greater than the max', () => {
                 return request(app)
                     .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
-                    .send({ limit: config.quota.maxLimitAllowed * GB + 1 })
+                    .send({ limit: maxLimitAllowedInGb + 1 })
                     .expect(400);
             });
 
@@ -127,11 +128,11 @@ describe('example unit tests', () => {
                 await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
                 const { body: updatedQuota } = await request(app)
                     .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
-                    .send({ limit: config.quota.defaultLimit * GB + 1 })
+                    .send({ limit: defaultLimitInGb + 1 })
                     .expect(200);
 
                 expect(updatedQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');
-                expect(updatedQuota.limit).toBe(config.quota.defaultLimit * GB + 1);
+                expect(updatedQuota.limit).toBe(defaultLimitInGb + 1);
             });
 
             it('should pass validation, and raise the used field', async () => {
@@ -151,11 +152,11 @@ describe('example unit tests', () => {
             it('should pass validation, and create new quota', async () => {
                 const { body: updatedQuota } = await request(app)
                     .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
-                    .send({ limit: config.quota.defaultLimit * GB + 5 * GB })
+                    .send({ limit: defaultLimitInGb + 5 })
                     .expect(200);
 
                 expect(updatedQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');
-                expect(updatedQuota.limit).toBe(config.quota.defaultLimit * GB + 5 * GB);
+                expect(updatedQuota.limit).toBe(defaultLimitInGb + 5);
             });
         });
     });
