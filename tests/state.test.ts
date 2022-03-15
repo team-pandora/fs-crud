@@ -28,7 +28,7 @@ describe('state tests', () => {
 
     describe('/api/state', () => {
         describe('POST', () => {
-            it('should fail validation, the fields gets values they are not supposed to accept', () => {
+            it('should fail validation,', () => {
                 return request(app)
                     .post('/api/state')
                     .send({
@@ -62,7 +62,7 @@ describe('state tests', () => {
                 favorite: true,
                 trash: true,
                 root: true,
-                permission: 'read' || 'write',
+                permission: 'read',
             };
 
             const state2 = {
@@ -73,10 +73,11 @@ describe('state tests', () => {
                 permission: 'owner',
             };
 
-            it('should pass validation, get all the stats', () => {
+            it('should pass validation, get all the states', () => {
                 return request(app).get('/api/state').expect(200);
             });
-            it('should pass validation, get all the types of stats', async () => {
+
+            it('should pass validation, get all the types of states', async () => {
                 await request(app)
                     .post('/api/state')
                     .send({ ...state1, fsObjectId: '5d7e4d4e4f7c8e8d4f7c8e8a' });
@@ -98,15 +99,11 @@ describe('state tests', () => {
                 expect(getState1).toHaveLength(1);
                 expect(getState1).toEqual([
                     {
+                        ...state1,
                         _id: expect.any(String),
-                        userId: '5d7e4d4e4f7c8e8d4f7c8e8d',
                         fsObjectId: '5d7e4d4e4f7c8e8d4f7c8e8a',
-                        favorite: true,
-                        trash: true,
-                        root: true,
-                        permission: 'read',
-                        createdAt: expect.any(String),
-                        updatedAt: expect.any(String),
+                        createdAt: expect.anything(),
+                        updatedAt: expect.anything(),
                     },
                 ]);
 
@@ -126,15 +123,11 @@ describe('state tests', () => {
                 expect(getState2).toHaveLength(1);
                 expect(getState2).toEqual([
                     {
+                        ...state2,
                         _id: expect.any(String),
-                        userId: '5d7e4d4e4f7c8e8d4f7c8e8d',
                         fsObjectId: '5d7e4d4e4f7c8e8d4f7c8e8c',
-                        favorite: false,
-                        trash: false,
-                        root: false,
-                        permission: 'owner',
-                        createdAt: expect.any(String),
-                        updatedAt: expect.any(String),
+                        createdAt: expect.anything(),
+                        updatedAt: expect.anything(),
                     },
                 ]);
             });

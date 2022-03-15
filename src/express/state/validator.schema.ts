@@ -16,13 +16,13 @@ export const createStateRequestSchema = Joi.object({
         trash: Joi.boolean().optional(),
         root: Joi.boolean().required(),
         permission: Joi.string()
-            .allow(...permissions)
+            .valid(...permissions)
             .required(),
     },
 });
 
 /**
- * GET /api/state
+ * GET /api/state?userId=5d7e4d4e4f7c8e8d4f7c8e8d&permission=read
  */
 export const getStatesRequestSchema = Joi.object({
     query: {
@@ -32,7 +32,7 @@ export const getStatesRequestSchema = Joi.object({
         trash: Joi.boolean().optional(),
         root: Joi.boolean().optional(),
         permission: Joi.string()
-            .allow(...permissions)
+            .valid(...permissions)
             .optional(),
     },
     params: {},
