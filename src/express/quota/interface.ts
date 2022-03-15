@@ -1,8 +1,16 @@
+// import { number } from 'joi';
 import * as mongoose from 'mongoose';
 
 export interface IQuota {
     _id: mongoose.Types.ObjectId;
-    // TODO
+    userId: string;
+    used: number;
+    limit: number;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
-export type INewQuota = Omit<IQuota, '_id' | 'createdAt' | 'updatedAt' | '__v'>;
+export interface INewQuota {
+    userId: string;
+    limit?: number;
+}

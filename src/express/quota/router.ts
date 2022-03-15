@@ -6,10 +6,28 @@ import * as QuotaValidator from './validator.schema';
 
 const quotaRouter: Router = Router();
 
-quotaRouter.get(
+quotaRouter.post(
     '/',
+    ValidateRequest(QuotaValidator.createQuotaRequestSchema),
+    wrapController(QuotaController.createQuota),
+);
+
+quotaRouter.get(
+    '/:userId',
     ValidateRequest(QuotaValidator.getQuotaByUserIdRequestSchema),
     wrapController(QuotaController.getQuotaByUserId),
+);
+
+quotaRouter.patch(
+    '/:userId/limit',
+    ValidateRequest(QuotaValidator.updateQuotaLimitRequestSchema),
+    wrapController(QuotaController.updateQuotaLimit),
+);
+
+quotaRouter.patch(
+    '/:userId/used',
+    ValidateRequest(QuotaValidator.raiseQuotaUsedRequestSchema),
+    wrapController(QuotaController.raiseQuoataUsed),
 );
 
 export default quotaRouter;

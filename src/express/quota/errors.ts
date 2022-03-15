@@ -11,4 +11,4 @@ export const mongoDuplicateKeyError = (error: any) =>
         },
     );
 
-export default mongoDuplicateKeyError; // TODO: remove when you have more than one function
+export default { mongoDuplicateKeyError };

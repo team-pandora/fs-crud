@@ -3,15 +3,29 @@ import config from '../../config';
 import { mongoDuplicateKeyError } from './errors';
 import { IQuota } from './interface';
 
-const QuotaSchema = new mongoose.Schema(
+export const QuotaSchema = new mongoose.Schema(
     {
-        // TODO
+        userId: {
+            type: String,
+            required: true,
+            unique: true,
+        },
+        limit: {
+            type: Number,
+            required: true,
+        },
+        used: {
+            type: Number,
+            required: true,
+        },
     },
     {
         timestamps: true,
         versionKey: false,
     },
 );
+
+QuotaSchema.index({ userId: 1 });
 
 function errorHandler(error: any, _res: any, next: any) {
     if (error.code === 11000) {
