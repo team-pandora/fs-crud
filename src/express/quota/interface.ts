@@ -1,4 +1,3 @@
-// import { number } from 'joi';
 import * as mongoose from 'mongoose';
 
 export interface IQuota {

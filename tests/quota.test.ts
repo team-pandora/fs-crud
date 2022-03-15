@@ -11,7 +11,7 @@ jest.setTimeout(30000);
 const removeAllCollections = async () =>
     Promise.all(Object.values(mongoose.connection.collections).map((collection) => collection.deleteMany({})));
 
-describe('example unit tests', () => {
+describe('quota tests', () => {
     let app: Express.Application;
 
     beforeAll(async () => {
@@ -26,19 +26,6 @@ describe('example unit tests', () => {
 
     afterAll(async () => {
         await mongoose.disconnect();
-    });
-
-    describe('/isAlive', () => {
-        it('should return alive', async () => {
-            const response = await request(app).get('/isAlive').expect(200);
-            expect(response.text).toBe('alive');
-        });
-    });
-
-    describe('/unknownRoute', () => {
-        it('should return status code 404', () => {
-            return request(app).get('/unknownRoute').expect(404);
-        });
     });
 
     describe('/api/quota', () => {
@@ -101,7 +88,7 @@ describe('example unit tests', () => {
                 expect(getQuotaByUserId.used).toBe(0);
             });
 
-            it('should create new qouta', async () => {
+            it('should create new quota', async () => {
                 const { body: getQuotaByUserId } = await request(app)
                     .get('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d')
                     .expect(200);

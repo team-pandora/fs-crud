@@ -10,6 +10,7 @@ const config = {
     mongo: {
         uri: env.get('MONGO_URI').required().asUrlString(),
         quotaCollectionName: env.get('MONGO_QUOTA_COLLECTION_NAME').required().asString(),
+        stateCollectionName: env.get('MONGO_STATE_COLLECTION_NAME').required().asString(),
     },
     quota: {
         defaultLimitInGb: env.get('QUOTA_DEFAULT_LIMIT_IN_GB').default('10').asInt() * GB,

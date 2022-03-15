@@ -5,4 +5,9 @@ export const defaultNewQuota = {
     used: 0,
 };
 
+export const defaultNewState = {
+    trash: false,
+    favorite: false,
+};
+
 export default { defaultNewQuota };
