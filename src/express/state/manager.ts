@@ -13,6 +13,7 @@ const createState = (state: INewState): Promise<IState> => {
 
 /**
  * Get filtered states.
+ * @param {IStateFilters} filters - The filters object.
  * @returns {Promise<IState[]>} - Promise object containing the States.
  */
 const getStates = (filters: IStateFilters): Promise<IState[]> => {
