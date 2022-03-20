@@ -1,5 +1,5 @@
 import { defaultNewQuota } from '../../config/defaults';
-import { substractObjectFields } from '../../utils/object';
+import { subtractObjectFields } from '../../utils/object';
 import { INewQuota, IQuota } from './interface';
 import QuotaModel from './model';
 
@@ -35,7 +35,7 @@ const getQuotaByUserId = (userId: string): Promise<IQuota> => {
 const updateQuotaLimit = (userId: string, limit: number): Promise<IQuota> => {
     return QuotaModel.findOneAndUpdate(
         { userId },
-        { $set: { limit }, $setOnInsert: substractObjectFields(defaultNewQuota, { limit }) },
+        { $set: { limit }, $setOnInsert: subtractObjectFields(defaultNewQuota, { limit }) },
         { upsert: true, new: true },
     ).exec();
 };
@@ -43,18 +43,18 @@ const updateQuotaLimit = (userId: string, limit: number): Promise<IQuota> => {
 /**
  * Raise the used field of the quota by the amount provided.
  * @param {string} userId - The userId to raise the quota.
- * @param {number} raiseBy - The amount to raise the quota.
+ * @param {number} difference - The amount to raise the quota.
  * @returns {Promise<IQuota>} - Promise object containing the Quota.
  */
-const raiseQuoataUsed = (userId: string, raiseBy: number): Promise<IQuota> => {
+const changeQuotaUsed = (userId: string, difference: number): Promise<IQuota> => {
     return QuotaModel.findOneAndUpdate(
         { userId },
         {
-            $inc: { used: raiseBy },
-            $setOnInsert: substractObjectFields(defaultNewQuota, { used: raiseBy }),
+            $inc: { used: difference },
+            $setOnInsert: subtractObjectFields(defaultNewQuota, { used: difference }),
         },
         { upsert: true, new: true },
     ).exec();
 };
 
-export { getQuotaByUserId, createQuota, updateQuotaLimit, raiseQuoataUsed };
+export { getQuotaByUserId, createQuota, updateQuotaLimit, changeQuotaUsed };

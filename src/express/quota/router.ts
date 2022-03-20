@@ -26,8 +26,8 @@ quotaRouter.patch(
 
 quotaRouter.patch(
     '/:userId/used',
-    ValidateRequest(QuotaValidator.raiseQuotaUsedRequestSchema),
-    wrapController(QuotaController.raiseQuoataUsed),
+    ValidateRequest(QuotaValidator.changeQuotaUsedRequestSchema),
+    wrapController(QuotaController.changeQuotaUsed),
 );
 
 export default quotaRouter;
