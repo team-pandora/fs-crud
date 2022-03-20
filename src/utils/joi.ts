@@ -2,6 +2,8 @@ import { Request } from 'express';
 import * as Joi from 'joi';
 import { wrapValidator } from './express';
 
+export const JoiObjectId = Joi.string().hex().length(24);
+
 const defaultValidationOptions: Joi.ValidationOptions = {
     abortEarly: false,
     allowUnknown: false,

@@ -1,5 +1,6 @@
 import * as Joi from 'joi';
 import config from '../../config';
+import { JoiObjectId } from '../../utils/joi';
 
 const { minLimitAllowedInGb, maxLimitAllowedInGb } = config.quota;
 
@@ -9,7 +10,7 @@ const { minLimitAllowedInGb, maxLimitAllowedInGb } = config.quota;
  */
 export const createQuotaRequestSchema = Joi.object({
     body: {
-        userId: Joi.string().hex().length(24).required(),
+        userId: JoiObjectId.required(),
         limit: Joi.number().min(minLimitAllowedInGb).max(maxLimitAllowedInGb).optional(),
     },
     query: {},
@@ -21,19 +22,19 @@ export const createQuotaRequestSchema = Joi.object({
  */
 export const getQuotaByUserIdRequestSchema = Joi.object({
     params: {
-        userId: Joi.string().hex().length(24).required(),
+        userId: JoiObjectId.required(),
     },
     query: {},
     body: {},
 });
 
 /**
- * PUT /api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit
+ * PATCH /api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit
  * { limit: 10 }
  */
 export const updateQuotaLimitRequestSchema = Joi.object({
     params: {
-        userId: Joi.string().hex().length(24).required(),
+        userId: JoiObjectId.required(),
     },
     body: {
         limit: Joi.number().min(minLimitAllowedInGb).max(maxLimitAllowedInGb).required(),
@@ -42,15 +43,15 @@ export const updateQuotaLimitRequestSchema = Joi.object({
 });
 
 /**
- * PUT /api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/used
- * { raiseBy: 10 }
+ * PATCH /api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/used
+ * { difference: 10 }
  */
-export const raiseQuotaUsedRequestSchema = Joi.object({
+export const changeQuotaUsedRequestSchema = Joi.object({
     params: {
-        userId: Joi.string().hex().length(24).required(),
+        userId: JoiObjectId.required(),
     },
     body: {
-        raiseBy: Joi.number().required(),
+        difference: Joi.number().required(),
     },
     query: {},
 });

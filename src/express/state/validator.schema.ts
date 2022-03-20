@@ -1,4 +1,5 @@
 import Joi = require('joi');
+import { JoiObjectId } from '../../utils/joi';
 import { permissions } from './interface';
 
 /**
@@ -10,8 +11,8 @@ export const createStateRequestSchema = Joi.object({
     query: {},
     params: {},
     body: {
-        userId: Joi.string().hex().length(24).required(),
-        fsObjectId: Joi.string().hex().length(24).required(),
+        userId: JoiObjectId.required(),
+        fsObjectId: JoiObjectId.required(),
         favorite: Joi.boolean().optional(),
         trash: Joi.boolean().optional(),
         root: Joi.boolean().required(),
@@ -26,8 +27,8 @@ export const createStateRequestSchema = Joi.object({
  */
 export const getStatesRequestSchema = Joi.object({
     query: {
-        userId: Joi.string().hex().length(24).optional(),
-        fsObjectId: Joi.string().hex().length(24).optional(),
+        userId: JoiObjectId.optional(),
+        fsObjectId: JoiObjectId.optional(),
         favorite: Joi.boolean().optional(),
         trash: Joi.boolean().optional(),
         root: Joi.boolean().optional(),

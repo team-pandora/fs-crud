@@ -6,20 +6,20 @@ import Server from '../src/express/server';
 
 jest.setTimeout(30000);
 
-const removeAllCollections = async () =>
-    Promise.all(Object.values(mongoose.connection.collections).map((collection) => collection.deleteMany({})));
+const removeStateCollection = async () =>
+    mongoose.connection.collections[config.mongo.stateCollectionName].deleteMany({});
 
 describe('state tests', () => {
     let app: Express.Application;
 
     beforeAll(async () => {
         await mongoose.connect(config.mongo.uri);
-        await removeAllCollections();
+        await removeStateCollection();
         app = Server.createExpressApp();
     });
 
     afterEach(async () => {
-        await removeAllCollections();
+        await removeStateCollection();
     });
 
     afterAll(async () => {
@@ -41,6 +41,33 @@ describe('state tests', () => {
                     })
                     .expect(400);
             });
+
+            it('should fail with duplicate key error', async () => {
+                await request(app)
+                    .post('/api/state')
+                    .send({
+                        userId: '5d7e4d4e4f7c8e8d4f7c8e8d',
+                        fsObjectId: '5d7e4d4e4f7c8e8d4f7c8e8d',
+                        favorite: true,
+                        trash: true,
+                        root: true,
+                        permission: 'read',
+                    })
+                    .expect(200);
+
+                await request(app)
+                    .post('/api/state')
+                    .send({
+                        userId: '5d7e4d4e4f7c8e8d4f7c8e8d',
+                        fsObjectId: '5d7e4d4e4f7c8e8d4f7c8e8d',
+                        favorite: true,
+                        trash: true,
+                        root: true,
+                        permission: 'read',
+                    })
+                    .expect(400);
+            });
+
             it('should pass validation, create new state', () => {
                 return request(app)
                     .post('/api/state')

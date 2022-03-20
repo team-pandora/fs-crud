@@ -8,20 +8,20 @@ const { defaultLimitInGb, maxLimitAllowedInGb } = config.quota;
 
 jest.setTimeout(30000);
 
-const removeAllCollections = async () =>
-    Promise.all(Object.values(mongoose.connection.collections).map((collection) => collection.deleteMany({})));
+const removeQuotaCollection = async () =>
+    mongoose.connection.collections[config.mongo.quotaCollectionName].deleteMany({});
 
 describe('quota tests', () => {
     let app: Express.Application;
 
     beforeAll(async () => {
         await mongoose.connect(config.mongo.uri);
-        await removeAllCollections();
+        await removeQuotaCollection();
         app = Server.createExpressApp();
     });
 
     afterEach(async () => {
-        await removeAllCollections();
+        await removeQuotaCollection();
     });
 
     afterAll(async () => {
@@ -129,7 +129,7 @@ describe('quota tests', () => {
                     .expect(200);
                 const { body: updatedQuota } = await request(app)
                     .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/used')
-                    .send({ raiseBy: 12 })
+                    .send({ difference: 12 })
                     .expect(200);
 
                 expect(updatedQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');

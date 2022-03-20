@@ -14,8 +14,8 @@ const updateQuotaLimit = async (req: Request, res: Response) => {
     res.json(await quotaManager.updateQuotaLimit(req.params.userId, req.body.limit));
 };
 
-const raiseQuoataUsed = async (req: Request, res: Response) => {
-    res.json(await quotaManager.raiseQuoataUsed(req.params.userId, req.body.raiseBy));
+const changeQuotaUsed = async (req: Request, res: Response) => {
+    res.json(await quotaManager.changeQuotaUsed(req.params.userId, req.body.difference));
 };
 
-export { getQuotaByUserId, createQuota, updateQuotaLimit, raiseQuoataUsed };
+export { getQuotaByUserId, createQuota, updateQuotaLimit, changeQuotaUsed };
