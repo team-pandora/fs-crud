@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export const sources = ['dropbox', 'drive'] as const;
+export const sources = ['dropbox', 'drive', 'falcon'] as const;
 export type source = typeof sources[number];
 
 export const fsObjectTypes = ['file', 'folder', 'shortcut'] as const;

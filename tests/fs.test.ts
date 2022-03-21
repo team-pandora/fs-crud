@@ -6,7 +6,7 @@ import Server from '../src/express/server';
 
 jest.setTimeout(30000);
 
-const removeStateCollection = async () =>
+const removeFsObjectsCollection = async () =>
     mongoose.connection.collections[config.mongo.fsObjectsCollectionName].deleteMany({});
 
 describe('fsObjects tests', () => {
@@ -14,12 +14,12 @@ describe('fsObjects tests', () => {
 
     beforeAll(async () => {
         await mongoose.connect(config.mongo.uri);
-        await removeStateCollection();
+        await removeFsObjectsCollection();
         app = Server.createExpressApp();
     });
 
     afterEach(async () => {
-        await removeStateCollection();
+        await removeFsObjectsCollection();
     });
 
     afterAll(async () => {
@@ -28,10 +28,11 @@ describe('fsObjects tests', () => {
 
     describe('/api/fs/file', () => {
         describe('POST', () => {
-            it('should fail validation,', async () => {
+            it('should fail validation', async () => {
                 await request(app).post('/api/fs/file').send({}).expect(400);
             });
-            it('should pass validation,', async () => {
+
+            it('should create file', async () => {
                 await request(app)
                     .post('/api/fs/file')
                     .send({
@@ -47,10 +48,11 @@ describe('fsObjects tests', () => {
     });
     describe('/api/fs/folder', () => {
         describe('POST', () => {
-            it('should fail validation,', async () => {
+            it('should fail validation', async () => {
                 await request(app).post('/api/fs/folder').send({}).expect(400);
             });
-            it('should pass validation,', async () => {
+
+            it('should create folder', async () => {
                 await request(app)
                     .post('/api/fs/folder')
                     .send({
@@ -62,9 +64,10 @@ describe('fsObjects tests', () => {
     });
     describe('/api/fs/shortcut', () => {
         describe('POST', () => {
-            it('should fail validation,', async () => {
+            it('should fail validation', async () => {
                 await request(app).post('/api/fs/shortcut').send({}).expect(400);
             });
+
             it('should create a shortcut with the ref of the file', async () => {
                 const file = await request(app)
                     .post('/api/fs/file')

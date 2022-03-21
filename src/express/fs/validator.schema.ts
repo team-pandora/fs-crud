@@ -2,6 +2,9 @@
 import * as Joi from 'joi';
 import config from '../../config';
 import { JoiObjectId } from '../../utils/joi';
+import { sources } from './interface';
+
+const { nameRegex, fileKeyRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
 
 /**
  * POST /api/file
@@ -11,13 +14,15 @@ export const createFileRequestSchema = Joi.object({
     query: {},
     params: {},
     body: {
-        name: Joi.string().regex(config.fs.fsObjectNameRegex).required(),
-        parent: Joi.alternatives(JoiObjectId, Joi.allow(null)),
-        key: Joi.string().regex(config.fs.fsObjectKeyRegex).required(),
-        bucket: Joi.string().regex(config.fs.fsObjectKeyRegex).required(),
-        size: Joi.number().min(config.fs.minFileSizeInBytes).max(config.fs.maxFileSizeInBytes).required(),
-        public: Joi.boolean(),
-        source: Joi.string().valid(config.fs.fsObjectSourceRegex),
+        name: Joi.string().regex(nameRegex).required(),
+        parent: JoiObjectId.allow(null).optional(),
+        key: Joi.string().regex(fileKeyRegex).required(),
+        bucket: Joi.string().regex(fileBucketRegex).required(),
+        size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
+        public: Joi.boolean().optional(),
+        source: Joi.string()
+            .valid(...sources)
+            .optional(),
     },
 });
 
@@ -29,8 +34,8 @@ export const createFolderRequestSchema = Joi.object({
     query: {},
     params: {},
     body: {
-        name: Joi.string().regex(config.fs.fsObjectNameRegex).required(),
-        parent: Joi.alternatives(JoiObjectId, Joi.allow(null)),
+        name: Joi.string().regex(nameRegex).required(),
+        parent: JoiObjectId.allow(null).optional(),
     },
 });
 
@@ -41,11 +46,10 @@ export const createFolderRequestSchema = Joi.object({
 export const createShortcutRequestSchema = Joi.object({
     query: {},
     params: {},
-
     body: {
-        name: Joi.string().regex(config.fs.fsObjectNameRegex).required(),
-        parent: Joi.alternatives(JoiObjectId, Joi.allow(null)),
-        ref: Joi.string().regex(config.fs.fsObjectKeyRegex).required(),
+        name: Joi.string().regex(nameRegex).required(),
+        parent: JoiObjectId.allow(null).optional(),
+        ref: JoiObjectId.required(),
     },
 });
 

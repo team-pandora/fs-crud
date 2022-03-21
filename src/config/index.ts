@@ -20,10 +20,18 @@ const config = {
     fs: {
         maxFileSizeInBytes: env.get('FS_MAX_FILE_SIZE_IN_BYTES').default('107374182400').asInt(),
         minFileSizeInBytes: env.get('FS_MIN_FILE_SIZE_IN_BYTES').default('1').asInt(),
-        fsObjectNameRegex: env.get('FS_OBJECT_NAME_REGEX').default('^[a-zA-Z0-9-_]+$').asRegExp(),
-        fsObjectKeyRegex: env.get('FS_OBJECT_KEY_REGEX').default('^[a-zA-Z0-9-_]+$').asRegExp(),
-        fsObjectBucketNameRegex: env.get('FS_OBJECT_BUCKET_NAME_REGEX').default('^[a-zA-Z0-9-_]+$').asRegExp(),
-        fsObjectSourceRegex: env.get('FS_OBJECT_SOURCE_REGEX').default('^[a-zA-Z0-9-_]+$').asRegExp(),
+        nameRegex: env
+            .get('FS_OBJECT_NAME_REGEX')
+            .default('^[a-zA-Z0-9-_.!@#$%^&*()[\\]{}<>"\':\\\\\\/\t ]{1,100}$')
+            .asRegExp(),
+        fileKeyRegex: env
+            .get('FS_FILE_KEY_REGEX')
+            .default('^[a-zA-Z0-9-_.!@#$%^&*()[\\]{}<>"\':\\\\\\/\t ]{1,100}$')
+            .asRegExp(),
+        fileBucketRegex: env
+            .get('FS_FILE_BUCKET_REGEX')
+            .default('^[a-zA-Z0-9-_.!@#$%^&*()[\\]{}<>"\':\\\\\\/\t ]{1,100}$')
+            .asRegExp(),
     },
 };
 
