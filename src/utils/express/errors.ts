@@ -1,5 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
-import { ServerError } from '../error';
+import { ServerError } from '../../express/error';
 
 export const mongoDuplicateKeyError = (error: any) =>
     new ServerError(
