@@ -44,16 +44,6 @@ describe('quota tests', () => {
                     .expect(400);
             });
 
-            it('should fail validation, and the used field should not exist', () => {
-                return request(app)
-                    .post('/api/quota')
-                    .send({
-                        userId: '5d7e4d4e4f7c8e8d4f7c8e8d',
-                        used: 1,
-                    })
-                    .expect(400);
-            });
-
             it('should pass validation, and create limit and used fields automatically', async () => {
                 const { body: createdQuota } = await request(app)
                     .post('/api/quota')
