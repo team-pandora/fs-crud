@@ -77,7 +77,6 @@ describe('fsObjects tests', () => {
                         public: true,
                     })
                     .expect(200);
-                // take the id from the response body and use it in the shortcut
                 const shortcut = await request(app)
                     .post('/api/fs/shortcut')
                     .send({
