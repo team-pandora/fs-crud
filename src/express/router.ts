@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { ServerError } from './error';
+import fsRouter from './fs/router';
 import quotaRouter from './quota/router';
 import stateRouter from './state/router';
 
@@ -8,6 +9,7 @@ const appRouter = Router();
 
 appRouter.use('/api/quota', quotaRouter);
 appRouter.use('/api/state', stateRouter);
+appRouter.use('/api/fs', fsRouter);
 
 appRouter.use('/isAlive', (_req, res) => {
     res.status(StatusCodes.OK).send('alive');

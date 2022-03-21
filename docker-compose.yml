@@ -6,17 +6,13 @@ services:
     ports:
       - 27017:27017
 
-  rabbit:
-    image: rabbitmq:3-management
-    ports:
-      - 5672:5672
-      - 15672:15672
-
   file-service:
     build: .
     environment:
       PORT: 8000
-      MONGO_URI: mongodb://mongo
-      MONGO_QUOTA_COLLECTION_NAME: quota
+      MONGO_URI: mongodb://mongo:27017/file-service
+      MONGO_QUOTA_COLLECTION_NAME: quotas
+      MONGO_STATE_COLLECTION_NAME: states
+      MONGO_FS_OBJECTS_COLLECTION_NAME: fsobjects
     ports:
       - 8000:8000

@@ -1,9 +1,9 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
-import { mongoDuplicateKeyError } from './errors';
+import { errorHandler } from '../../utils/mongo';
 import { IQuota } from './interface';
 
-export const QuotaSchema = new mongoose.Schema(
+const QuotaSchema = new mongoose.Schema<IQuota & mongoose.Document>(
     {
         userId: {
             type: String,
@@ -26,14 +26,6 @@ export const QuotaSchema = new mongoose.Schema(
 );
 
 QuotaSchema.index({ userId: 1 });
-
-function errorHandler(error: any, _res: any, next: any) {
-    if (error.code === 11000) {
-        next(mongoDuplicateKeyError(error));
-    } else {
-        next();
-    }
-}
 
 QuotaSchema.post(/save|update|findOneAndUpdate|insertMany/, errorHandler);
 

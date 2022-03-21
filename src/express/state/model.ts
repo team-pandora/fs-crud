@@ -1,9 +1,9 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
-import { mongoDuplicateKeyError } from './errors';
+import { errorHandler } from '../../utils/mongo';
 import { IState } from './interface';
 
-export const StateSchema = new mongoose.Schema(
+export const StateSchema = new mongoose.Schema<IState & mongoose.Document>(
     {
         userId: {
             type: String,
@@ -39,14 +39,6 @@ StateSchema.index({ fsObjectId: 1, userId: 1 }, { unique: true });
 StateSchema.index({ userId: 1, favorite: 1 });
 StateSchema.index({ userId: 1, trash: 1 });
 StateSchema.index({ userId: 1, permission: 1, root: 1 });
-
-function errorHandler(error: any, _res: any, next: any) {
-    if (error.code === 11000) {
-        next(mongoDuplicateKeyError(error));
-    } else {
-        next();
-    }
-}
 
 StateSchema.post(/save|update|findOneAndUpdate|insertMany/, errorHandler);
 

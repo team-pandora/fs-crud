@@ -4,7 +4,7 @@ import * as request from 'supertest';
 import config from '../src/config';
 import Server from '../src/express/server';
 
-const { defaultLimitInGb, maxLimitAllowedInGb } = config.quota;
+const { defaultLimitInBytes, maxLimitAllowedInBytes } = config.quota;
 
 jest.setTimeout(30000);
 
@@ -39,17 +39,7 @@ describe('quota tests', () => {
                     .post('/api/quota')
                     .send({
                         userId: '5d7e4d4e4f7c8e8d4f7c8e8d',
-                        limit: maxLimitAllowedInGb + 1,
-                    })
-                    .expect(400);
-            });
-
-            it('should fail validation, and the used field should not exist', () => {
-                return request(app)
-                    .post('/api/quota')
-                    .send({
-                        userId: '5d7e4d4e4f7c8e8d4f7c8e8d',
-                        used: 1,
+                        limit: maxLimitAllowedInBytes + 1,
                     })
                     .expect(400);
             });
@@ -62,7 +52,7 @@ describe('quota tests', () => {
 
                 expect(mongoose.Types.ObjectId.isValid(createdQuota._id)).toBe(true);
                 expect(createdQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');
-                expect(createdQuota.limit).toBe(defaultLimitInGb);
+                expect(createdQuota.limit).toBe(defaultLimitInBytes);
                 expect(createdQuota.used).toBe(0);
             });
 
@@ -84,7 +74,7 @@ describe('quota tests', () => {
                     .expect(200);
 
                 expect(mongoose.Types.ObjectId.isValid(getQuotaByUserId.userId)).toBe(true);
-                expect(getQuotaByUserId.limit).toBe(defaultLimitInGb);
+                expect(getQuotaByUserId.limit).toBe(defaultLimitInBytes);
                 expect(getQuotaByUserId.used).toBe(0);
             });
 
@@ -94,7 +84,7 @@ describe('quota tests', () => {
                     .expect(200);
 
                 expect(mongoose.Types.ObjectId.isValid(getQuotaByUserId.userId)).toBe(true);
-                expect(getQuotaByUserId.limit).toBe(defaultLimitInGb);
+                expect(getQuotaByUserId.limit).toBe(defaultLimitInBytes);
                 expect(getQuotaByUserId.used).toBe(0);
             });
         });
@@ -107,7 +97,7 @@ describe('quota tests', () => {
             it('should fail validation, limit field is greater than the max', () => {
                 return request(app)
                     .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
-                    .send({ limit: maxLimitAllowedInGb + 1 })
+                    .send({ limit: maxLimitAllowedInBytes + 1 })
                     .expect(400);
             });
 
@@ -115,11 +105,11 @@ describe('quota tests', () => {
                 await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
                 const { body: updatedQuota } = await request(app)
                     .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
-                    .send({ limit: defaultLimitInGb + 1 })
+                    .send({ limit: defaultLimitInBytes + 1 })
                     .expect(200);
 
                 expect(updatedQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');
-                expect(updatedQuota.limit).toBe(defaultLimitInGb + 1);
+                expect(updatedQuota.limit).toBe(defaultLimitInBytes + 1);
             });
 
             it('should pass validation, and raise the used field', async () => {
@@ -139,11 +129,11 @@ describe('quota tests', () => {
             it('should pass validation, and create new quota', async () => {
                 const { body: updatedQuota } = await request(app)
                     .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
-                    .send({ limit: defaultLimitInGb + 5 })
+                    .send({ limit: defaultLimitInBytes + 5 })
                     .expect(200);
 
                 expect(updatedQuota.userId).toBe('5d7e4d4e4f7c8e8d4f7c8e8d');
-                expect(updatedQuota.limit).toBe(defaultLimitInGb + 5);
+                expect(updatedQuota.limit).toBe(defaultLimitInBytes + 5);
             });
         });
     });

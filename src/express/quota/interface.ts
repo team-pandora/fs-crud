@@ -12,4 +12,5 @@ export interface IQuota {
 export interface INewQuota {
     userId: string;
     limit?: number;
+    used?: number;
 }
