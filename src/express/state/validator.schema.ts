@@ -1,4 +1,4 @@
-import Joi = require('joi');
+import * as Joi from 'joi';
 import { JoiObjectId } from '../../utils/joi';
 import { permissions } from './interface';
 
