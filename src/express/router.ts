@@ -1,16 +1,16 @@
 import { Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import actionsRouter from './actions/router';
 import { ServerError } from './error';
 import fsRouter from './fs/router';
 import quotaRouter from './quota/router';
 import stateRouter from './state/router';
-import actionsRouter from './actions/router';
 
 const appRouter = Router();
 
-appRouter.use('/api/quota', quotaRouter);
-appRouter.use('/api/state', stateRouter);
-appRouter.use('/api/fs', fsRouter);
+appRouter.use('/api/quotas', quotaRouter);
+appRouter.use('/api/states', stateRouter);
+appRouter.use('/api/fsObjects', fsRouter);
 appRouter.use('/api/actions', actionsRouter);
 
 appRouter.use('/isAlive', (_req, res) => {

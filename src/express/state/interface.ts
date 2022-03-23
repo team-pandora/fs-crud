@@ -6,7 +6,7 @@ export type permission = typeof permissions[number];
 export interface IState {
     _id: mongoose.Types.ObjectId;
     userId: string;
-    fsObjectId: string;
+    fsObjectId: mongoose.Types.ObjectId;
     favorite: boolean;
     trash: boolean;
     root: boolean;

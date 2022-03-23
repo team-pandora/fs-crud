@@ -14,7 +14,7 @@ export const createFileRequestSchema = Joi.object({
     params: {},
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: JoiObjectId.allow(null).optional(),
+        parent: JoiObjectId.optional(),
         key: Joi.string().regex(fileKeyRegex).required(),
         bucket: Joi.string().regex(fileBucketRegex).required(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
@@ -34,7 +34,7 @@ export const createFolderRequestSchema = Joi.object({
     params: {},
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: JoiObjectId.allow(null).optional(),
+        parent: JoiObjectId.optional(),
     },
 });
 
@@ -47,7 +47,7 @@ export const createShortcutRequestSchema = Joi.object({
     params: {},
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: JoiObjectId.allow(null).optional(),
+        parent: JoiObjectId.optional(),
         ref: JoiObjectId.required(),
     },
 });

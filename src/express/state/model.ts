@@ -10,8 +10,9 @@ export const StateSchema = new mongoose.Schema<IState & mongoose.Document>(
             required: true,
         },
         fsObjectId: {
-            type: String,
+            type: 'ObjectId',
             required: true,
+            ref: config.mongo.fsObjectsCollectionName,
         },
         favorite: {
             type: Boolean,
