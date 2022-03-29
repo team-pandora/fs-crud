@@ -5,6 +5,9 @@ services:
     image: mongo
     ports:
       - 27017:27017
+    volumes: 
+      - ./mongo-scripts:/docker-entrypoint-initdb.d
+      - ./data:/data/db
 
   file-service:
     build: .

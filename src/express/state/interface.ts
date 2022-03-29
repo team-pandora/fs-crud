@@ -24,4 +24,10 @@ export interface INewState {
     permission: permission;
 }
 
+export interface IUpdatedState {
+    favorite?: boolean;
+    trash?: boolean;
+    permission?: permission;
+}
+
 export type IStateFilters = Partial<INewState>;

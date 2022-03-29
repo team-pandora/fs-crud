@@ -29,6 +29,6 @@ QuotaSchema.index({ userId: 1 });
 
 QuotaSchema.post(/save|update|findOneAndUpdate|insertMany/, errorHandler);
 
-const QuotaModel = mongoose.model<IQuota & mongoose.Document>(config.mongo.quotaCollectionName, QuotaSchema);
+const QuotaModel = mongoose.model<IQuota & mongoose.Document>(config.mongo.quotasCollectionName, QuotaSchema);
 
 export default QuotaModel;

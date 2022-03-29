@@ -1,4 +1,5 @@
 import { defaultNewFile, defaultNewFolder, defaultNewShortcut } from '../../config/defaults';
+import { ServerError } from '../error';
 import { IFile, IFolder, INewFile, INewFolder, INewShortcut, IShortcut } from './interface';
 import { FileModel, FolderModel, ShortcutModel } from './model';
 
@@ -17,4 +18,12 @@ const createShortcut = (shortcut: INewShortcut): Promise<IShortcut> => {
     return ShortcutModel.create(newShortcut);
 };
 
-export { createFile, createFolder, createShortcut };
+const getObject = async (id: string): Promise<IFile | IFolder | IShortcut> => {
+    const result = await FileModel.findById(id).exec();
+    if (result === null) {
+        throw new ServerError(404, 'File not found');
+    }
+    return result as IFile | IFolder | IShortcut;
+};
+
+export { createFile, createFolder, createShortcut, getObject };

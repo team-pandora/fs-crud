@@ -11,5 +11,15 @@ actionsRouter.get(
     ValidateRequest(actionsValidator.aggregateStatesFsObjectsRequestSchema),
     wrapController(actionsController.aggregateStatesFsObjects),
 );
+actionsRouter.get(
+    '/fsObjects/states',
+    ValidateRequest(actionsValidator.aggregateStatesFsObjectsRequestSchema),
+    wrapController(actionsController.aggregateFsObjectStates),
+);
+actionsRouter.delete(
+    '/users/fsObjects/:fsObjectId',
+    ValidateRequest(actionsValidator.deleteObjectTransactionsRequestSchema),
+    wrapController(actionsController.deleteObjectTransactions),
+);
 
 export default actionsRouter;

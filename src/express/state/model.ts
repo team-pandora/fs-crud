@@ -43,6 +43,6 @@ StateSchema.index({ userId: 1, permission: 1, root: 1 });
 
 StateSchema.post(/save|update|findOneAndUpdate|insertMany/, errorHandler);
 
-const StateModel = mongoose.model<IState & mongoose.Document>(config.mongo.stateCollectionName, StateSchema);
+const StateModel = mongoose.model<IState & mongoose.Document>(config.mongo.statesCollectionName, StateSchema);
 
 export default StateModel;

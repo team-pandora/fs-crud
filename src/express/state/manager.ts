@@ -1,5 +1,6 @@
 import { defaultNewState } from '../../config/defaults';
-import { INewState, IState, IStateFilters } from './interface';
+import { ServerError } from '../error';
+import { INewState, IState, IStateFilters, IUpdatedState } from './interface';
 import StateModel from './model';
 
 /**
@@ -20,4 +21,10 @@ const getStates = (filters: IStateFilters): Promise<IState[]> => {
     return StateModel.find(filters).exec();
 };
 
-export { createState, getStates };
+const updateState = async (id: string, state: IUpdatedState): Promise<IState> => {
+    const result = await StateModel.findByIdAndUpdate(id, state, { new: true }).exec();
+    if (result === null) throw new ServerError(404, 'State not found');
+    return result;
+};
+
+export { createState, getStates, updateState };

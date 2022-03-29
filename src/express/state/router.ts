@@ -11,6 +11,11 @@ stateRouter.post(
     ValidateRequest(stateValidator.createStateRequestSchema),
     wrapController(stateController.createState),
 );
+stateRouter.patch(
+    '/:id',
+    ValidateRequest(stateValidator.updateStateRequestSchema),
+    wrapController(stateController.updateState),
+);
 
 stateRouter.get('/', ValidateRequest(stateValidator.getStatesRequestSchema), wrapController(stateController.getStates));
 

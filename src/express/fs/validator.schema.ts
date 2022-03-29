@@ -52,4 +52,12 @@ export const createShortcutRequestSchema = Joi.object({
     },
 });
 
+export const getObjectRequestSchema = Joi.object({
+    query: {},
+    params: {
+        id: JoiObjectId.required(),
+    },
+    body: {},
+});
+
 export default { createFileRequestSchema, createFolderRequestSchema, createShortcutRequestSchema };

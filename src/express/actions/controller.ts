@@ -6,5 +6,12 @@ const aggregateStatesFsObjects = async (req: Request, res: Response) => {
     res.json(await actionsManager.aggregateStatesFsObjects(req.query as IAggregateStatesFsObjectsReq));
 };
 
-export { aggregateStatesFsObjects };
-export default { aggregateStatesFsObjects };
+const aggregateFsObjectStates = async (req: Request, res: Response) => {
+    res.json(await actionsManager.aggregateFsObjectsStates(req.query as IAggregateStatesFsObjectsReq));
+};
+
+const deleteObjectTransactions = async (req: Request, res: Response) => {
+    res.json(await actionsManager.deleteObjectTransactions(req.params.fsObjectId as IAggregateStatesFsObjectsReq));
+};
+
+export { aggregateStatesFsObjects, aggregateFsObjectStates, deleteObjectTransactions };

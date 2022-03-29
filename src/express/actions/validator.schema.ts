@@ -2,12 +2,13 @@ import * as Joi from 'joi';
 import { JoiObjectId } from '../../utils/joi';
 import { fsObjectTypes } from '../fs/interface';
 import { permissions } from '../state/interface';
+import { AggregateStatesFsObjectsSortByFields, AggregateStatesFsObjectsSortOrders } from './interface';
 
 /**
- * GET /api/actions/fs/5d7e4d4e4f7c8e8d4f7c8e8d?folderId=5d7e4d4e4f7c8e8d4f7c8e8d&favorite=true
+ * GET /api/actions/states/fsObjects?stateId=:stateId&userId=:userId&fsObjectId=:fsObjectId&favorite=:favorite&trash=:trash&root=:root&permission=:permission&key=:key&bucket=:bucket&source=:source&size=:size&public=:public&name=:name&parent=:parent&type=:type&ref=:ref
  */
 export const aggregateStatesFsObjectsRequestSchema = Joi.object({
-    query: {
+    query: Joi.object({
         // State filters
         stateId: JoiObjectId.optional(),
         userId: JoiObjectId.optional(),
@@ -15,7 +16,9 @@ export const aggregateStatesFsObjectsRequestSchema = Joi.object({
         favorite: Joi.boolean().optional(),
         trash: Joi.boolean().optional(),
         root: Joi.boolean().optional(),
-        permission: Joi.string().valid(...permissions),
+        permission: Joi.array()
+            .items(Joi.string().valid(...permissions))
+            .optional(),
 
         // FsObject filters
         key: Joi.string().optional(),
@@ -24,13 +27,38 @@ export const aggregateStatesFsObjectsRequestSchema = Joi.object({
         size: Joi.number().optional(),
         public: Joi.boolean().optional(),
         name: Joi.string().optional(),
-        parent: JoiObjectId.optional(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.string().valid('null').empty('null').default(null)).optional(),
         type: Joi.string()
             .valid(...fsObjectTypes)
             .optional(),
         ref: JoiObjectId.optional(),
-    },
+
+        // Sort
+        sortBy: Joi.string()
+            .valid(...AggregateStatesFsObjectsSortByFields)
+            .optional(),
+        sortOrder: Joi.string()
+            .valid(...AggregateStatesFsObjectsSortOrders)
+            .optional(),
+
+        // Pagination
+        page: Joi.number().integer().min(1).optional(),
+        pageSize: Joi.number().integer().min(1).optional(),
+    })
+        .with('sortBy', 'sortOrder')
+        .with('sortOrder', 'sortBy')
+        .with('page', ['pageSize', 'sortBy', 'sortOrder'])
+        .with('pageSize', ['page', 'sortBy', 'sortOrder']),
+
     params: {},
+    body: {},
+});
+
+export const deleteObjectTransactionsRequestSchema = Joi.object({
+    query: {},
+    params: {
+        fsObjectId: JoiObjectId.required(),
+    },
     body: {},
 });
 

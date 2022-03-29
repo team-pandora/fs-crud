@@ -13,4 +13,9 @@ const createShortcut = async (req: Request, res: Response) => {
     res.json(await fsManager.createShortcut(req.body));
 };
 
-export { createFile, createFolder, createShortcut };
+const getObject = async (req: Request, res: Response) => {
+    // eslint-disable-next-line no-underscore-dangle
+    res.json(await fsManager.getObject(req.params.id));
+};
+
+export { createFile, createFolder, createShortcut, getObject };

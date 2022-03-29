@@ -39,3 +39,16 @@ export const getStatesRequestSchema = Joi.object({
     params: {},
     body: {},
 });
+export const updateStateRequestSchema = Joi.object({
+    query: {},
+    params: {
+        id: JoiObjectId.required(),
+    },
+    body: {
+        favorite: Joi.boolean().optional(),
+        trash: Joi.boolean().optional(),
+        permission: Joi.string()
+            .valid(...permissions)
+            .optional(),
+    },
+});

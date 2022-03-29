@@ -6,6 +6,8 @@ import * as fsValidator from './validator.schema';
 
 const fsRouter: Router = Router();
 
+fsRouter.get('/:id', ValidateRequest(fsValidator.getObjectRequestSchema), wrapController(fsController.getObject));
+
 fsRouter.post('/file', ValidateRequest(fsValidator.createFileRequestSchema), wrapController(fsController.createFile));
 fsRouter.post(
     '/folder',

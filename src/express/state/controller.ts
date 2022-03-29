@@ -10,4 +10,8 @@ const getStates = async (req: Request, res: Response) => {
     res.json(await stateManager.getStates(req.query as IStateFilters));
 };
 
-export { createState, getStates };
+const updateState = async (req: Request, res: Response) => {
+    res.json(await stateManager.updateState(req.params.id, req.body));
+};
+
+export { createState, getStates, updateState };
