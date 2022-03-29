@@ -6,9 +6,9 @@ services:
     ports:
       - 27017:27017
     volumes: 
-      - ./mongo-scripts:/docker-entrypoint-initdb.d
+      - ./mongo-scripts/:/docker-entrypoint-initdb.d/
       - ./data:/data/db
-
+    command: [ "--replSet", "rs0", "--bind_ip_all" ]
   file-service:
     build: .
     environment:
