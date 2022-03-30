@@ -1,6 +1,8 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
+import { defaultNewFile } from '../../config/defaults';
 import { removeUndefinedFields } from '../../utils/object';
+import { IFile, INewFile } from '../fs/interface';
 import { FileModel, FsObjectModel } from '../fs/model';
 import QuotaModel from '../quota/model';
 import StateModel from '../state/model';
@@ -213,4 +215,51 @@ const deleteObjectTransactions = async (fsObjectId: IAggregateStatesFsObjectsReq
     }
 };
 
-export { aggregateStatesFsObjects, aggregateFsObjectsStates, deleteObjectTransactions };
+const createUserFileTransaction = async (userId: string, file: INewFile): Promise<IFile> => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+        const quota = await QuotaModel.findOne({ userId }).exec();
+        if (!quota) {
+            throw new Error("Quota doesn't exist");
+        }
+        if (quota.used + file.size > quota.limit) {
+            throw new Error('Quota limit exceeded');
+        }
+
+        const newFile: INewFile = new FileModel({
+            ...defaultNewFile,
+            ...file,
+            userId,
+        });
+        // check if file name is unique
+
+        const fileExists = await FileModel.findOne({
+            name: newFile.name,
+        }).exec();
+
+        if (fileExists) {
+            const fileName = newFile.name;
+            let newFileName = '';
+            let i = 1;
+            do {
+                newFileName = `${fileName}(${i})`;
+
+                i += 1;
+                // eslint-disable-next-line no-await-in-loop
+            } while (await FileModel.findOne({ name: newFileName }).exec());
+            newFile.name = newFileName;
+        }
+
+        const createdFile = await newFile.save({ session });
+        await QuotaModel.findOneAndUpdate({ userId }, { $inc: { used: file.size } }, { session });
+
+        await session.commitTransaction();
+        return createdFile;
+    } catch (err) {
+        await session.abortTransaction();
+        throw err;
+    }
+};
+
+export { aggregateStatesFsObjects, aggregateFsObjectsStates, deleteObjectTransactions, createUserFileTransaction };

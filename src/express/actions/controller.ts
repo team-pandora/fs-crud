@@ -14,4 +14,8 @@ const deleteObjectTransactions = async (req: Request, res: Response) => {
     res.json(await actionsManager.deleteObjectTransactions(req.params.fsObjectId as IAggregateStatesFsObjectsReq));
 };
 
-export { aggregateStatesFsObjects, aggregateFsObjectStates, deleteObjectTransactions };
+const createUserFileTransaction = async (req: Request, res: Response) => {
+    res.json(await actionsManager.createUserFileTransaction(req.params.userId, req.body));
+};
+
+export { aggregateStatesFsObjects, aggregateFsObjectStates, deleteObjectTransactions, createUserFileTransaction };

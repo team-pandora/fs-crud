@@ -1,8 +1,11 @@
 import * as Joi from 'joi';
+import config from '../../config';
 import { JoiObjectId } from '../../utils/joi';
 import { fsObjectTypes } from '../fs/interface';
 import { permissions } from '../state/interface';
 import { AggregateStatesFsObjectsSortByFields, AggregateStatesFsObjectsSortOrders } from './interface';
+
+const { nameRegex, fileKeyRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
 
 /**
  * GET /api/actions/states/fsObjects?stateId=:stateId&userId=:userId&fsObjectId=:fsObjectId&favorite=:favorite&trash=:trash&root=:root&permission=:permission&key=:key&bucket=:bucket&source=:source&size=:size&public=:public&name=:name&parent=:parent&type=:type&ref=:ref
@@ -60,6 +63,19 @@ export const deleteObjectTransactionsRequestSchema = Joi.object({
         fsObjectId: JoiObjectId.required(),
     },
     body: {},
+});
+
+export const createUserFileTransactionRequestSchema = Joi.object({
+    query: {},
+    params: { userId: JoiObjectId.required() },
+    body: {
+        name: Joi.string().regex(nameRegex).required(),
+        parent: JoiObjectId.optional(),
+        key: Joi.string().regex(fileKeyRegex).required(),
+        bucket: Joi.string().regex(fileBucketRegex).required(),
+        size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
+        public: Joi.boolean().optional(),
+    },
 });
 
 export default { aggregateStatesFsObjectsRequestSchema };

@@ -21,5 +21,10 @@ actionsRouter.delete(
     ValidateRequest(actionsValidator.deleteObjectTransactionsRequestSchema),
     wrapController(actionsController.deleteObjectTransactions),
 );
+actionsRouter.post(
+    '/users/:userId/fsObjects/file',
+    ValidateRequest(actionsValidator.createUserFileTransactionRequestSchema),
+    wrapController(actionsController.createUserFileTransaction),
+);
 
 export default actionsRouter;
