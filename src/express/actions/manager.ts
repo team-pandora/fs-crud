@@ -1,8 +1,8 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
 import { removeUndefinedFields } from '../../utils/object';
-import { IFile, INewFile } from '../fs/interface';
-import { createFile } from '../fs/manager';
+import { IFile, IFolder, INewFile, INewFolder } from '../fs/interface';
+import { createFile, createFolder } from '../fs/manager';
 import { FsObjectModel } from '../fs/model';
 import { changeQuotaUsed } from '../quota/manager';
 import { createState } from '../state/manager';
@@ -244,4 +244,30 @@ const createUserFileTransaction = async (userId: string, file: INewFile): Promis
     }
 };
 
-export { aggregateStatesFsObjects, aggregateFsObjectsStates, createUserFileTransaction };
+const createUserFolderTransaction = async (userId: string, folder: INewFolder): Promise<IFolder> => {
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const newFolder = await createFolder(folder, session);
+
+        await createState(
+            {
+                userId,
+                fsObjectId: newFolder._id,
+                permission: 'owner',
+                root: newFolder.parent === null,
+            },
+            session,
+        );
+
+        await session.commitTransaction();
+        return newFolder;
+    } catch (err) {
+        await session.abortTransaction();
+        throw err;
+    }
+};
+
+export { aggregateStatesFsObjects, aggregateFsObjectsStates, createUserFileTransaction, createUserFolderTransaction };

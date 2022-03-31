@@ -27,4 +27,10 @@ actionsRouter.post(
     wrapController(actionsController.createUserFileTransaction),
 );
 
+actionsRouter.post(
+    '/users/:userId/fsObjects/folder',
+    ValidateRequest(actionsValidator.createUserFolderTransactionRequestSchema),
+    wrapController(actionsController.createUserFolderTransaction),
+);
+
 export default actionsRouter;

@@ -18,4 +18,8 @@ const createUserFileTransaction = async (req: Request, res: Response) => {
     res.json(await actionsManager.createUserFileTransaction(req.params.userId, req.body));
 };
 
-export { aggregateStatesFsObjects, aggregateFsObjectStates, createUserFileTransaction };
+const createUserFolderTransaction = async (req: Request, res: Response) => {
+    res.json(await actionsManager.createUserFolderTransaction(req.params.userId, req.body));
+};
+
+export { aggregateStatesFsObjects, aggregateFsObjectStates, createUserFileTransaction, createUserFolderTransaction };

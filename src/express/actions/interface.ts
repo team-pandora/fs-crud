@@ -45,3 +45,9 @@ export interface IAggregateStatesFsObjectsReq {
     page?: number;
     pageSize?: number;
 }
+
+export interface ICreateFoldersReq {
+    name: string;
+    parent: string;
+    userId: string;
+}
