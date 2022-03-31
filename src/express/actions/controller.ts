@@ -10,12 +10,12 @@ const aggregateFsObjectStates = async (req: Request, res: Response) => {
     res.json(await actionsManager.aggregateFsObjectsStates(req.query as IAggregateStatesFsObjectsReq));
 };
 
-const deleteObjectTransactions = async (req: Request, res: Response) => {
-    res.json(await actionsManager.deleteObjectTransactions(req.params.fsObjectId as IAggregateStatesFsObjectsReq));
-};
+// const deleteObjectTransactions = async (req: Request, res: Response) => {
+//     res.json(await actionsManager.deleteObjectTransactions(req.params.fsObjectId as IAggregateStatesFsObjectsReq));
+// };
 
 const createUserFileTransaction = async (req: Request, res: Response) => {
     res.json(await actionsManager.createUserFileTransaction(req.params.userId, req.body));
 };
 
-export { aggregateStatesFsObjects, aggregateFsObjectStates, deleteObjectTransactions, createUserFileTransaction };
+export { aggregateStatesFsObjects, aggregateFsObjectStates, createUserFileTransaction };

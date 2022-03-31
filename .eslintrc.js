@@ -36,5 +36,6 @@ module.exports = {
         'no-unused-vars': 'off', // Checked by typescript
         'no-undef': 'off', // Checked by typescript
         'no-default-export': 'off',
+        'no-underscore-dangle': 'off', // For mongoose
     },
 };

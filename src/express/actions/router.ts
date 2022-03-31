@@ -16,11 +16,11 @@ actionsRouter.get(
     ValidateRequest(actionsValidator.aggregateStatesFsObjectsRequestSchema),
     wrapController(actionsController.aggregateFsObjectStates),
 );
-actionsRouter.delete(
-    '/users/fsObjects/:fsObjectId',
-    ValidateRequest(actionsValidator.deleteObjectTransactionsRequestSchema),
-    wrapController(actionsController.deleteObjectTransactions),
-);
+// actionsRouter.delete(
+//     '/users/fsObjects/:fsObjectId',
+//     ValidateRequest(actionsValidator.deleteObjectTransactionsRequestSchema),
+//     wrapController(actionsController.deleteObjectTransactions),
+// );
 actionsRouter.post(
     '/users/:userId/fsObjects/file',
     ValidateRequest(actionsValidator.createUserFileTransactionRequestSchema),

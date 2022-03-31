@@ -30,7 +30,6 @@ export interface IShortcut extends IFsObject {
 }
 
 export interface INewFile {
-    save(arg0: { session: import("mongodb").ClientSession; });
     name: string;
     parent?: mongoose.Types.ObjectId | null;
     key: string;

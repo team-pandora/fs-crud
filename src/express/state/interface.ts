@@ -17,7 +17,7 @@ export interface IState {
 
 export interface INewState {
     userId: string;
-    fsObjectId: string;
+    fsObjectId: mongoose.Types.ObjectId;
     favorite?: boolean;
     trash?: boolean;
     root: boolean;

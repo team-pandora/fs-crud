@@ -1,10 +1,11 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
-import { defaultNewFile } from '../../config/defaults';
 import { removeUndefinedFields } from '../../utils/object';
 import { IFile, INewFile } from '../fs/interface';
-import { FileModel, FsObjectModel } from '../fs/model';
-import QuotaModel from '../quota/model';
+import { createFile } from '../fs/manager';
+import { FsObjectModel } from '../fs/model';
+import { changeQuotaUsed } from '../quota/manager';
+import { createState } from '../state/manager';
 import StateModel from '../state/model';
 import { IAggregateStatesFsObjectsReq } from './interface';
 
@@ -186,73 +187,54 @@ const aggregateFsObjectsStates = async (query: IAggregateStatesFsObjectsReq): Pr
     return FsObjectModel.aggregate(pipeline).exec();
 };
 
-const deleteObjectTransactions = async (fsObjectId: IAggregateStatesFsObjectsReq): Promise<void> => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-        const file = await FileModel.findOne({
-            _id: fsObjectId,
-        }).exec();
-        if (!file) {
-            throw new Error("File doesn't exist");
-        }
-        const state = await StateModel.findOne({
-            fsObjectId,
-        }).exec();
-        if (!state) {
-            throw new Error("State doesn't exist");
-        }
-        // eslint-disable-next-line no-underscore-dangle
-        await QuotaModel.findOneAndUpdate({ userId: state._id }, { $inc: { used: -file.size } }, { session });
+// const deleteObjectTransactions = async (fsObjectId: IAggregateStatesFsObjectsReq): Promise<void> => {
+//     const session = await mongoose.startSession();
+//     session.startTransaction();
+//     try {
+//         const file = await FileModel.findOne({
+//             _id: fsObjectId,
+//         }).exec();
+//         if (!file) {
+//             throw new Error("File doesn't exist");
+//         }
+//         const state = await StateModel.findOne({
+//             fsObjectId,
+//         }).exec();
+//         if (!state) {
+//             throw new Error("State doesn't exist");
+//         }
+//         // eslint-disable-next-line no-underscore-dangle
+//         await QuotaModel.findOneAndUpdate({ userId: state._id }, { $inc: { used: -file.size } }, { session });
 
-        await StateModel.deleteOne({ fsObjectId }, { session });
-        await FsObjectModel.deleteOne({ _id: fsObjectId }, { session });
+//         await StateModel.deleteOne({ fsObjectId }, { session });
+//         await FsObjectModel.deleteOne({ _id: fsObjectId }, { session });
 
-        await session.commitTransaction();
-    } catch (err) {
-        await session.abortTransaction();
-        throw err;
-    }
-};
+//         await session.commitTransaction();
+//     } catch (err) {
+//         await session.abortTransaction();
+//         throw err;
+//     }
+// };
 
 const createUserFileTransaction = async (userId: string, file: INewFile): Promise<IFile> => {
     const session = await mongoose.startSession();
-    session.startTransaction();
+
     try {
-        const quota = await QuotaModel.findOne({ userId }).exec();
-        if (!quota) {
-            throw new Error("Quota doesn't exist");
-        }
-        if (quota.used + file.size > quota.limit) {
-            throw new Error('Quota limit exceeded');
-        }
+        session.startTransaction();
 
-        const newFile: INewFile = new FileModel({
-            ...defaultNewFile,
-            ...file,
-            userId,
-        });
-        // check if file name is unique
+        await changeQuotaUsed(userId, file.size);
 
-        const fileExists = await FileModel.findOne({
-            name: newFile.name,
-        }).exec();
+        const createdFile = await createFile(file, session);
 
-        if (fileExists) {
-            const fileName = newFile.name;
-            let newFileName = '';
-            let i = 1;
-            do {
-                newFileName = `${fileName}(${i})`;
-
-                i += 1;
-                // eslint-disable-next-line no-await-in-loop
-            } while (await FileModel.findOne({ name: newFileName }).exec());
-            newFile.name = newFileName;
-        }
-
-        const createdFile = await newFile.save({ session });
-        await QuotaModel.findOneAndUpdate({ userId }, { $inc: { used: file.size } }, { session });
+        await createState(
+            {
+                userId,
+                fsObjectId: createdFile._id,
+                permission: 'owner',
+                root: createdFile.parent === null,
+            },
+            session,
+        );
 
         await session.commitTransaction();
         return createdFile;
@@ -262,4 +244,4 @@ const createUserFileTransaction = async (userId: string, file: INewFile): Promis
     }
 };
 
-export { aggregateStatesFsObjects, aggregateFsObjectsStates, deleteObjectTransactions, createUserFileTransaction };
+export { aggregateStatesFsObjects, aggregateFsObjectsStates, createUserFileTransaction };

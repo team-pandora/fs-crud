@@ -1,3 +1,4 @@
+import { ClientSession } from 'mongoose';
 import { defaultNewState } from '../../config/defaults';
 import { ServerError } from '../error';
 import { INewState, IState, IStateFilters, IUpdatedState } from './interface';
@@ -6,10 +7,11 @@ import StateModel from './model';
 /**
  * Create new State document.
  * @param {INewState} state - The new State object.
+ * @param {ClientSession | undefined} session - Optional mongoose session.
  * @returns {Promise<IState>} - Promise object containing the created State.
  */
-const createState = (state: INewState): Promise<IState> => {
-    return StateModel.create({ ...defaultNewState, ...state });
+const createState = async (state: INewState, session?: ClientSession): Promise<IState> => {
+    return (await StateModel.create([{ ...defaultNewState, ...state }], { session }))[0];
 };
 
 /**
