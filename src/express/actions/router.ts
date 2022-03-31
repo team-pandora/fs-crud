@@ -33,4 +33,10 @@ actionsRouter.post(
     wrapController(actionsController.createUserFolderTransaction),
 );
 
+actionsRouter.post(
+    '/users/:userId/fsObjects/shortcut',
+    ValidateRequest(actionsValidator.createUserShortcutTransactionRequestSchema),
+    wrapController(actionsController.createUserShortcutTransaction),
+);
+
 export default actionsRouter;

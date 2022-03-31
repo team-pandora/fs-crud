@@ -22,4 +22,14 @@ const createUserFolderTransaction = async (req: Request, res: Response) => {
     res.json(await actionsManager.createUserFolderTransaction(req.params.userId, req.body));
 };
 
-export { aggregateStatesFsObjects, aggregateFsObjectStates, createUserFileTransaction, createUserFolderTransaction };
+const createUserShortcutTransaction = async (req: Request, res: Response) => {
+    res.json(await actionsManager.createUserShortcutTransaction(req.params.userId, req.body));
+};
+
+export {
+    aggregateStatesFsObjects,
+    aggregateFsObjectStates,
+    createUserFileTransaction,
+    createUserShortcutTransaction,
+    createUserFolderTransaction,
+};

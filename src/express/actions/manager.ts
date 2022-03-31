@@ -1,13 +1,13 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
 import { removeUndefinedFields } from '../../utils/object';
-import { IFile, IFolder, INewFile, INewFolder } from '../fs/interface';
-import { createFile, createFolder } from '../fs/manager';
+import { INewFile, INewFolder, INewShortcut } from '../fs/interface';
+import { createFile, createFolder, createShortcut } from '../fs/manager';
 import { FsObjectModel } from '../fs/model';
 import { changeQuotaUsed } from '../quota/manager';
 import { createState } from '../state/manager';
 import StateModel from '../state/model';
-import { IAggregateStatesFsObjectsReq } from './interface';
+import { FsObjectAndState, IAggregateStatesFsObjectsReq } from './interface';
 
 const aggregateStatesFsObjects = async (query: IAggregateStatesFsObjectsReq): Promise<object[]> => {
     const stateFilters = removeUndefinedFields({
@@ -216,7 +216,7 @@ const aggregateFsObjectsStates = async (query: IAggregateStatesFsObjectsReq): Pr
 //     }
 // };
 
-const createUserFileTransaction = async (userId: string, file: INewFile): Promise<IFile> => {
+const createUserFileTransaction = async (userId: string, file: INewFile): Promise<FsObjectAndState> => {
     const session = await mongoose.startSession();
 
     try {
@@ -226,7 +226,7 @@ const createUserFileTransaction = async (userId: string, file: INewFile): Promis
 
         const createdFile = await createFile(file, session);
 
-        await createState(
+        const createdState = await createState(
             {
                 userId,
                 fsObjectId: createdFile._id,
@@ -237,37 +237,71 @@ const createUserFileTransaction = async (userId: string, file: INewFile): Promis
         );
 
         await session.commitTransaction();
-        return createdFile;
+
+        return new FsObjectAndState(createdFile, createdState);
     } catch (err) {
         await session.abortTransaction();
         throw err;
     }
 };
 
-const createUserFolderTransaction = async (userId: string, folder: INewFolder): Promise<IFolder> => {
+const createUserFolderTransaction = async (userId: string, folder: INewFolder): Promise<FsObjectAndState> => {
     const session = await mongoose.startSession();
 
     try {
         session.startTransaction();
 
-        const newFolder = await createFolder(folder, session);
+        const createdFolder = await createFolder(folder, session);
 
-        await createState(
+        const createdState = await createState(
             {
                 userId,
-                fsObjectId: newFolder._id,
+                fsObjectId: createdFolder._id,
                 permission: 'owner',
-                root: newFolder.parent === null,
+                root: createdFolder.parent === null,
             },
             session,
         );
 
         await session.commitTransaction();
-        return newFolder;
+        return new FsObjectAndState(createdFolder, createdState);
     } catch (err) {
         await session.abortTransaction();
         throw err;
     }
 };
 
-export { aggregateStatesFsObjects, aggregateFsObjectsStates, createUserFileTransaction, createUserFolderTransaction };
+const createUserShortcutTransaction = async (userId: string, shortcut: INewShortcut): Promise<FsObjectAndState> => {
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const createdShortcut = await createShortcut(shortcut, session);
+
+        const createdState = await createState(
+            {
+                userId,
+                fsObjectId: createdShortcut._id,
+                permission: 'owner',
+                root: createdShortcut.parent === null,
+            },
+            session,
+        );
+
+        await session.commitTransaction();
+
+        return new FsObjectAndState(createdShortcut, createdState);
+    } catch (err) {
+        await session.abortTransaction();
+        throw err;
+    }
+};
+
+export {
+    aggregateStatesFsObjects,
+    aggregateFsObjectsStates,
+    createUserFileTransaction,
+    createUserFolderTransaction,
+    createUserShortcutTransaction,
+};

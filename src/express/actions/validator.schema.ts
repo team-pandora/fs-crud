@@ -87,4 +87,12 @@ export const createUserFolderTransactionRequestSchema = Joi.object({
     },
 });
 
-export default { aggregateStatesFsObjectsRequestSchema };
+export const createUserShortcutTransactionRequestSchema = Joi.object({
+    query: {},
+    params: { userId: JoiObjectId.required() },
+    body: {
+        name: Joi.string().regex(nameRegex).required(),
+        parent: JoiObjectId.optional(),
+        ref: JoiObjectId.required(),
+    },
+});

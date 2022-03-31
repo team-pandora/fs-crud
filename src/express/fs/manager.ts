@@ -2,12 +2,12 @@ import { ClientSession } from 'mongoose';
 import { defaultNewFile, defaultNewFolder, defaultNewShortcut } from '../../config/defaults';
 import { ServerError } from '../error';
 import { IFile, IFolder, INewFile, INewFolder, INewShortcut, IShortcut } from './interface';
-import { FileModel, FolderModel, ShortcutModel } from './model';
+import { FileModel, FolderModel, FsObjectModel, ShortcutModel } from './model';
 
 const createFile = async (file: INewFile, session?: ClientSession): Promise<IFile> => {
     if (file.parent && !(await FolderModel.exists({ _id: file.parent })))
         throw new ServerError(404, 'Parent not found');
-    if (await FileModel.exists({ parent: file.parent, name: file.name }))
+    if (await FsObjectModel.exists({ parent: file.parent, name: file.name }))
         throw new ServerError(409, 'Object with this name already exists in folder');
 
     const newFile: INewFile = { ...defaultNewFile, ...file };
@@ -17,7 +17,7 @@ const createFile = async (file: INewFile, session?: ClientSession): Promise<IFil
 const createFolder = async (folder: INewFolder, session?: ClientSession): Promise<IFolder> => {
     if (folder.parent && !(await FolderModel.exists({ _id: folder.parent })))
         throw new ServerError(404, 'Parent not found');
-    if (await FolderModel.exists({ parent: folder.parent, name: folder.name }))
+    if (await FsObjectModel.exists({ parent: folder.parent, name: folder.name }))
         throw new ServerError(409, 'Object with this name already exists in folder');
 
     const newFolder: INewFolder = { ...defaultNewFolder, ...folder };
@@ -27,7 +27,7 @@ const createFolder = async (folder: INewFolder, session?: ClientSession): Promis
 const createShortcut = async (shortcut: INewShortcut, session?: ClientSession): Promise<IShortcut> => {
     if (shortcut.parent && !(await FolderModel.exists({ _id: shortcut.parent })))
         throw new ServerError(404, 'Parent not found');
-    if (await ShortcutModel.exists({ parent: shortcut.parent, name: shortcut.name }))
+    if (await FsObjectModel.exists({ parent: shortcut.parent, name: shortcut.name }))
         throw new ServerError(409, 'Object with this name already exists in folder');
 
     const newShortcut: INewShortcut = { ...defaultNewShortcut, ...shortcut };
