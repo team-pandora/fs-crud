@@ -1,26 +1,30 @@
+import { StatusCodes } from 'http-status-codes';
 import * as mongoose from 'mongoose';
 import config from '../../config';
 import { removeUndefinedFields } from '../../utils/object';
-import { INewFile, INewFolder, INewShortcut } from '../fs/interface';
-import { createFile, createFolder, createShortcut } from '../fs/manager';
-import { FsObjectModel } from '../fs/model';
-import { changeQuotaUsed } from '../quota/manager';
-import { createState } from '../state/manager';
-import StateModel from '../state/model';
-import { FsObjectAndState, IAggregateStatesFsObjectsReq } from './interface';
+import { ServerError } from '../error';
+import { INewFile, INewFolder, INewShortcut, IUpdateShortcut } from '../fs/interface';
+import { createFile, createFolder, createShortcut, updateShortcut } from '../fs/manager';
+import { FileModel, FsObjectModel } from '../fs/model';
+import { changeQuotaUsed } from '../quotas/manager';
+import QuotaModel from '../quotas/model';
+import { IState, permission as permissionType, permissionRanking } from '../states/interface';
+import { createState, updateState } from '../states/manager';
+import StateModel from '../states/model';
+import { FsObjectAndState, IAggregateStatesFsObjectsReq, IUserAndPermission } from './interface';
 
-const aggregateStatesFsObjects = async (query: IAggregateStatesFsObjectsReq): Promise<object[]> => {
+const aggregateStatesFsObjects = async (query: IAggregateStatesFsObjectsReq): Promise<FsObjectAndState[]> => {
     const stateFilters = removeUndefinedFields({
-        stateId: query.stateId && new mongoose.Types.ObjectId(query.stateId),
+        _id: query.stateId,
         userId: query.userId,
-        fsObjectId: query.fsObjectId && new mongoose.Types.ObjectId(query.fsObjectId),
+        fsObjectId: query.fsObjectId,
         favorite: query.favorite,
         trash: query.trash,
         root: query.root,
         permission: query.permission && { $in: query.permission },
     });
     const fsObjectFilters = removeUndefinedFields({
-        'fsObject.parent': query.parent && new mongoose.Types.ObjectId(query.parent),
+        'fsObject.parent': query.parent,
         'fsObject.key': query.key,
         'fsObject.bucket': query.bucket,
         'fsObject.source': query.source,
@@ -28,7 +32,7 @@ const aggregateStatesFsObjects = async (query: IAggregateStatesFsObjectsReq): Pr
         'fsObject.public': query.public,
         'fsObject.name': query.name,
         'fsObject.type': query.type,
-        'fsObject.ref': query.ref && new mongoose.Types.ObjectId(query.ref),
+        'fsObject.ref': query.ref,
     });
 
     const pipeline: mongoose.PipelineStage[] = [
@@ -86,21 +90,24 @@ const aggregateStatesFsObjects = async (query: IAggregateStatesFsObjectsReq): Pr
 
         // Add pagination pipeline stage, added only if sort exists
         if (query.page && query.pageSize) {
-            pipeline.push({
-                $skip: (query.page - 1) * query.pageSize,
-            });
-            pipeline.push({
-                $limit: query.pageSize,
-            });
+            pipeline.push(
+                {
+                    $skip: (query.page - 1) * query.pageSize,
+                },
+                {
+                    $limit: query.pageSize,
+                },
+            );
         }
     }
 
     return StateModel.aggregate(pipeline).exec();
 };
 
-const aggregateFsObjectsStates = async (query: IAggregateStatesFsObjectsReq): Promise<object[]> => {
+const aggregateFsObjectsStates = async (query: IAggregateStatesFsObjectsReq): Promise<FsObjectAndState[]> => {
     const fsObjectFilters = removeUndefinedFields({
-        parent: query.parent && new mongoose.Types.ObjectId(query.parent),
+        _id: query.fsObjectId,
+        parent: query.parent,
         key: query.key,
         bucket: query.bucket,
         source: query.source,
@@ -108,12 +115,12 @@ const aggregateFsObjectsStates = async (query: IAggregateStatesFsObjectsReq): Pr
         public: query.public,
         name: query.name,
         type: query.type,
-        ref: query.ref && new mongoose.Types.ObjectId(query.ref),
+        ref: query.ref,
     });
+
     const stateFilters = removeUndefinedFields({
-        'state.stateId': query.stateId && new mongoose.Types.ObjectId(query.stateId),
+        'state._id': query.stateId,
         'state.userId': query.userId,
-        'state.fsObjectId': query.fsObjectId && new mongoose.Types.ObjectId(query.fsObjectId),
         'state.favorite': query.favorite,
         'state.trash': query.trash,
         'state.root': query.root,
@@ -175,54 +182,32 @@ const aggregateFsObjectsStates = async (query: IAggregateStatesFsObjectsReq): Pr
 
         // Add pagination pipeline stage, added only if sort exists
         if (query.page && query.pageSize) {
-            pipeline.push({
-                $skip: (query.page - 1) * query.pageSize,
-            });
-            pipeline.push({
-                $limit: query.pageSize,
-            });
+            pipeline.push(
+                {
+                    $skip: (query.page - 1) * query.pageSize,
+                },
+                {
+                    $limit: query.pageSize,
+                },
+            );
         }
     }
 
     return FsObjectModel.aggregate(pipeline).exec();
 };
 
-// const deleteObjectTransactions = async (fsObjectId: IAggregateStatesFsObjectsReq): Promise<void> => {
-//     const session = await mongoose.startSession();
-//     session.startTransaction();
-//     try {
-//         const file = await FileModel.findOne({
-//             _id: fsObjectId,
-//         }).exec();
-//         if (!file) {
-//             throw new Error("File doesn't exist");
-//         }
-//         const state = await StateModel.findOne({
-//             fsObjectId,
-//         }).exec();
-//         if (!state) {
-//             throw new Error("State doesn't exist");
-//         }
-//         // eslint-disable-next-line no-underscore-dangle
-//         await QuotaModel.findOneAndUpdate({ userId: state._id }, { $inc: { used: -file.size } }, { session });
+const createUserFile = async (userId: string, file: INewFile): Promise<FsObjectAndState> => {
+    if (
+        !file.parent &&
+        (await aggregateStatesFsObjects({ userId, root: true, name: file.name, source: file.source })).length > 0
+    ) {
+        throw new Error('Object with the same name already exists');
+    }
 
-//         await StateModel.deleteOne({ fsObjectId }, { session });
-//         await FsObjectModel.deleteOne({ _id: fsObjectId }, { session });
-
-//         await session.commitTransaction();
-//     } catch (err) {
-//         await session.abortTransaction();
-//         throw err;
-//     }
-// };
-
-const createUserFileTransaction = async (userId: string, file: INewFile): Promise<FsObjectAndState> => {
     const session = await mongoose.startSession();
 
     try {
         session.startTransaction();
-
-        await changeQuotaUsed(userId, file.size);
 
         const createdFile = await createFile(file, session);
 
@@ -231,10 +216,12 @@ const createUserFileTransaction = async (userId: string, file: INewFile): Promis
                 userId,
                 fsObjectId: createdFile._id,
                 permission: 'owner',
-                root: createdFile.parent === null,
+                root: !createdFile.parent,
             },
             session,
         );
+
+        await changeQuotaUsed(userId, file.size, session);
 
         await session.commitTransaction();
 
@@ -242,10 +229,16 @@ const createUserFileTransaction = async (userId: string, file: INewFile): Promis
     } catch (err) {
         await session.abortTransaction();
         throw err;
+    } finally {
+        session.endSession();
     }
 };
 
-const createUserFolderTransaction = async (userId: string, folder: INewFolder): Promise<FsObjectAndState> => {
+const createUserFolder = async (userId: string, folder: INewFolder): Promise<FsObjectAndState> => {
+    if (!folder.parent && (await aggregateStatesFsObjects({ userId, root: true, name: folder.name })).length > 0) {
+        throw new Error('Object with the same name already exists');
+    }
+
     const session = await mongoose.startSession();
 
     try {
@@ -258,20 +251,27 @@ const createUserFolderTransaction = async (userId: string, folder: INewFolder): 
                 userId,
                 fsObjectId: createdFolder._id,
                 permission: 'owner',
-                root: createdFolder.parent === null,
+                root: !createdFolder.parent,
             },
             session,
         );
 
         await session.commitTransaction();
+
         return new FsObjectAndState(createdFolder, createdState);
     } catch (err) {
         await session.abortTransaction();
         throw err;
+    } finally {
+        session.endSession();
     }
 };
 
-const createUserShortcutTransaction = async (userId: string, shortcut: INewShortcut): Promise<FsObjectAndState> => {
+const createUserShortcut = async (userId: string, shortcut: INewShortcut): Promise<FsObjectAndState> => {
+    if (!shortcut.parent && (await aggregateStatesFsObjects({ userId, root: true, name: shortcut.name })).length > 0) {
+        throw new Error('Object with the same name already exists');
+    }
+
     const session = await mongoose.startSession();
 
     try {
@@ -284,7 +284,7 @@ const createUserShortcutTransaction = async (userId: string, shortcut: INewShort
                 userId,
                 fsObjectId: createdShortcut._id,
                 permission: 'owner',
-                root: createdShortcut.parent === null,
+                root: !createdShortcut.parent,
             },
             session,
         );
@@ -295,13 +295,129 @@ const createUserShortcutTransaction = async (userId: string, shortcut: INewShort
     } catch (err) {
         await session.abortTransaction();
         throw err;
+    } finally {
+        session.endSession();
     }
+};
+
+const updateShortcutTransaction = async (
+    userId: string,
+    fsObjectId: mongoose.Types.ObjectId,
+    shortcut: IUpdateShortcut,
+): Promise<FsObjectAndState> => {
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const updatedShortcut = await updateShortcut(fsObjectId, shortcut, session);
+
+        const updatedState = await updateState(
+            userId,
+            {
+                root: updatedShortcut.parent === null,
+            },
+            session,
+        );
+
+        await session.commitTransaction();
+
+        return new FsObjectAndState(updatedShortcut, updatedState);
+    } catch (err) {
+        await session.abortTransaction();
+        throw err;
+    }
+};
+
+const getAllSharedUsers = async (
+    userId: string,
+    fsObjectId: mongoose.Types.ObjectId,
+): Promise<IUserAndPermission[]> => {
+    if (!(await StateModel.exists({ userId, fsObjectId }))) {
+        throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found.');
+    }
+
+    return StateModel.find({ fsObjectId }, { _id: 0, userId: 1, permission: 1 }).exec();
+};
+
+const shareFsObject = async (
+    userId: string,
+    fsObjectId: mongoose.Types.ObjectId,
+    sharedUserId: string,
+    permission: permissionType,
+): Promise<IState> => {
+    const state = await StateModel.findOne({ userId, fsObjectId }).exec();
+    if (!state) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found.');
+    if (permissionRanking[permission] > permissionRanking[state.permission])
+        throw new ServerError(StatusCodes.BAD_REQUEST, 'Trying to share with higher permission than own.');
+
+    return createState({
+        userId: sharedUserId,
+        permission,
+        fsObjectId,
+        root: true,
+    });
+};
+
+const deleteFileTransaction = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const file = await FileModel.findOne({
+            _id: fsObjectId,
+        }).exec();
+        if (!file) {
+            throw new Error("File doesn't exist");
+        }
+        const state = await StateModel.findOne({
+            fsObjectId,
+        }).exec();
+        if (!state) {
+            throw new Error("State doesn't exist");
+        }
+
+        await QuotaModel.findOneAndUpdate({ userId }, { $inc: { used: -file.size } }, { session });
+
+        await StateModel.deleteMany({ fsObjectId }, { session });
+
+        await FsObjectModel.deleteOne({ _id: fsObjectId }, { session });
+
+        await session.commitTransaction();
+    } catch (err) {
+        await session.abortTransaction();
+        throw err;
+    }
+};
+
+const getFsObjectHierarchy = async (
+    userId: string,
+    fsObjectId: mongoose.Types.ObjectId,
+): Promise<FsObjectAndState[]> => {
+    const [fileAndState] = await aggregateStatesFsObjects({ userId, fsObjectId });
+    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Provided file does not exist.');
+
+    const hierarchy: FsObjectAndState[] = [fileAndState];
+
+    for (let depth = 0; !hierarchy[0]?.root && depth < config.fs.maxHierarchySearchDepth; depth++) {
+        if (!hierarchy[0]?.parent) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Broken hierarchy.');
+        // eslint-disable-next-line no-await-in-loop -- It's OK to await here.
+        hierarchy.unshift((await aggregateStatesFsObjects({ userId, fsObjectId: hierarchy[0].parent }))[0]);
+    }
+
+    return hierarchy;
 };
 
 export {
     aggregateStatesFsObjects,
     aggregateFsObjectsStates,
-    createUserFileTransaction,
-    createUserFolderTransaction,
-    createUserShortcutTransaction,
+    createUserFile,
+    createUserFolder,
+    createUserShortcut,
+    updateShortcutTransaction,
+    getAllSharedUsers,
+    shareFsObject,
+    deleteFileTransaction,
+    getFsObjectHierarchy,
 };

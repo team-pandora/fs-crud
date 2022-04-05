@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import * as mongoose from 'mongoose';
 import * as request from 'supertest';
 import config from '../src/config';

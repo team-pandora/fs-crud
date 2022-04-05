@@ -6,6 +6,10 @@ export type source = typeof sources[number];
 export const fsObjectTypes = ['file', 'folder', 'shortcut'] as const;
 export type fsObjectType = typeof fsObjectTypes[number];
 
+export interface IReqParams {
+    fsObjectId: mongoose.Types.ObjectId;
+}
+
 export interface IFsObject {
     _id: mongoose.Types.ObjectId;
     name: string;
@@ -36,7 +40,7 @@ export interface INewFile {
     bucket: string;
     size: number;
     public?: boolean;
-    source?: source;
+    source: source;
 }
 
 export interface INewFolder {
@@ -48,4 +52,9 @@ export interface INewShortcut {
     name: string;
     parent?: mongoose.Types.ObjectId | null;
     ref: mongoose.Types.ObjectId;
+}
+
+export interface IUpdateShortcut {
+    name?: string;
+    parent?: mongoose.Types.ObjectId | null;
 }

@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import * as mongoose from 'mongoose';
 import * as request from 'supertest';
 import config from '../src/config';
@@ -7,7 +6,7 @@ import Server from '../src/express/server';
 jest.setTimeout(30000);
 
 const removeStateCollection = async () =>
-    mongoose.connection.collections[config.mongo.stateCollectionName].deleteMany({});
+    mongoose.connection.collections[config.mongo.statesCollectionName].deleteMany({});
 
 describe('state tests', () => {
     let app: Express.Application;

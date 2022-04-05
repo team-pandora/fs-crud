@@ -1,8 +1,20 @@
 import { ClientSession } from 'mongoose';
 import { defaultNewState } from '../../config/defaults';
 import { ServerError } from '../error';
-import { INewState, IState, IStateFilters, IUpdatedState } from './interface';
+import { IGetStatesQuery, INewState, IState, IUpdatedState } from './interface';
 import StateModel from './model';
+
+const getStateById = async (stateId: string): Promise<IState> => {
+    const result = await StateModel.findById(stateId).exec();
+
+    if (result === null) throw new ServerError(404, 'State not found.');
+
+    return result;
+};
+
+const getStates = (query: IGetStatesQuery): Promise<IState[]> => {
+    return StateModel.find(query).exec();
+};
 
 /**
  * Create new State document.
@@ -14,19 +26,10 @@ const createState = async (state: INewState, session?: ClientSession): Promise<I
     return (await StateModel.create([{ ...defaultNewState, ...state }], { session }))[0];
 };
 
-/**
- * Get filtered states.
- * @param {IStateFilters} filters - The filters object.
- * @returns {Promise<IState[]>} - Promise object containing the States.
- */
-const getStates = (filters: IStateFilters): Promise<IState[]> => {
-    return StateModel.find(filters).exec();
-};
-
-const updateState = async (id: string, state: IUpdatedState): Promise<IState> => {
-    const result = await StateModel.findByIdAndUpdate(id, state, { new: true }).exec();
+const updateState = async (id: string, state: IUpdatedState, session?: ClientSession): Promise<IState> => {
+    const result = await StateModel.findByIdAndUpdate(id, state, { session, new: true }).exec();
     if (result === null) throw new ServerError(404, 'State not found');
     return result;
 };
 
-export { createState, getStates, updateState };
+export { getStateById, getStates, createState, updateState };

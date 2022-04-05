@@ -1,7 +1,7 @@
 import config from '.';
 import { INewFile, INewFolder, INewShortcut } from '../express/fs/interface';
-import { INewQuota } from '../express/quota/interface';
-import { INewState } from '../express/state/interface';
+import { INewQuota } from '../express/quotas/interface';
+import { INewState } from '../express/states/interface';
 
 export const defaultNewQuota: Partial<INewQuota> = {
     limit: config.quota.defaultLimitInBytes,

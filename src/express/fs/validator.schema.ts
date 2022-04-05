@@ -5,6 +5,14 @@ import { sources } from './interface';
 
 const { nameRegex, fileKeyRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
 
+export const getFsObjectRequestSchema = Joi.object({
+    query: {},
+    params: {
+        fsObjectId: JoiObjectId.required(),
+    },
+    body: {},
+});
+
 /**
  * POST /api/file
  * {name: 'abc', parent: '5d7e4d4e4f7c8e8d4f7c8e8d', key: 'abc', bucket: 'abc', size: 123, public: true, source: 'dropbox'}
@@ -14,14 +22,14 @@ export const createFileRequestSchema = Joi.object({
     params: {},
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: JoiObjectId.optional(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
         key: Joi.string().regex(fileKeyRegex).required(),
         bucket: Joi.string().regex(fileBucketRegex).required(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
         public: Joi.boolean().optional(),
         source: Joi.string()
             .valid(...sources)
-            .optional(),
+            .required(),
     },
 });
 
@@ -34,7 +42,7 @@ export const createFolderRequestSchema = Joi.object({
     params: {},
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: JoiObjectId.optional(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
     },
 });
 
@@ -47,17 +55,25 @@ export const createShortcutRequestSchema = Joi.object({
     params: {},
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: JoiObjectId.optional(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
         ref: JoiObjectId.required(),
     },
 });
 
-export const getObjectRequestSchema = Joi.object({
+export const updateShortcutRequestSchema = Joi.object({
     query: {},
     params: {
-        id: JoiObjectId.required(),
+        fsObjectId: JoiObjectId.required(),
     },
-    body: {},
+    body: {
+        name: Joi.string().regex(nameRegex).required(),
+        parent: JoiObjectId.optional(),
+    },
 });
 
-export default { createFileRequestSchema, createFolderRequestSchema, createShortcutRequestSchema };
+export default {
+    createFileRequestSchema,
+    createFolderRequestSchema,
+    createShortcutRequestSchema,
+    updateShortcutRequestSchema,
+};

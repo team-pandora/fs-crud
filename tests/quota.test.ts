@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import * as mongoose from 'mongoose';
 import * as request from 'supertest';
 import config from '../src/config';
@@ -9,7 +8,7 @@ const { defaultLimitInBytes, maxLimitAllowedInBytes } = config.quota;
 jest.setTimeout(30000);
 
 const removeQuotaCollection = async () =>
-    mongoose.connection.collections[config.mongo.quotaCollectionName].deleteMany({});
+    mongoose.connection.collections[config.mongo.quotasCollectionName].deleteMany({});
 
 describe('quota tests', () => {
     let app: Express.Application;

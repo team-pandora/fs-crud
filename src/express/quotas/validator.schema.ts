@@ -1,6 +1,5 @@
 import * as Joi from 'joi';
 import config from '../../config';
-import { JoiObjectId } from '../../utils/joi';
 
 const { minLimitAllowedInBytes, maxLimitAllowedInBytes } = config.quota;
 
@@ -12,7 +11,7 @@ export const createQuotaRequestSchema = Joi.object({
     query: {},
     params: {},
     body: {
-        userId: JoiObjectId.required(),
+        userId: Joi.string().required(),
         limit: Joi.number().min(minLimitAllowedInBytes).max(maxLimitAllowedInBytes).optional(),
         used: Joi.number().min(minLimitAllowedInBytes).max(maxLimitAllowedInBytes).optional(),
     },
@@ -24,7 +23,7 @@ export const createQuotaRequestSchema = Joi.object({
 export const getQuotaByUserIdRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: JoiObjectId.required(),
+        userId: Joi.string().required(),
     },
     body: {},
 });
@@ -36,7 +35,7 @@ export const getQuotaByUserIdRequestSchema = Joi.object({
 export const updateQuotaLimitRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: JoiObjectId.required(),
+        userId: Joi.string().required(),
     },
     body: {
         limit: Joi.number().min(minLimitAllowedInBytes).max(maxLimitAllowedInBytes).required(),
@@ -50,7 +49,7 @@ export const updateQuotaLimitRequestSchema = Joi.object({
 export const changeQuotaUsedRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: JoiObjectId.required(),
+        userId: Joi.string().required(),
     },
     body: {
         difference: Joi.number().required(),

@@ -8,8 +8,8 @@ const config = {
     },
     mongo: {
         uri: env.get('MONGO_URI').required().asString(),
-        quotasCollectionName: env.get('MONGO_QUOTA_COLLECTION_NAME').required().asString(),
-        statesCollectionName: env.get('MONGO_STATE_COLLECTION_NAME').required().asString(),
+        quotasCollectionName: env.get('MONGO_QUOTAS_COLLECTION_NAME').required().asString(),
+        statesCollectionName: env.get('MONGO_STATES_COLLECTION_NAME').required().asString(),
         fsObjectsCollectionName: env.get('MONGO_FS_OBJECTS_COLLECTION_NAME').required().asString(),
     },
     quota: {
@@ -18,6 +18,7 @@ const config = {
         minLimitAllowedInBytes: env.get('QUOTA_MIN_LIMIT_ALLOWED_IN_BYTES').default('0').asInt(),
     },
     fs: {
+        maxHierarchySearchDepth: env.get('FS_MAX_HIERARCHY_SEARCH_DEPTH').default('5').asInt(),
         maxFileSizeInBytes: env.get('FS_MAX_FILE_SIZE_IN_BYTES').default('107374182400').asInt(),
         minFileSizeInBytes: env.get('FS_MIN_FILE_SIZE_IN_BYTES').default('1').asInt(),
         nameRegex: env

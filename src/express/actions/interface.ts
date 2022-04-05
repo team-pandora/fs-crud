@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { fsObjectType, IFile, IFolder, IShortcut, source } from '../fs/interface';
-import { IState, permission } from '../state/interface';
+import { IState, permission } from '../states/interface';
 
 export const AggregateStatesFsObjectsSortByFields = [
     'size',
@@ -17,15 +17,21 @@ export type AggregateStatesFsObjectsSortBy = typeof AggregateStatesFsObjectsSort
 
 export const AggregateStatesFsObjectsSortOrders = ['asc', 'desc'] as const;
 export type AggregateStatesFsObjectsSortOrder = typeof AggregateStatesFsObjectsSortOrders[number];
+
+export interface IUserActionParams {
+    userId: string;
+    fsObjectId: mongoose.Types.ObjectId;
+}
+
 export interface IAggregateStatesFsObjectsReq {
     // State filters
-    stateId?: string;
+    stateId?: mongoose.Types.ObjectId;
     userId?: string;
-    fsObjectId?: string;
+    fsObjectId?: mongoose.Types.ObjectId;
     favorite?: boolean;
     trash?: boolean;
     root?: boolean;
-    permission?: permission;
+    permission?: Array<permission>;
 
     // FsObject filters
     key?: string;
@@ -34,9 +40,9 @@ export interface IAggregateStatesFsObjectsReq {
     size?: number;
     public?: boolean;
     name?: string;
-    parent?: string;
+    parent?: mongoose.Types.ObjectId;
     type?: fsObjectType;
-    ref?: string;
+    ref?: mongoose.Types.ObjectId;
 
     // Sort
     sortBy?: AggregateStatesFsObjectsSortBy;
@@ -45,6 +51,13 @@ export interface IAggregateStatesFsObjectsReq {
     // Pagination
     page?: number;
     pageSize?: number;
+}
+
+export type IAggregateFsObjectsStatesReq = IAggregateStatesFsObjectsReq;
+
+export interface IUserAndPermission {
+    userId: string;
+    permission: permission;
 }
 
 export class FsObjectAndState {

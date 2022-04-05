@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import * as request from 'supertest';
 import Server from '../src/express/server';
 

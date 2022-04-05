@@ -1,8 +1,12 @@
 import { Request } from 'express';
 import * as Joi from 'joi';
+import * as mongoose from 'mongoose';
 import { wrapValidator } from './express';
 
-export const JoiObjectId = Joi.string().hex().length(24);
+export const JoiObjectId = Joi.string()
+    .hex()
+    .length(24)
+    .custom((value) => new mongoose.Types.ObjectId(value));
 
 const defaultValidationOptions: Joi.ValidationOptions = {
     abortEarly: false,

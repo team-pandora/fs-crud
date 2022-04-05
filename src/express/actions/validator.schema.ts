@@ -1,8 +1,8 @@
 import * as Joi from 'joi';
 import config from '../../config';
 import { JoiObjectId } from '../../utils/joi';
-import { fsObjectTypes } from '../fs/interface';
-import { permissions } from '../state/interface';
+import { fsObjectTypes, sources } from '../fs/interface';
+import { permissions } from '../states/interface';
 import { AggregateStatesFsObjectsSortByFields, AggregateStatesFsObjectsSortOrders } from './interface';
 
 const { nameRegex, fileKeyRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
@@ -14,7 +14,7 @@ export const aggregateStatesFsObjectsRequestSchema = Joi.object({
     query: Joi.object({
         // State filters
         stateId: JoiObjectId.optional(),
-        userId: JoiObjectId.optional(),
+        userId: Joi.string().optional(),
         fsObjectId: JoiObjectId.optional(),
         favorite: Joi.boolean().optional(),
         trash: Joi.boolean().optional(),
@@ -57,6 +57,8 @@ export const aggregateStatesFsObjectsRequestSchema = Joi.object({
     body: {},
 });
 
+export const aggregateFsObjectsStatesRequestSchema = aggregateStatesFsObjectsRequestSchema;
+
 export const deleteObjectTransactionsRequestSchema = Joi.object({
     query: {},
     params: {
@@ -65,34 +67,97 @@ export const deleteObjectTransactionsRequestSchema = Joi.object({
     body: {},
 });
 
-export const createUserFileTransactionRequestSchema = Joi.object({
+export const createUserFileRequestSchema = Joi.object({
     query: {},
-    params: { userId: JoiObjectId.required() },
+    params: {
+        userId: Joi.string().required(),
+    },
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: JoiObjectId.optional(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
         key: Joi.string().regex(fileKeyRegex).required(),
         bucket: Joi.string().regex(fileBucketRegex).required(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
         public: Joi.boolean().optional(),
+        source: Joi.string()
+            .valid(...sources)
+            .required(),
     },
 });
 
-export const createUserFolderTransactionRequestSchema = Joi.object({
+export const createUserFolderRequestSchema = Joi.object({
     query: {},
-    params: { userId: JoiObjectId.required() },
+    params: {
+        userId: Joi.string().required(),
+    },
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: JoiObjectId.optional(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
     },
 });
 
-export const createUserShortcutTransactionRequestSchema = Joi.object({
+export const createUserShortcutRequestSchema = Joi.object({
     query: {},
-    params: { userId: JoiObjectId.required() },
+    params: {
+        userId: Joi.string().required(),
+    },
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: JoiObjectId.optional(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
         ref: JoiObjectId.required(),
     },
+});
+
+export const updatedShortcutTransactionRequestSchema = Joi.object({
+    query: {},
+    params: {
+        userId: Joi.string().required(),
+        fsObjectId: JoiObjectId.required(),
+    },
+    body: {
+        name: Joi.string().regex(nameRegex).optional(),
+        parent: JoiObjectId.optional(),
+    },
+});
+
+export const getAllSharedUsersRequestSchema = Joi.object({
+    query: {},
+    params: {
+        userId: Joi.string().required(),
+        fsObjectId: JoiObjectId.required(),
+    },
+    body: {},
+});
+
+export const shareFsObjectRequestSchema = Joi.object({
+    query: {},
+    params: {
+        userId: Joi.string().required(),
+        fsObjectId: JoiObjectId.required(),
+    },
+    body: {
+        permission: Joi.string()
+            .valid(...permissions)
+            .invalid('owner')
+            .required(),
+        userId: Joi.string().required(),
+    },
+});
+
+export const deleteFileTransactionRequestSchema = Joi.object({
+    query: {},
+    params: {
+        userId: Joi.string().required(),
+        fsObjectId: JoiObjectId.required(),
+    },
+    body: {},
+});
+
+export const getFsObjectHierarchyRequestSchema = Joi.object({
+    query: {},
+    params: {
+        userId: Joi.string().required(),
+        fsObjectId: JoiObjectId.required(),
+    },
+    body: {},
 });

@@ -1,21 +1,21 @@
 import { Request, Response } from 'express';
 import { INewQuota } from './interface';
-import * as quotaManager from './manager';
+import * as quotasManager from './manager';
 
 const createQuota = async (req: Request, res: Response) => {
-    res.json(await quotaManager.createQuota(req.body as INewQuota));
+    res.json(await quotasManager.createQuota(req.body as INewQuota));
 };
 
 const getQuotaByUserId = async (req: Request, res: Response) => {
-    res.json(await quotaManager.getQuotaByUserId(req.params.userId));
+    res.json(await quotasManager.getQuotaByUserId(req.params.userId));
 };
 
 const updateQuotaLimit = async (req: Request, res: Response) => {
-    res.json(await quotaManager.updateQuotaLimit(req.params.userId, req.body.limit));
+    res.json(await quotasManager.updateQuotaLimit(req.params.userId, req.body.limit));
 };
 
 const changeQuotaUsed = async (req: Request, res: Response) => {
-    res.json(await quotaManager.changeQuotaUsed(req.params.userId, req.body.difference));
+    res.json(await quotasManager.changeQuotaUsed(req.params.userId, req.body.difference));
 };
 
 export { getQuotaByUserId, createQuota, updateQuotaLimit, changeQuotaUsed };
