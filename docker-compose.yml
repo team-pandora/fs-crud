@@ -1,33 +1,16 @@
 version: '3.4'
 
 services:
-  mongo1:
-    image: mongo
+  mongo:
+    hostname: mongodb
+    container_name: mongodb
+    image: mongo:latest
     restart: always
-    command: [ '--bind_ip_all', '--replSet', 'rs0' ]
     ports:
-      - 27017:27017
-
-  mongo2:
-    image: mongo
-    restart: always
-    command: [ '--bind_ip_all', '--replSet', 'rs0' ]
-
-  mongo3:
-    image: mongo
-    restart: always
-    command: [ '--bind_ip_all', '--replSet', 'rs0' ]
-
-  mongosetup:
-    image: mongo
-    depends_on:
-      - mongo1
-      - mongo2
-      - mongo3
+      - "27017:27017"
     volumes:
-      - ./scripts:/scripts
-    restart: "no"
-    entrypoint: [ "bash", "/scripts/setup_mongo.sh" ]
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+    command: [ "--replSet", "rs0", "--bind_ip_all" ]
 
   file-service:
     build: .
@@ -40,3 +23,4 @@ services:
       MONGO_FS_OBJECTS_COLLECTION_NAME: fsobjects
     ports:
       - 8000:8000
+    network_mode: "host"
