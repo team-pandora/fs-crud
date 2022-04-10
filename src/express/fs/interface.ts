@@ -54,7 +54,18 @@ export interface INewShortcut {
     ref: mongoose.Types.ObjectId;
 }
 
-export interface IUpdateShortcut {
+export interface IUpdateFile {
+    name?: string;
+    parent?: mongoose.Types.ObjectId | null;
+    key?: string;
+    bucket?: string;
+    size?: number;
+    public?: boolean;
+}
+
+export interface IUpdateFolder {
     name?: string;
     parent?: mongoose.Types.ObjectId | null;
 }
+
+export type IUpdateShortcut = IUpdateFolder;

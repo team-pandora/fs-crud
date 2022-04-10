@@ -14,7 +14,7 @@ const createState = async (req: Request, res: Response) => {
 };
 
 const updateState = async (req: Request, res: Response) => {
-    res.json(await statesManager.updateState(req.params.id, req.body));
+    res.json(await statesManager.updateState({ _id: req.params.stateId }, req.body));
 };
 
 export { getStateById, getStates, createState, updateState };

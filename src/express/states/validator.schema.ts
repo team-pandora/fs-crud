@@ -51,7 +51,7 @@ export const createStateRequestSchema = Joi.object({
 export const updateStateRequestSchema = Joi.object({
     query: {},
     params: {
-        id: JoiObjectId.required(),
+        stateId: JoiObjectId.required(),
     },
     body: {
         favorite: Joi.boolean().optional(),
@@ -59,6 +59,5 @@ export const updateStateRequestSchema = Joi.object({
         permission: Joi.string()
             .valid(...permissions)
             .optional(),
-        root: Joi.boolean().optional(),
     },
 });

@@ -60,7 +60,22 @@ export const createShortcutRequestSchema = Joi.object({
     },
 });
 
-export const updateShortcutRequestSchema = Joi.object({
+export const updateFileRequestSchema = Joi.object({
+    query: {},
+    params: {
+        fsObjectId: JoiObjectId.required(),
+    },
+    body: {
+        name: Joi.string().regex(nameRegex).optional(),
+        parent: JoiObjectId.optional(),
+        key: Joi.string().regex(fileKeyRegex).optional(),
+        bucket: Joi.string().regex(fileBucketRegex).optional(),
+        size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).optional(),
+        public: Joi.boolean().optional(),
+    },
+});
+
+export const updateFolderRequestSchema = Joi.object({
     query: {},
     params: {
         fsObjectId: JoiObjectId.required(),
@@ -71,9 +86,4 @@ export const updateShortcutRequestSchema = Joi.object({
     },
 });
 
-export default {
-    createFileRequestSchema,
-    createFolderRequestSchema,
-    createShortcutRequestSchema,
-    updateShortcutRequestSchema,
-};
+export const updateShortcutRequestSchema = updateFolderRequestSchema;

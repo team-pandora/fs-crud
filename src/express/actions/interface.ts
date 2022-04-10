@@ -23,6 +23,11 @@ export interface IUserActionParams {
     fsObjectId: mongoose.Types.ObjectId;
 }
 
+export interface IUserStateActionParams {
+    userId: string;
+    stateId: mongoose.Types.ObjectId;
+}
+
 export interface IAggregateStatesFsObjectsReq {
     // State filters
     stateId?: mongoose.Types.ObjectId;

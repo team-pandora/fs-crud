@@ -30,7 +30,7 @@ export interface INewState {
     permission: permission;
 }
 
-export interface IUpdatedState {
+export interface IUpdateState {
     favorite?: boolean;
     trash?: boolean;
     permission?: permission;

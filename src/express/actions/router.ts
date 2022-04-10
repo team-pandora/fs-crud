@@ -37,15 +37,15 @@ actionsRouter.post(
 );
 
 actionsRouter.patch(
-    '/users/:userId/fs/shortcut/:id',
-    ValidateRequest(actionsValidator.updatedShortcutTransactionRequestSchema),
-    wrapController(actionsController.updateShortcutTransaction),
+    '/users/:userId/states/:stateId',
+    ValidateRequest(actionsValidator.updateUserStateRequestSchema),
+    wrapController(actionsController.updateUserState),
 );
 
 actionsRouter.get(
     '/users/:userId/fs/:fsObjectId/sharedUsers',
-    ValidateRequest(actionsValidator.getAllSharedUsersRequestSchema),
-    wrapController(actionsController.getAllSharedUsers),
+    ValidateRequest(actionsValidator.getSharedUsersRequestSchema),
+    wrapController(actionsController.getSharedUsers),
 );
 
 actionsRouter.post(
@@ -54,16 +54,28 @@ actionsRouter.post(
     wrapController(actionsController.shareFsObject),
 );
 
-actionsRouter.delete(
-    '/users/:userId/fs/:fsObjectId',
-    ValidateRequest(actionsValidator.deleteFileTransactionRequestSchema),
-    wrapController(actionsController.deleteFileTransaction),
-);
-
 actionsRouter.get(
     '/users/:userId/fs/:fsObjectId/hierarchy',
     ValidateRequest(actionsValidator.getFsObjectHierarchyRequestSchema),
     wrapController(actionsController.getFsObjectHierarchy),
+);
+
+actionsRouter.patch(
+    '/users/:userId/fsObjects/file/:fsObjectId',
+    ValidateRequest(actionsValidator.updateUserFileRequestSchema),
+    wrapController(actionsController.updateUserFile),
+);
+
+actionsRouter.patch(
+    '/users/:userId/fsObjects/folder/:fsObjectId',
+    ValidateRequest(actionsValidator.updateUserFolderRequestSchema),
+    wrapController(actionsController.updateUserFolder),
+);
+
+actionsRouter.patch(
+    '/users/:userId/fsObjects/shortcut/:fsObjectId',
+    ValidateRequest(actionsValidator.updateUserShortcutRequestSchema),
+    wrapController(actionsController.updateUserShortcut),
 );
 
 export default actionsRouter;

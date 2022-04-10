@@ -27,6 +27,18 @@ fsRouter.post(
 );
 
 fsRouter.patch(
+    '/file/:fsObjectId',
+    ValidateRequest(fsValidator.updateFileRequestSchema),
+    wrapController(fsController.updateFile),
+);
+
+fsRouter.patch(
+    '/folder/:fsObjectId',
+    ValidateRequest(fsValidator.updateFolderRequestSchema),
+    wrapController(fsController.updateFolder),
+);
+
+fsRouter.patch(
     '/shortcut/:fsObjectId',
     ValidateRequest(fsValidator.updateShortcutRequestSchema),
     wrapController(fsController.updateShortcut),

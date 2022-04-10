@@ -1,7 +1,8 @@
+import { StatusCodes } from 'http-status-codes';
 import { ClientSession } from 'mongoose';
 import { defaultNewState } from '../../config/defaults';
 import { ServerError } from '../error';
-import { IGetStatesQuery, INewState, IState, IUpdatedState } from './interface';
+import { IGetStatesQuery, INewState, IState, IUpdateState } from './interface';
 import StateModel from './model';
 
 const getStateById = async (stateId: string): Promise<IState> => {
@@ -23,12 +24,16 @@ const getStates = (query: IGetStatesQuery): Promise<IState[]> => {
  * @returns {Promise<IState>} - Promise object containing the created State.
  */
 const createState = async (state: INewState, session?: ClientSession): Promise<IState> => {
-    return (await StateModel.create([{ ...defaultNewState, ...state }], { session }))[0];
+    return StateModel.findOneAndUpdate(
+        { userId: state.userId, fsObjectId: state.fsObjectId },
+        { $setOnInsert: defaultNewState },
+        { upsert: true, new: true, session },
+    ).exec();
 };
 
-const updateState = async (id: string, state: IUpdatedState, session?: ClientSession): Promise<IState> => {
-    const result = await StateModel.findByIdAndUpdate(id, state, { session, new: true }).exec();
-    if (result === null) throw new ServerError(404, 'State not found');
+const updateState = async (filters: any, update: IUpdateState, session?: ClientSession): Promise<IState> => {
+    const result = await StateModel.findOneAndUpdate(filters, { $set: update }, { new: true, session }).exec();
+    if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'State not found.');
     return result;
 };
 

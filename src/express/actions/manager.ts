@@ -3,12 +3,11 @@ import * as mongoose from 'mongoose';
 import config from '../../config';
 import { removeUndefinedFields } from '../../utils/object';
 import { ServerError } from '../error';
-import { INewFile, INewFolder, INewShortcut, IUpdateShortcut } from '../fs/interface';
-import { createFile, createFolder, createShortcut, updateShortcut } from '../fs/manager';
-import { FileModel, FsObjectModel } from '../fs/model';
+import { IFile, IFolder, INewFile, INewFolder, INewShortcut, IShortcut, IUpdateFile } from '../fs/interface';
+import { createFile, createFolder, createShortcut, updateFile, updateFolder, updateShortcut } from '../fs/manager';
+import { FsObjectModel } from '../fs/model';
 import { changeQuotaUsed } from '../quotas/manager';
-import QuotaModel from '../quotas/model';
-import { IState, permission as permissionType, permissionRanking } from '../states/interface';
+import { IState, IUpdateState, permission as permissionType, permissionRanking } from '../states/interface';
 import { createState, updateState } from '../states/manager';
 import StateModel from '../states/model';
 import { FsObjectAndState, IAggregateStatesFsObjectsReq, IUserAndPermission } from './interface';
@@ -300,39 +299,44 @@ const createUserShortcut = async (userId: string, shortcut: INewShortcut): Promi
     }
 };
 
-const updateShortcutTransaction = async (
+// const updateShortcutTransaction = async (
+//     userId: string,
+//     fsObjectId: mongoose.Types.ObjectId,
+//     shortcut: IUpdateShortcut,
+// ): Promise<FsObjectAndState> => {
+//     const session = await mongoose.startSession();
+
+//     try {
+//         session.startTransaction();
+
+//         const updatedShortcut = await updateShortcut(fsObjectId, shortcut, session);
+
+//         const updatedState = await updateState(
+//             userId,
+//             {
+//                 root: updatedShortcut.parent === null,
+//             },
+//             session,
+//         );
+
+//         await session.commitTransaction();
+
+//         return new FsObjectAndState(updatedShortcut, updatedState);
+//     } catch (err) {
+//         await session.abortTransaction();
+//         throw err;
+//     }
+// };
+
+const updateUserState = async (
     userId: string,
-    fsObjectId: mongoose.Types.ObjectId,
-    shortcut: IUpdateShortcut,
-): Promise<FsObjectAndState> => {
-    const session = await mongoose.startSession();
-
-    try {
-        session.startTransaction();
-
-        const updatedShortcut = await updateShortcut(fsObjectId, shortcut, session);
-
-        const updatedState = await updateState(
-            userId,
-            {
-                root: updatedShortcut.parent === null,
-            },
-            session,
-        );
-
-        await session.commitTransaction();
-
-        return new FsObjectAndState(updatedShortcut, updatedState);
-    } catch (err) {
-        await session.abortTransaction();
-        throw err;
-    }
+    stateId: mongoose.Types.ObjectId,
+    update: IUpdateState,
+): Promise<IState> => {
+    return updateState({ _id: stateId, userId }, update);
 };
 
-const getAllSharedUsers = async (
-    userId: string,
-    fsObjectId: mongoose.Types.ObjectId,
-): Promise<IUserAndPermission[]> => {
+const getSharedUsers = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<IUserAndPermission[]> => {
     if (!(await StateModel.exists({ userId, fsObjectId }))) {
         throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found.');
     }
@@ -359,38 +363,6 @@ const shareFsObject = async (
     });
 };
 
-const deleteFileTransaction = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
-    const session = await mongoose.startSession();
-
-    try {
-        session.startTransaction();
-
-        const file = await FileModel.findOne({
-            _id: fsObjectId,
-        }).exec();
-        if (!file) {
-            throw new Error("File doesn't exist");
-        }
-        const state = await StateModel.findOne({
-            fsObjectId,
-        }).exec();
-        if (!state) {
-            throw new Error("State doesn't exist");
-        }
-
-        await QuotaModel.findOneAndUpdate({ userId }, { $inc: { used: -file.size } }, { session });
-
-        await StateModel.deleteMany({ fsObjectId }, { session });
-
-        await FsObjectModel.deleteOne({ _id: fsObjectId }, { session });
-
-        await session.commitTransaction();
-    } catch (err) {
-        await session.abortTransaction();
-        throw err;
-    }
-};
-
 const getFsObjectHierarchy = async (
     userId: string,
     fsObjectId: mongoose.Types.ObjectId,
@@ -409,15 +381,74 @@ const getFsObjectHierarchy = async (
     return hierarchy;
 };
 
+const updateUserFile = async (userId: string, fileId: mongoose.Types.ObjectId, update: IUpdateFile): Promise<IFile> => {
+    const fileAndState = (await aggregateStatesFsObjects({ userId, fsObjectId: fileId, type: 'file' }))[0];
+    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found.');
+
+    if (permissionRanking[fileAndState.permission] < permissionRanking.write)
+        throw new ServerError(StatusCodes.FORBIDDEN, 'You do not have permission to edit this file.');
+
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        const sizeDiff = update.size && fileAndState.size ? update.size - fileAndState.size : 0;
+        if (sizeDiff !== 0) {
+            await changeQuotaUsed(userId, sizeDiff, session);
+        }
+
+        const updatedFile = await updateFile(fileId, update, session);
+
+        await session.commitTransaction();
+
+        return updatedFile;
+    } catch (err) {
+        await session.abortTransaction();
+        throw err;
+    } finally {
+        session.endSession();
+    }
+};
+
+const updateUserFolder = async (
+    userId: string,
+    folderId: mongoose.Types.ObjectId,
+    update: IUpdateFile,
+): Promise<IFolder> => {
+    const folderAndState = (await aggregateStatesFsObjects({ userId, fsObjectId: folderId, type: 'folder' }))[0];
+    if (!folderAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found.');
+
+    if (permissionRanking[folderAndState.permission] < permissionRanking.write)
+        throw new ServerError(StatusCodes.FORBIDDEN, 'You do not have permission to edit this folder.');
+
+    return updateFolder(folderId, update);
+};
+
+const updateUserShortcut = async (
+    userId: string,
+    shortcutId: mongoose.Types.ObjectId,
+    update: IUpdateFile,
+): Promise<IShortcut> => {
+    const shortcutAndState = (
+        await aggregateStatesFsObjects({ userId, fsObjectId: shortcutId, type: 'shortcut', permission: ['owner'] })
+    )[0];
+    if (!shortcutAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found.');
+
+    return updateShortcut(shortcutId, update);
+};
+
 export {
     aggregateStatesFsObjects,
     aggregateFsObjectsStates,
     createUserFile,
     createUserFolder,
     createUserShortcut,
-    updateShortcutTransaction,
-    getAllSharedUsers,
+    updateUserState,
+    getSharedUsers,
     shareFsObject,
-    deleteFileTransaction,
     getFsObjectHierarchy,
+    updateUserFile,
+    updateUserFolder,
+    updateUserShortcut,
 };

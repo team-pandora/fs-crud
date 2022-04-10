@@ -25,7 +25,7 @@ statesRouter.post(
 );
 
 statesRouter.patch(
-    '/:id',
+    '/:stateId',
     ValidateRequest(statesValidator.updateStateRequestSchema),
     wrapController(statesController.updateState),
 );

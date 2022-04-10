@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { IUserActionParams } from './interface';
+import { IUserActionParams, IUserStateActionParams } from './interface';
 import * as actionsManager from './manager';
 
 const aggregateStatesFsObjects = async (req: Request, res: Response) => {
@@ -8,10 +8,6 @@ const aggregateStatesFsObjects = async (req: Request, res: Response) => {
 
 const aggregateFsObjectStates = async (req: Request, res: Response) => {
     res.json(await actionsManager.aggregateFsObjectsStates(req.query));
-};
-
-const deleteFileTransaction = async (req: Request<IUserActionParams>, res: Response) => {
-    res.json(await actionsManager.deleteFileTransaction(req.params.userId, req.params.fsObjectId));
 };
 
 const createUserFile = async (req: Request, res: Response) => {
@@ -26,12 +22,12 @@ const createUserShortcut = async (req: Request, res: Response) => {
     res.json(await actionsManager.createUserShortcut(req.params.userId, req.body));
 };
 
-const updateShortcutTransaction = async (req: Request<IUserActionParams>, res: Response) => {
-    res.json(await actionsManager.updateShortcutTransaction(req.params.userId, req.params.fsObjectId, req.body));
+const updateUserState = async (req: Request<IUserStateActionParams>, res: Response) => {
+    res.json(await actionsManager.updateUserState(req.params.userId, req.params.stateId, req.body));
 };
 
-const getAllSharedUsers = async (req: Request<IUserActionParams>, res: Response) => {
-    res.json(await actionsManager.getAllSharedUsers(req.params.userId, req.params.fsObjectId));
+const getSharedUsers = async (req: Request<IUserActionParams>, res: Response) => {
+    res.json(await actionsManager.getSharedUsers(req.params.userId, req.params.fsObjectId));
 };
 
 const shareFsObject = async (req: Request<IUserActionParams>, res: Response) => {
@@ -49,15 +45,29 @@ const getFsObjectHierarchy = async (req: Request<IUserActionParams>, res: Respon
     res.json(await actionsManager.getFsObjectHierarchy(req.params.userId, req.params.fsObjectId));
 };
 
+const updateUserFile = async (req: Request<IUserActionParams>, res: Response) => {
+    res.json(await actionsManager.updateUserFile(req.params.userId, req.params.fsObjectId, req.body));
+};
+
+const updateUserFolder = async (req: Request<IUserActionParams>, res: Response) => {
+    res.json(await actionsManager.updateUserFolder(req.params.userId, req.params.fsObjectId, req.body));
+};
+
+const updateUserShortcut = async (req: Request<IUserActionParams>, res: Response) => {
+    res.json(await actionsManager.updateUserShortcut(req.params.userId, req.params.fsObjectId, req.body));
+};
+
 export {
     aggregateStatesFsObjects,
     aggregateFsObjectStates,
-    deleteFileTransaction,
     createUserFile,
     createUserShortcut,
     createUserFolder,
-    updateShortcutTransaction,
-    getAllSharedUsers,
+    updateUserState,
+    getSharedUsers,
     shareFsObject,
     getFsObjectHierarchy,
+    updateUserFile,
+    updateUserFolder,
+    updateUserShortcut,
 };
