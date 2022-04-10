@@ -5,6 +5,7 @@ import { ServerError } from './error';
 import fsRouter from './fs/router';
 import quotasRouter from './quotas/router';
 import statesRouter from './states/router';
+import uploadRouter from './upload/router';
 
 const appRouter = Router();
 
@@ -12,6 +13,7 @@ appRouter.use('/api/quotas', quotasRouter);
 appRouter.use('/api/states', statesRouter);
 appRouter.use('/api/fs', fsRouter);
 appRouter.use('/api/actions', actionsRouter);
+appRouter.use('/api/uploads', uploadRouter);
 
 appRouter.use('/isAlive', (_req, res) => {
     res.status(StatusCodes.OK).send('alive');

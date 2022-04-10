@@ -299,35 +299,6 @@ const createUserShortcut = async (userId: string, shortcut: INewShortcut): Promi
     }
 };
 
-// const updateShortcutTransaction = async (
-//     userId: string,
-//     fsObjectId: mongoose.Types.ObjectId,
-//     shortcut: IUpdateShortcut,
-// ): Promise<FsObjectAndState> => {
-//     const session = await mongoose.startSession();
-
-//     try {
-//         session.startTransaction();
-
-//         const updatedShortcut = await updateShortcut(fsObjectId, shortcut, session);
-
-//         const updatedState = await updateState(
-//             userId,
-//             {
-//                 root: updatedShortcut.parent === null,
-//             },
-//             session,
-//         );
-
-//         await session.commitTransaction();
-
-//         return new FsObjectAndState(updatedShortcut, updatedState);
-//     } catch (err) {
-//         await session.abortTransaction();
-//         throw err;
-//     }
-// };
-
 const updateUserState = async (
     userId: string,
     stateId: mongoose.Types.ObjectId,
