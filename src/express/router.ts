@@ -5,7 +5,7 @@ import { ServerError } from './error';
 import fsRouter from './fs/router';
 import quotasRouter from './quotas/router';
 import statesRouter from './states/router';
-import uploadRouter from './upload/router';
+import uploadRouter from './uploads/router';
 
 const appRouter = Router();
 

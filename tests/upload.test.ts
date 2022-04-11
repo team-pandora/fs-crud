@@ -1,4 +1,3 @@
-/* eslint-disable no-underscore-dangle */
 import * as mongoose from 'mongoose';
 import * as request from 'supertest';
 import config from '../src/config';
@@ -27,23 +26,28 @@ describe('upload tests', () => {
     });
 
     describe('/api/uploads', () => {
-        describe('POST', () => {
-            it('should fail validation,', () => {
-                return request(app)
-                    .post('/api/upload')
-                    .send({
-                        name: 'upload',
-                        parent: 'abc',
-                        uploadedBytes: 123,
-                        key: 'abc',
-                        bucket: 'abc',
-                        size: 123,
-                        source: 'abc',
-                    })
-                    .expect(400);
-            });
+        const upload1 = {
+            name: 'upload1',
+            parent: '5d7e4d4e4f7c8e8d4f7c8e8d',
+            uploadedBytes: 123,
+            key: 'ab',
+            bucket: 'ab',
+            size: 123,
+            source: 'drive',
+        };
 
-            it('should pass validation, create new upload', () => {
+        const upload2 = {
+            name: 'upload2',
+            parent: '5d7e4d4e4f7c8e8d4f7c8e8d',
+            uploadedBytes: 321,
+            key: 'abcd',
+            bucket: 'abcd',
+            size: 123,
+            source: 'dropbox',
+        };
+
+        describe('POST', () => {
+            it('should create new upload', () => {
                 return request(app)
                     .post('/api/uploads')
                     .send({
@@ -57,80 +61,132 @@ describe('upload tests', () => {
                     })
                     .expect(200);
             });
+
+            it('should fail creating new upload,', () => {
+                return request(app)
+                    .post('/api/uploads')
+                    .send({
+                        name: 'upload',
+                        parent: 'abc',
+                        uploadedBytes: 123,
+                        size: 123,
+                    })
+                    .expect(400);
+            });
         });
 
         describe('GET', () => {
-            const upload1 = {
-                name: 'upload1',
-                parent: '5d7e4d4e4f7c8e8d4f7c8e8d',
-                uploadedBytes: 123,
-                key: 'abc',
-                bucket: 'ab',
-                size: 123,
-                source: 'drive',
-            };
+            it('should get filtered uploads', async () => {
+                await request(app)
+                    .post('/api/uploads')
+                    .send({ ...upload1 })
+                    .expect(200);
 
-            const upload2 = {
-                name: 'upload2',
-                parent: '5d7e4d4e4f7c8e8d4f7c8e8d',
-                uploadedBytes: 321,
-                key: 'abcde',
-                bucket: 'ab',
-                size: 123,
-                source: 'dropbox',
-            };
-
-            it('should pass validation, get all the uploads', () => {
-                return request(app).get('/api/upload').expect(200);
+                return request(app).get(`/api/uploads?name=${upload1.name}`).expect(200);
             });
 
-            it('should pass validation, get all the types of uploads', async () => {
+            it('should get all uploads', async () => {
                 await request(app)
                     .post('/api/uploads')
-                    .send({ ...upload1, parent: '5d7e4d4e4f7c8e8d4f7c8e8a' });
-
-                await request(app)
-                    .post('/api/uploads')
-                    .send({ ...upload1, parent: '5d7e4d4e4f7c8e8d4f7c8e8b', source: 'drive' });
-
-                await request(app)
-                    .post('/api/uploads')
-                    .send({ ...upload2, parent: '5d7e4d4e4f7c8e8d4f7c8e8c' });
-
-                const { body: getUpload1 } = await request(app)
-                    .get('/api/uploads?parent=5d7e4d4e4f7c8e8d4f7c8e8d&source=drive&name=upload1&key=abc')
+                    .send({ ...upload1 })
                     .expect(200);
 
-                expect(getUpload1).toHaveLength(1);
-                expect(getUpload1).toEqual([
+                await request(app)
+                    .post('/api/uploads')
+                    .send({ ...upload2 });
+
+                const { body: result } = await request(app).get('/api/uploads').expect(200);
+
+                expect(result).toHaveLength(2);
+                expect(result).toEqual([
                     {
                         ...upload1,
+                        __v: expect.any(Number),
                         _id: expect.any(String),
-                        parent: '5d7e4d4e4f7c8e8d4f7c8e8a',
                         createdAt: expect.anything(),
                         updatedAt: expect.anything(),
                     },
-                ]);
-
-                const { body: getSourceDrive } = await request(app)
-                    .get('/api/uploads?parent=5d7e4d4e4f7c8e8d4f7c8e8d&source=drive&name=upload1&key=abc')
-                    .expect(200);
-                expect(getSourceDrive).toHaveLength(1);
-                expect(getSourceDrive[0].source).toEqual('drive');
-
-                const { body: getUpload2 } = await request(app)
-                    .get('/api/uploads?parent=5d7e4d4e4f7c8e8d4f7c8e8d&source=dropbox&name=upload2&key=abcde')
-                    .expect(200);
-                expect(getUpload2).toHaveLength(1);
-                expect(getUpload2).toEqual([
                     {
                         ...upload2,
+                        __v: expect.any(Number),
                         _id: expect.any(String),
-                        parent: '5d7e4d4e4f7c8e8d4f7c8e8a',
                         createdAt: expect.anything(),
                         updatedAt: expect.anything(),
                     },
                 ]);
+            });
+
+            it('should get an empty array, when there are no files', async () => {
+                const { body: result } = await request(app).get('/api/uploads');
+                expect(result).toHaveLength(0);
+            });
+
+            it('should get an empty array, if filtered upload cant be found', async () => {
+                await request(app)
+                    .post('/api/uploads')
+                    .send({ ...upload2 })
+                    .expect(200);
+
+                const { body: result } = await request(app).get(`/api/uploads?name=${upload1.name}`);
+                expect(result).toHaveLength(0);
+            });
+        });
+
+        describe('PATCH', () => {
+            it('should successfully update an upload', async () => {
+                await request(app)
+                    .post('/api/uploads')
+                    .send({ ...upload1 })
+                    .expect(200);
+
+                const { body: result } = await request(app).get('/api/uploads').expect(200);
+                expect(result).toHaveLength(1);
+                const uploadId = result[0]._id;
+
+                await request(app).patch(`/api/uploads/${uploadId}`).send({ name: 'upload123' }).expect(200);
+                const { body: result2 } = await request(app).get(`/api/uploads?id=${uploadId}`).expect(200);
+
+                expect(result2).toHaveLength(1);
+                expect(result2[0].name).toEqual('upload123');
+            });
+
+            it('should fail updating an upload', async () => {
+                await request(app)
+                    .post('/api/uploads')
+                    .send({ ...upload1 })
+                    .expect(200);
+
+                const { body: result } = await request(app).get('/api/uploads').expect(200);
+                expect(result).toHaveLength(1);
+                const uploadId = result[0]._id;
+
+                await request(app).patch(`/api/uploads/${uploadId}`).send({ name: 12345 }).expect(400);
+            });
+        });
+
+        describe('DELETE', () => {
+            it('should delete an upload', async () => {
+                await request(app)
+                    .post('/api/uploads')
+                    .send({ ...upload2 })
+                    .expect(200);
+
+                const { body: result } = await request(app).get('/api/uploads').expect(200);
+                expect(result).toHaveLength(1);
+
+                await request(app).delete(`/api/uploads/${result[0]._id}`).expect(200);
+            });
+
+            it('should fail deleting an upload', async () => {
+                await request(app)
+                    .post('/api/uploads')
+                    .send({ ...upload2 })
+                    .expect(200);
+
+                const { body: result } = await request(app).get('/api/uploads').expect(200);
+                expect(result).toHaveLength(1);
+
+                await request(app).delete(`/api/uploads/62529e358e6444d81c96603f`).expect(404);
             });
         });
     });
