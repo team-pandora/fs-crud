@@ -26,7 +26,7 @@ const getStates = (query: IGetStatesQuery): Promise<IState[]> => {
 const createState = async (state: INewState, session?: ClientSession): Promise<IState> => {
     return StateModel.findOneAndUpdate(
         { userId: state.userId, fsObjectId: state.fsObjectId },
-        { $setOnInsert: defaultNewState },
+        { $setOnInsert: { ...defaultNewState, ...state } },
         { upsert: true, new: true, session },
     ).exec();
 };

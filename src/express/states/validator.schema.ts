@@ -42,6 +42,7 @@ export const createStateRequestSchema = Joi.object({
         fsObjectId: JoiObjectId.required(),
         favorite: Joi.boolean().optional(),
         trash: Joi.boolean().optional(),
+        root: Joi.boolean().optional(),
         permission: Joi.string()
             .valid(...permissions)
             .required(),
