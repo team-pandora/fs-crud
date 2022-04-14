@@ -14,7 +14,7 @@ export const aggregateStatesFsObjectsRequestSchema = Joi.object({
     query: Joi.object({
         // State filters
         stateId: JoiObjectId.optional(),
-        userId: Joi.string().optional(),
+        userId: Joi.string().regex(config.users.idRegex).optional(),
         fsObjectId: JoiObjectId.optional(),
         favorite: Joi.boolean().optional(),
         trash: Joi.boolean().optional(),
@@ -70,7 +70,7 @@ export const deleteObjectTransactionsRequestSchema = Joi.object({
 export const createUserFileRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
     },
     body: {
         name: Joi.string().regex(nameRegex).required(),
@@ -88,7 +88,7 @@ export const createUserFileRequestSchema = Joi.object({
 export const createUserFolderRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
     },
     body: {
         name: Joi.string().regex(nameRegex).required(),
@@ -99,7 +99,7 @@ export const createUserFolderRequestSchema = Joi.object({
 export const createUserShortcutRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
     },
     body: {
         name: Joi.string().regex(nameRegex).required(),
@@ -111,7 +111,7 @@ export const createUserShortcutRequestSchema = Joi.object({
 export const updateUserFileRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
         fsObjectId: JoiObjectId.required(),
     },
     body: {
@@ -127,7 +127,7 @@ export const updateUserFileRequestSchema = Joi.object({
 export const updateUserFolderRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
         fsObjectId: JoiObjectId.required(),
     },
     body: {
@@ -141,7 +141,7 @@ export const updateUserShortcutRequestSchema = updateUserFolderRequestSchema;
 export const getSharedUsersRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
         fsObjectId: JoiObjectId.required(),
     },
     body: {},
@@ -150,7 +150,7 @@ export const getSharedUsersRequestSchema = Joi.object({
 export const shareFsObjectRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
         fsObjectId: JoiObjectId.required(),
     },
     body: {
@@ -158,14 +158,14 @@ export const shareFsObjectRequestSchema = Joi.object({
             .valid(...permissions)
             .invalid('owner')
             .required(),
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
     },
 });
 
 export const deleteFileTransactionRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
         fsObjectId: JoiObjectId.required(),
     },
     body: {},
@@ -174,7 +174,7 @@ export const deleteFileTransactionRequestSchema = Joi.object({
 export const getFsObjectHierarchyRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
         fsObjectId: JoiObjectId.required(),
     },
     body: {},
@@ -183,7 +183,7 @@ export const getFsObjectHierarchyRequestSchema = Joi.object({
 export const updateUserStateRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
         stateId: JoiObjectId.required(),
     },
     body: {

@@ -4,8 +4,8 @@ import config from '../../config';
 const { minLimitAllowedInBytes, maxLimitAllowedInBytes } = config.quota;
 
 /**
- * POST /api/quota
- * { userId: '507f1f77bcf86cd799439011', limit: 10 }
+ * POST /api/quotas
+ * { userId: '507f1f77bcf86cd799439011', limit: 10, used: 0 }
  */
 export const createQuotaRequestSchema = Joi.object({
     query: {},
@@ -18,18 +18,18 @@ export const createQuotaRequestSchema = Joi.object({
 });
 
 /**
- * GET /api/quota/5d7e4d4e4f7c8e8d4f7c8e8d
+ * GET /api/quotas/5d7e4d4e4f7c8e8d4f7c8e8d
  */
 export const getQuotaByUserIdRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
     },
     body: {},
 });
 
 /**
- * PATCH /api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit
+ * PATCH /api/quotas/5d7e4d4e4f7c8e8d4f7c8e8d/limit
  * { limit: 10 }
  */
 export const updateQuotaLimitRequestSchema = Joi.object({
@@ -43,13 +43,13 @@ export const updateQuotaLimitRequestSchema = Joi.object({
 });
 
 /**
- * PATCH /api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/used
+ * PATCH /api/quotas/5d7e4d4e4f7c8e8d4f7c8e8d/used
  * { difference: 10 }
  */
 export const changeQuotaUsedRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
     },
     body: {
         difference: Joi.number().required(),
