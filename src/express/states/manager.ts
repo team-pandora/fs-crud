@@ -3,6 +3,7 @@ import * as mongoose from 'mongoose';
 import { ClientSession } from 'mongoose';
 import { defaultNewState } from '../../config/defaults';
 import { ServerError } from '../error';
+import { ShortcutModel } from '../fs/model';
 import { IGetStatesQuery, INewState, IState, IUpdateState } from './interface';
 import StateModel from './model';
 
@@ -25,7 +26,12 @@ const getStates = (query: IGetStatesQuery): Promise<IState[]> => {
  * @returns {Promise<IState>} - Promise object containing the created State.
  */
 const createState = async (state: INewState, session?: ClientSession): Promise<IState> => {
-    return (await StateModel.create([{ ...defaultNewState, ...state }], { session }))[0];
+    const newState = { ...defaultNewState, ...state };
+
+    const sourceRef = await ShortcutModel.findOne({ _id: newState.fsObjectId }).exec();
+    if (sourceRef && sourceRef.ref) newState.fsObjectId = sourceRef.ref;
+
+    return (await StateModel.create([newState], { session }))[0];
 };
 
 const updateState = async (filters: any, update: IUpdateState, session?: ClientSession): Promise<IState> => {

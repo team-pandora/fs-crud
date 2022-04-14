@@ -14,7 +14,7 @@ import {
     updateFolder,
     updateShortcut,
 } from '../fs/manager';
-import { FsObjectModel } from '../fs/model';
+import { FsObjectModel, ShortcutModel } from '../fs/model';
 import { changeQuotaUsed } from '../quotas/manager';
 import { IState, IUpdateState, permission as permissionType, permissionRanking } from '../states/interface';
 import { createState, deleteState, deleteStates, moveToTrash, updateState } from '../states/manager';
@@ -319,6 +319,12 @@ const updateUserState = async (
 const getSharedUsers = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<IUserAndPermission[]> => {
     if (!(await StateModel.exists({ userId, fsObjectId }))) {
         throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found.');
+    }
+
+    const sourceRef = await ShortcutModel.findById(fsObjectId);
+
+    if (sourceRef && sourceRef.ref) {
+        return StateModel.find({ fsObjectId: sourceRef.ref }, { _id: 0, userId: 1, permission: 1 }).exec();
     }
 
     return StateModel.find({ fsObjectId }, { _id: 0, userId: 1, permission: 1 }).exec();

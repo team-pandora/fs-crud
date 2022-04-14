@@ -55,10 +55,14 @@ const createShortcut = async (shortcut: INewShortcut, session?: ClientSession): 
         if (await FsObjectModel.exists({ parent: shortcut.parent, name: shortcut.name }))
             throw new ServerError(StatusCodes.CONFLICT, 'Object with this name already exists in folder.');
     }
-    if (!(await FsObjectModel.exists({ _id: shortcut.ref, type: { $ne: 'shortcut' } })))
+    if (!(await FsObjectModel.exists({ _id: shortcut.ref })))
         throw new ServerError(StatusCodes.BAD_REQUEST, 'Provided ref does not exist.');
 
     const newShortcut: INewShortcut = { ...defaultNewShortcut, ...shortcut };
+
+    const sourceRef = await ShortcutModel.findOne({ _id: newShortcut.ref }).exec();
+    if (sourceRef && sourceRef.ref) newShortcut.ref = sourceRef.ref;
+
     return (await ShortcutModel.create([newShortcut], { session }))[0];
 };
 
