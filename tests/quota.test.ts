@@ -27,15 +27,19 @@ describe('quota tests', () => {
         await mongoose.disconnect();
     });
 
-    describe('/api/quota', () => {
+    describe('/api/quotas', () => {
         describe('POST', () => {
-            it('should fail validation, userId is not a valid mongo ObjectId', () => {
-                return request(app).post('/api/quota').send({ userId: 'abc' }).expect(400);
+            it('should create a quota', () => {
+                return request(app).post('/api/quotas').send({ userId: '123456' }).expect(200);
             });
 
-            it('should fail validation, limit field is greater than max limit', () => {
+            it('should fail, userId is not valid', () => {
+                return request(app).post('/api/quotas').send({ userId: '123456~' }).expect(400);
+            });
+
+            it('should fail, limit field is greater than max limit', () => {
                 return request(app)
-                    .post('/api/quota')
+                    .post('/api/quotas')
                     .send({
                         userId: '5d7e4d4e4f7c8e8d4f7c8e8d',
                         limit: maxLimitAllowedInBytes + 1,
@@ -43,9 +47,9 @@ describe('quota tests', () => {
                     .expect(400);
             });
 
-            it('should pass validation, and create limit and used fields automatically', async () => {
+            it('should create quota, and create limit and used fields automatically', async () => {
                 const { body: createdQuota } = await request(app)
-                    .post('/api/quota')
+                    .post('/api/quotas')
                     .send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' })
                     .expect(200);
 
@@ -56,20 +60,20 @@ describe('quota tests', () => {
             });
 
             it('should fail with duplicate key error', async () => {
-                await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
-                await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(400);
+                await request(app).post('/api/quotas').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
+                await request(app).post('/api/quotas').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(400);
             });
         });
 
         describe('GET', () => {
-            it('should fail validation, userId is not a valid mongo ObjectId', () => {
-                return request(app).get('/api/quota/abc').expect(400);
+            it('should fail, userId is not valid ', () => {
+                return request(app).get('/api/quotas/abc~').expect(400);
             });
 
             it('should return the quota', async () => {
-                await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
+                await request(app).post('/api/quotas').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
                 const { body: getQuotaByUserId } = await request(app)
-                    .get('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d')
+                    .get('/api/quotas/5d7e4d4e4f7c8e8d4f7c8e8d')
                     .expect(200);
 
                 expect(mongoose.Types.ObjectId.isValid(getQuotaByUserId.userId)).toBe(true);
@@ -77,9 +81,9 @@ describe('quota tests', () => {
                 expect(getQuotaByUserId.used).toBe(0);
             });
 
-            it('should create new quota', async () => {
+            it('should create a new quota', async () => {
                 const { body: getQuotaByUserId } = await request(app)
-                    .get('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d')
+                    .get('/api/quotas/5d7e4d4e4f7c8e8d4f7c8e8d')
                     .expect(200);
 
                 expect(mongoose.Types.ObjectId.isValid(getQuotaByUserId.userId)).toBe(true);
@@ -89,21 +93,21 @@ describe('quota tests', () => {
         });
 
         describe('PATCH', () => {
-            it('should fail validation, userId is not a valid mongo ObjectId', () => {
-                return request(app).patch('/api/quota/!34ffdg/limit').expect(400);
+            it('should fail, userId is not valid', () => {
+                return request(app).patch('/api/quotas/!34ffdg/limit').expect(400);
             });
 
-            it('should fail validation, limit field is greater than the max', () => {
+            it('should fail, limit field is greater than the max', () => {
                 return request(app)
-                    .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
+                    .patch('/api/quotas/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
                     .send({ limit: maxLimitAllowedInBytes + 1 })
                     .expect(400);
             });
 
-            it('should pass validation, and update the quota limit', async () => {
-                await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
+            it('should update the quota limit field', async () => {
+                await request(app).post('/api/quotas').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
                 const { body: updatedQuota } = await request(app)
-                    .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
+                    .patch('/api/quotas/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
                     .send({ limit: defaultLimitInBytes + 1 })
                     .expect(200);
 
@@ -111,13 +115,13 @@ describe('quota tests', () => {
                 expect(updatedQuota.limit).toBe(defaultLimitInBytes + 1);
             });
 
-            it('should pass validation, and raise the used field', async () => {
-                await request(app).post('/api/quota').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
+            it('should update the quota used field', async () => {
+                await request(app).post('/api/quotas').send({ userId: '5d7e4d4e4f7c8e8d4f7c8e8d' }).expect(200);
                 const { body: quotaBeforeUpdate } = await request(app)
-                    .get('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d')
+                    .get('/api/quotas/5d7e4d4e4f7c8e8d4f7c8e8d')
                     .expect(200);
                 const { body: updatedQuota } = await request(app)
-                    .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/used')
+                    .patch('/api/quotas/5d7e4d4e4f7c8e8d4f7c8e8d/used')
                     .send({ difference: 12 })
                     .expect(200);
 
@@ -125,9 +129,9 @@ describe('quota tests', () => {
                 expect(updatedQuota.used).toBe(quotaBeforeUpdate.used + 12);
             });
 
-            it('should pass validation, and create new quota', async () => {
+            it('should create a new quota', async () => {
                 const { body: updatedQuota } = await request(app)
-                    .patch('/api/quota/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
+                    .patch('/api/quotas/5d7e4d4e4f7c8e8d4f7c8e8d/limit')
                     .send({ limit: defaultLimitInBytes + 5 })
                     .expect(200);
 
