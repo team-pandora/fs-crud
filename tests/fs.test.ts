@@ -27,66 +27,83 @@ describe('fsObjects tests', () => {
 
     describe('/api/fs/file', () => {
         describe('POST', () => {
-            it('should fail validation', async () => {
-                await request(app).post('/api/fs/file').send({}).expect(400);
-            });
-
-            it('should create file', async () => {
+            it('should fail to create file', async () => {
                 await request(app)
                     .post('/api/fs/file')
                     .send({
+                        userId: 'abc',
+                        fsObjectId: 'abc',
                         name: 'abc',
-                        key: 'abc',
-                        bucket: 'abc',
+                        type: 'abc',
                         size: 123,
-                        public: true,
+                        parent: 'abc',
+                        permission: 123,
                     })
-                    .expect(200);
+                    .expect(400);
             });
-        });
-    });
-    describe('/api/fs/folder', () => {
-        describe('POST', () => {
-            it('should fail validation', async () => {
-                await request(app).post('/api/fs/folder').send({}).expect(400);
-            });
-
-            it('should create folder', async () => {
+            it('should create a file', async () => {
                 await request(app)
-                    .post('/api/fs/folder')
-                    .send({
-                        name: 'abc',
-                    })
-                    .expect(200);
-            });
-        });
-    });
-    describe('/api/fs/shortcut', () => {
-        describe('POST', () => {
-            it('should fail validation', async () => {
-                await request(app).post('/api/fs/shortcut').send({}).expect(400);
-            });
-
-            it('should create a shortcut with the ref of the file', async () => {
-                const file = await request(app)
                     .post('/api/fs/file')
                     .send({
-                        name: 'abc',
                         parent: null,
-                        key: 'abc',
-                        bucket: 'abc',
-                        size: 123,
-                        public: true,
-                    })
-                    .expect(200);
-                const shortcut = await request(app)
-                    .post('/api/fs/shortcut')
-                    .send({
                         name: 'abc',
-                        ref: new mongoose.Types.ObjectId(file.body._id),
+                        key: '123',
+                        bucket: '123',
+                        size: 123,
+                        source: 'drive',
                     })
+
                     .expect(200);
-                expect(shortcut.body.ref).toBe(file.body._id);
+            });
+
+            describe('/api/fs/folder', () => {
+                describe('POST', () => {
+                    it('should fail to create a folder', async () => {
+                        await request(app).post('/api/fs/folder').send({}).expect(400);
+                    });
+
+                    it('should create a folder', async () => {
+                        await request(app)
+                            .post('/api/fs/folder')
+                            .send({
+                                parent: null,
+                                name: 'abc',
+                            })
+                            .expect(200);
+                    });
+                });
+            });
+
+            describe('/api/fs/shortcut', () => {
+                describe('POST', () => {
+                    it('should fail to create a shortcut', async () => {
+                        await request(app).post('/api/fs/shortcut').send({}).expect(400);
+                    });
+
+                    it('should create a shortcut', async () => {
+                        // create a file first to create a shortcut with his ref
+                        const createdFile = await request(app)
+                            .post('/api/fs/file')
+                            .send({
+                                parent: null,
+                                name: 'abc',
+                                key: '123',
+                                bucket: '123',
+                                size: 123,
+                                source: 'drive',
+                            })
+                            .expect(200);
+
+                        await request(app)
+                            .post('/api/fs/shortcut')
+                            .send({
+                                parent: null,
+                                name: 'abc',
+                                ref: createdFile.body._id,
+                            })
+                            .expect(200);
+                    });
+                });
             });
         });
     });
