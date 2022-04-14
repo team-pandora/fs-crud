@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import * as mongoose from 'mongoose';
 import { ClientSession } from 'mongoose';
 import { defaultNewState } from '../../config/defaults';
 import { ServerError } from '../error';
@@ -24,11 +25,7 @@ const getStates = (query: IGetStatesQuery): Promise<IState[]> => {
  * @returns {Promise<IState>} - Promise object containing the created State.
  */
 const createState = async (state: INewState, session?: ClientSession): Promise<IState> => {
-    return StateModel.findOneAndUpdate(
-        { userId: state.userId, fsObjectId: state.fsObjectId },
-        { $setOnInsert: defaultNewState },
-        { upsert: true, new: true, session },
-    ).exec();
+    return (await StateModel.create([{ ...defaultNewState, ...state }], { session }))[0];
 };
 
 const updateState = async (filters: any, update: IUpdateState, session?: ClientSession): Promise<IState> => {
@@ -37,4 +34,34 @@ const updateState = async (filters: any, update: IUpdateState, session?: ClientS
     return result;
 };
 
-export { getStateById, getStates, createState, updateState };
+const moveToTrash = async (userId: string, fileId: mongoose.Types.ObjectId, session?: ClientSession): Promise<void> => {
+    const result = await StateModel.findOneAndUpdate(
+        { userId, fsObjectId: fileId },
+        { $set: { trash: true } },
+        { new: true, session },
+    ).exec();
+    if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'State not found.');
+};
+
+const deleteState = async (
+    userId: string,
+    fileId: mongoose.Types.ObjectId,
+    session?: ClientSession,
+): Promise<IState> => {
+    const result = await StateModel.findOneAndDelete({ userId, fsObjectId: fileId }, { session }).exec();
+    if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'State not found.');
+    return result;
+};
+
+const deleteStates = async (
+    fileId: mongoose.Types.ObjectId,
+    permission: string,
+    session?: ClientSession,
+): Promise<void> => {
+    const states = await StateModel.find({ fsObjectId: fileId }).exec();
+    const statesToDelete = states.filter((state) => state.permission !== permission);
+
+    await StateModel.deleteMany({ _id: { $in: statesToDelete.map((state) => state._id) } }, { session });
+};
+
+export { getStateById, getStates, createState, updateState, deleteState, deleteStates, moveToTrash };

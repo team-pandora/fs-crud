@@ -57,6 +57,14 @@ const updateUserShortcut = async (req: Request<IUserActionParams>, res: Response
     res.json(await actionsManager.updateUserShortcut(req.params.userId, req.params.fsObjectId, req.body));
 };
 
+const deleteUserFile = async (req: Request<IUserActionParams>, res: Response) => {
+    res.json(await actionsManager.deleteUserFile(req.params.userId, req.params.fsObjectId));
+};
+
+const deleteUserShortcut = async (req: Request<IUserActionParams>, res: Response) => {
+    res.json(await actionsManager.deleteUserShortcut(req.params.userId, req.params.fsObjectId));
+};
+
 export {
     aggregateStatesFsObjects,
     aggregateFsObjectStates,
@@ -70,4 +78,6 @@ export {
     updateUserFile,
     updateUserFolder,
     updateUserShortcut,
+    deleteUserFile,
+    deleteUserShortcut,
 };

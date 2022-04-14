@@ -4,11 +4,20 @@ import config from '../../config';
 import { removeUndefinedFields } from '../../utils/object';
 import { ServerError } from '../error';
 import { IFile, IFolder, INewFile, INewFolder, INewShortcut, IShortcut, IUpdateFile } from '../fs/interface';
-import { createFile, createFolder, createShortcut, updateFile, updateFolder, updateShortcut } from '../fs/manager';
+import {
+    createFile,
+    createFolder,
+    createShortcut,
+    deleteFile,
+    deleteShortcut,
+    updateFile,
+    updateFolder,
+    updateShortcut,
+} from '../fs/manager';
 import { FsObjectModel } from '../fs/model';
 import { changeQuotaUsed } from '../quotas/manager';
 import { IState, IUpdateState, permission as permissionType, permissionRanking } from '../states/interface';
-import { createState, updateState } from '../states/manager';
+import { createState, deleteState, deleteStates, moveToTrash, updateState } from '../states/manager';
 import StateModel from '../states/model';
 import { FsObjectAndState, IAggregateStatesFsObjectsReq, IUserAndPermission } from './interface';
 
@@ -299,35 +308,6 @@ const createUserShortcut = async (userId: string, shortcut: INewShortcut): Promi
     }
 };
 
-// const updateShortcutTransaction = async (
-//     userId: string,
-//     fsObjectId: mongoose.Types.ObjectId,
-//     shortcut: IUpdateShortcut,
-// ): Promise<FsObjectAndState> => {
-//     const session = await mongoose.startSession();
-
-//     try {
-//         session.startTransaction();
-
-//         const updatedShortcut = await updateShortcut(fsObjectId, shortcut, session);
-
-//         const updatedState = await updateState(
-//             userId,
-//             {
-//                 root: updatedShortcut.parent === null,
-//             },
-//             session,
-//         );
-
-//         await session.commitTransaction();
-
-//         return new FsObjectAndState(updatedShortcut, updatedState);
-//     } catch (err) {
-//         await session.abortTransaction();
-//         throw err;
-//     }
-// };
-
 const updateUserState = async (
     userId: string,
     stateId: mongoose.Types.ObjectId,
@@ -438,6 +418,72 @@ const updateUserShortcut = async (
     return updateShortcut(shortcutId, update);
 };
 
+const deleteUserFile = async (userId: string, fileId: mongoose.Types.ObjectId): Promise<FsObjectAndState> => {
+    const fileAndState = (await aggregateStatesFsObjects({ userId, fsObjectId: fileId, type: 'file' }))[0];
+    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found.');
+
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        if (permissionRanking[fileAndState.permission] < permissionRanking.owner) {
+            if (!fileAndState.trash) {
+                moveToTrash(fileAndState.userId, fileAndState.fsObjectId);
+            } else {
+                deleteState(fileAndState.userId, fileAndState.fsObjectId);
+            }
+        } else if (permissionRanking[fileAndState.permission] === permissionRanking.owner) {
+            if (!fileAndState.trash) {
+                moveToTrash(fileAndState.userId, fileAndState.fsObjectId);
+
+                deleteStates(fileAndState.fsObjectId, fileAndState.permission);
+            } else {
+                if (fileAndState.size) await changeQuotaUsed(userId, -fileAndState.size, session);
+
+                deleteState(fileAndState.userId, fileAndState.fsObjectId);
+                await deleteFile(fileId);
+            }
+        }
+        await session.commitTransaction();
+
+        return fileAndState;
+    } catch (err) {
+        await session.abortTransaction();
+        throw err;
+    } finally {
+        session.endSession();
+    }
+};
+
+const deleteUserShortcut = async (userId: string, shortcutId: mongoose.Types.ObjectId): Promise<FsObjectAndState> => {
+    const shortcutAndState = (
+        await aggregateStatesFsObjects({ userId, fsObjectId: shortcutId, type: 'shortcut', permission: ['owner'] })
+    )[0];
+    if (!shortcutAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found.');
+
+    const session = await mongoose.startSession();
+
+    try {
+        session.startTransaction();
+
+        if (!shortcutAndState.trash) moveToTrash(shortcutAndState.userId, shortcutAndState.fsObjectId);
+        else {
+            await deleteState(shortcutAndState.userId, shortcutAndState.fsObjectId);
+            await deleteShortcut(shortcutId);
+        }
+
+        await session.commitTransaction();
+
+        return shortcutAndState;
+    } catch (err) {
+        await session.abortTransaction();
+        throw err;
+    } finally {
+        session.endSession();
+    }
+};
+
 export {
     aggregateStatesFsObjects,
     aggregateFsObjectsStates,
@@ -451,4 +497,6 @@ export {
     updateUserFile,
     updateUserFolder,
     updateUserShortcut,
+    deleteUserFile,
+    deleteUserShortcut,
 };

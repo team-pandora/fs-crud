@@ -194,3 +194,12 @@ export const updateUserStateRequestSchema = Joi.object({
             .optional(),
     },
 });
+
+export const deleteUserRequestSchema = Joi.object({
+    query: {},
+    params: {
+        userId: Joi.string().required(),
+        fsObjectId: JoiObjectId.required(),
+    },
+    body: {},
+});

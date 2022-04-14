@@ -103,4 +103,28 @@ const updateShortcut = async (
     return result;
 };
 
-export { createFile, createFolder, createShortcut, getFsObject, updateFile, updateShortcut, updateFolder };
+const deleteFile = async (fileId: mongoose.Types.ObjectId, session?: ClientSession): Promise<IFile> => {
+    const result = await FileModel.findOneAndDelete({ _id: fileId }, { session }).exec();
+
+    if (!result) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
+    return result;
+};
+
+const deleteShortcut = async (shortcutId: mongoose.Types.ObjectId, session?: ClientSession): Promise<IShortcut> => {
+    const result = await ShortcutModel.findOneAndDelete({ _id: shortcutId }, { session }).exec();
+
+    if (!result) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found');
+    return result;
+};
+
+export {
+    createFile,
+    createFolder,
+    createShortcut,
+    getFsObject,
+    updateFile,
+    updateShortcut,
+    updateFolder,
+    deleteFile,
+    deleteShortcut,
+};

@@ -78,4 +78,16 @@ actionsRouter.patch(
     wrapController(actionsController.updateUserShortcut),
 );
 
+actionsRouter.delete(
+    '/users/:userId/fs/:fsObjectId/file',
+    ValidateRequest(actionsValidator.deleteFileTransactionRequestSchema),
+    wrapController(actionsController.deleteUserFile),
+);
+
+actionsRouter.delete(
+    '/users/:userId/fs/:fsObjectId/shortcut',
+    ValidateRequest(actionsValidator.deleteUserRequestSchema),
+    wrapController(actionsController.deleteUserShortcut),
+);
+
 export default actionsRouter;

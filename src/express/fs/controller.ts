@@ -30,4 +30,22 @@ const updateShortcut = async (req: Request<IReqParams>, res: Response) => {
     res.json(await fsManager.updateShortcut(req.params.fsObjectId, req.body));
 };
 
-export { getFsObject, createFile, createFolder, createShortcut, updateShortcut, updateFile, updateFolder };
+const deleteFile = async (req: Request<IReqParams>, res: Response) => {
+    res.json(await fsManager.deleteFile(req.params.fsObjectId));
+};
+
+const deleteShortcut = async (req: Request<IReqParams>, res: Response) => {
+    res.json(await fsManager.deleteShortcut(req.params.fsObjectId));
+};
+
+export {
+    getFsObject,
+    createFile,
+    createFolder,
+    createShortcut,
+    updateShortcut,
+    updateFile,
+    updateFolder,
+    deleteFile,
+    deleteShortcut,
+};

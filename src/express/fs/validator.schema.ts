@@ -87,3 +87,13 @@ export const updateFolderRequestSchema = Joi.object({
 });
 
 export const updateShortcutRequestSchema = updateFolderRequestSchema;
+
+export const deleteFileRequestSchema = Joi.object({
+    query: {},
+    params: {
+        fsObjectId: JoiObjectId.required(),
+    },
+    body: {},
+});
+
+export const deleteShortcutRequestSchema = deleteFileRequestSchema;

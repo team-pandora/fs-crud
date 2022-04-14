@@ -44,4 +44,16 @@ fsRouter.patch(
     wrapController(fsController.updateShortcut),
 );
 
+fsRouter.delete(
+    '/file/:fsObjectId',
+    ValidateRequest(fsValidator.deleteFileRequestSchema),
+    wrapController(fsController.deleteFile),
+);
+
+fsRouter.delete(
+    '/shortcut/:fsObjectId',
+    ValidateRequest(fsValidator.deleteShortcutRequestSchema),
+    wrapController(fsController.deleteShortcut),
+);
+
 export default fsRouter;

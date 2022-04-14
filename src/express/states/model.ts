@@ -24,10 +24,10 @@ export const StateSchema = new mongoose.Schema<IState & mongoose.Document>(
         },
         root: {
             type: Boolean,
-            required: true,
         },
         permission: {
             type: String,
+            required: true,
         },
     },
     {
