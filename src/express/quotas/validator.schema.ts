@@ -11,7 +11,7 @@ export const createQuotaRequestSchema = Joi.object({
     query: {},
     params: {},
     body: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
         limit: Joi.number().min(minLimitAllowedInBytes).max(maxLimitAllowedInBytes).optional(),
         used: Joi.number().min(minLimitAllowedInBytes).max(maxLimitAllowedInBytes).optional(),
     },
@@ -35,7 +35,7 @@ export const getQuotaByUserIdRequestSchema = Joi.object({
 export const updateQuotaLimitRequestSchema = Joi.object({
     query: {},
     params: {
-        userId: Joi.string().required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
     },
     body: {
         limit: Joi.number().min(minLimitAllowedInBytes).max(maxLimitAllowedInBytes).required(),

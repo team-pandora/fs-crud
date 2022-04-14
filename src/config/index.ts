@@ -34,6 +34,12 @@ const config = {
             .default('^[a-zA-Z0-9-_.!@#$%^&*()[\\]{}<>"\':\\\\\\/\t ]{1,100}$')
             .asRegExp(),
     },
+    users: {
+        idRegex: env
+            .get('USERS_ID_REGEX')
+            .default('^[a-zA-Z0-9-_.!@#$%^&*()[\\]{}<>"\':\\\\\\/\t ]{1,100}$')
+            .asRegExp(),
+    },
 };
 
 export default config;
