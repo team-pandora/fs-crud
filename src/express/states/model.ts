@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
-import { errorHandler } from '../../utils/mongo';
+import { errorHandler } from '../../utils/mongoose';
 import { IState } from './interface';
 
 export const StateSchema = new mongoose.Schema<IState & mongoose.Document>(

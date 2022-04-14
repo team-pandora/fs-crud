@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
-import { errorHandler } from '../../utils/mongo';
+import { errorHandler } from '../../utils/mongoose';
 import { IQuota } from './interface';
 
 const QuotaSchema = new mongoose.Schema<IQuota & mongoose.Document>(

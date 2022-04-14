@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
-import { errorHandler } from '../../utils/mongo';
+import { errorHandler } from '../../utils/mongoose';
 import { IFile, IFolder, IFsObject, IShortcut } from './interface';
 
 const schemaOptions = {
