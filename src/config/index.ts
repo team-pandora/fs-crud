@@ -21,24 +21,25 @@ const config = {
         maxHierarchySearchDepth: env.get('FS_MAX_HIERARCHY_SEARCH_DEPTH').default('5').asInt(),
         maxFileSizeInBytes: env.get('FS_MAX_FILE_SIZE_IN_BYTES').default('107374182400').asInt(),
         minFileSizeInBytes: env.get('FS_MIN_FILE_SIZE_IN_BYTES').default('1').asInt(),
-        nameRegex: env
-            .get('FS_OBJECT_NAME_REGEX')
-            .default('^[a-zA-Z0-9-_.!@#$%^&*()[\\]{}<>"\':\\\\\\/\t ]{1,100}$')
-            .asRegExp(),
-        fileKeyRegex: env
-            .get('FS_FILE_KEY_REGEX')
-            .default('^[a-zA-Z0-9-_.!@#$%^&*()[\\]{}<>"\':\\\\\\/\t ]{1,100}$')
-            .asRegExp(),
-        fileBucketRegex: env
-            .get('FS_FILE_BUCKET_REGEX')
-            .default('^[a-zA-Z0-9-_.!@#$%^&*()[\\]{}<>"\':\\\\\\/\t ]{1,100}$')
-            .asRegExp(),
+        nameRegex: env.get('FS_OBJECT_NAME_REGEX').default('^[a-zA-Z0-9s._-]{1,100}$').asRegExp(),
+        fileKeyRegex: env.get('FS_FILE_KEY_REGEX').default('^[a-zA-Z0-9s._-]{1,100}$').asRegExp(),
+        fileBucketRegex: env.get('FS_FILE_BUCKET_REGEX').default('^[a-zA-Z0-9s._-]{1,100}$').asRegExp(),
     },
     users: {
-        idRegex: env
-            .get('USERS_ID_REGEX')
-            .default('^[a-zA-Z0-9-_.!@#$%^&*()[\\]{}<>"\':\\\\\\/\t ]{1,100}$')
-            .asRegExp(),
+        idRegex: env.get('USERS_ID_REGEX').default('^[a-zA-Z0-9s._@-]{1,100}$').asRegExp(),
+    },
+    constants: {
+        fsObjectTypes: ['file', 'folder', 'shortcut'] as const,
+        apps: ['dropbox', 'drive', 'falcon'] as const,
+        permissions: ['read', 'write', 'owner'] as const,
+        permissionPriority: {
+            read: 0,
+            write: 1,
+            owner: 2,
+        } as const,
+        statesSortFields: ['stateCreatedAt', 'stateUpdatedAt'] as const,
+        fsObjectsSortFields: ['size', 'public', 'name', 'type', 'fsObjectCreatedAt', 'fsObjectUpdatedAt'] as const,
+        sortOrders: ['asc', 'desc'] as const,
     },
 };
 

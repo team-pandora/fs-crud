@@ -1,42 +1,32 @@
 import * as mongoose from 'mongoose';
+import config from '../../config';
 import { fsObjectType, IFile, IFolder, IShortcut, source } from '../fs/interface';
 import { IState, permission } from '../states/interface';
 
-export const AggregateStatesFsObjectsSortByFields = [
-    'size',
-    'public',
-    'name',
-    'type',
-    'fsObjectCreatedAt',
-    'fsObjectUpdatedAt',
-    'stateCreatedAt',
-    'stateUpdatedAt',
-    'stateUpdatedAt',
-] as const;
-export type AggregateStatesFsObjectsSortBy = typeof AggregateStatesFsObjectsSortByFields[number];
+export type AggregateStatesAndFsObjectsSortField =
+    | typeof config.constants.fsObjectsSortFields[number]
+    | typeof config.constants.statesSortFields[number];
 
-export const AggregateStatesFsObjectsSortOrders = ['asc', 'desc'] as const;
-export type AggregateStatesFsObjectsSortOrder = typeof AggregateStatesFsObjectsSortOrders[number];
+export type AggregateStatesFsObjectsSortOrder = typeof config.constants.sortOrders[number];
 
-export interface IUserActionParams {
-    userId: string;
+export interface IFsActionParams {
     fsObjectId: mongoose.Types.ObjectId;
 }
 
-export interface IUserStateActionParams {
-    userId: string;
+export interface IStateActionParams {
     stateId: mongoose.Types.ObjectId;
 }
 
-export interface IAggregateStatesFsObjectsReq {
+export interface IAggregateStatesAndFsObjectsQuery {
     // State filters
     stateId?: mongoose.Types.ObjectId;
     userId?: string;
-    fsObjectId?: mongoose.Types.ObjectId;
+    fsObjectId?: mongoose.Types.ObjectId | { $in: mongoose.Types.ObjectId[] };
     favorite?: boolean;
     trash?: boolean;
+    trashRoot?: boolean;
     root?: boolean;
-    permission?: Array<permission>;
+    permission?: permission | { $in: Array<permission> };
 
     // FsObject filters
     key?: string;
@@ -50,19 +40,12 @@ export interface IAggregateStatesFsObjectsReq {
     ref?: mongoose.Types.ObjectId;
 
     // Sort
-    sortBy?: AggregateStatesFsObjectsSortBy;
+    sortBy?: AggregateStatesAndFsObjectsSortField;
     sortOrder?: AggregateStatesFsObjectsSortOrder;
 
     // Pagination
     page?: number;
     pageSize?: number;
-}
-
-export type IAggregateFsObjectsStatesReq = IAggregateStatesFsObjectsReq;
-
-export interface IUserAndPermission {
-    userId: string;
-    permission: permission;
 }
 
 export class FsObjectAndState {
@@ -75,6 +58,8 @@ export class FsObjectAndState {
     public favorite: boolean;
 
     public trash: boolean;
+
+    public trashRoot: boolean;
 
     public root: boolean;
 
@@ -111,6 +96,7 @@ export class FsObjectAndState {
         this.userId = state.userId;
         this.favorite = state.favorite;
         this.trash = state.trash;
+        this.trashRoot = state.trashRoot;
         this.root = state.root;
         this.permission = state.permission;
         this.stateCreatedAt = state.createdAt;

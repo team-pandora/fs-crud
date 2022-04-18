@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
-import { errorHandler } from '../../utils/mongoose';
+import { setDefaultSettings, setErrorHandler } from '../../utils/mongoose';
 import { IState } from './interface';
 
 export const StateSchema = new mongoose.Schema<IState & mongoose.Document>(
@@ -11,8 +11,8 @@ export const StateSchema = new mongoose.Schema<IState & mongoose.Document>(
         },
         fsObjectId: {
             type: 'ObjectId',
-            required: true,
             ref: config.mongo.fsObjectsCollectionName,
+            required: true,
         },
         favorite: {
             type: Boolean,
@@ -22,8 +22,13 @@ export const StateSchema = new mongoose.Schema<IState & mongoose.Document>(
             type: Boolean,
             required: true,
         },
+        trashRoot: {
+            type: Boolean,
+            required: true,
+        },
         root: {
             type: Boolean,
+            required: true,
         },
         permission: {
             type: String,
@@ -32,16 +37,17 @@ export const StateSchema = new mongoose.Schema<IState & mongoose.Document>(
     },
     {
         timestamps: true,
-        versionKey: false,
     },
 );
 
 StateSchema.index({ fsObjectId: 1, userId: 1 }, { unique: true });
 StateSchema.index({ userId: 1, favorite: 1 });
-StateSchema.index({ userId: 1, trash: 1 });
+StateSchema.index({ userId: 1, trash: 1, trashRoot: 1 });
 StateSchema.index({ userId: 1, permission: 1, root: 1 });
 
-StateSchema.post(/save|update|findOneAndUpdate|insertMany/, errorHandler);
+setDefaultSettings(StateSchema);
+
+setErrorHandler(StateSchema);
 
 const StateModel = mongoose.model<IState & mongoose.Document>(config.mongo.statesCollectionName, StateSchema);
 

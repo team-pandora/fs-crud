@@ -81,7 +81,6 @@ describe('fsObjects tests', () => {
                     });
 
                     it('should create a shortcut', async () => {
-                        // create a file first to create a shortcut with his ref
                         const createdFile = await request(app)
                             .post('/api/fs/file')
                             .send({

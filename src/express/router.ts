@@ -1,17 +1,11 @@
 import { Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import actionsRouter from './actions/router';
+import apiRouter from './api/router';
 import { ServerError } from './error';
-import fsRouter from './fs/router';
-import quotasRouter from './quotas/router';
-import statesRouter from './states/router';
 
 const appRouter = Router();
 
-appRouter.use('/api/quotas', quotasRouter);
-appRouter.use('/api/states', statesRouter);
-appRouter.use('/api/fs', fsRouter);
-appRouter.use('/api/actions', actionsRouter);
+appRouter.use('/api', apiRouter);
 
 appRouter.use('/isAlive', (_req, res) => {
     res.status(StatusCodes.OK).send('alive');

@@ -1,12 +1,11 @@
 import * as mongoose from 'mongoose';
+import config from '../../config';
 
-export const sources = ['dropbox', 'drive', 'falcon'] as const;
-export type source = typeof sources[number];
+export type fsObjectType = typeof config.constants.fsObjectTypes[number];
 
-export const fsObjectTypes = ['file', 'folder', 'shortcut'] as const;
-export type fsObjectType = typeof fsObjectTypes[number];
+export type source = typeof config.constants.apps[number];
 
-export interface IReqParams {
+export interface IRequestParams {
     fsObjectId: mongoose.Types.ObjectId;
 }
 
@@ -33,24 +32,55 @@ export interface IShortcut extends IFsObject {
     ref: mongoose.Types.ObjectId;
 }
 
+export interface IFsObjectFilters {
+    _id?: mongoose.Types.ObjectId | { $in: mongoose.Types.ObjectId[] } | { $nin: mongoose.Types.ObjectId[] };
+    name?: string;
+    parent?: mongoose.Types.ObjectId | null;
+}
+
+export interface IFileFilters {
+    _id?: mongoose.Types.ObjectId;
+    name?: string;
+    parent?: mongoose.Types.ObjectId | null;
+    key?: string;
+    bucket?: string;
+    size?: number;
+    public?: boolean;
+    source?: source;
+}
+
+export interface IFolderFilters {
+    _id?: mongoose.Types.ObjectId;
+    name?: string;
+    parent?: mongoose.Types.ObjectId | null;
+}
+
+export interface IShortcutFilters {
+    _id?: mongoose.Types.ObjectId;
+    name?: string;
+    parent?: mongoose.Types.ObjectId | null;
+    ref?: mongoose.Types.ObjectId;
+}
+
 export interface INewFile {
     name: string;
-    parent?: mongoose.Types.ObjectId | null;
+    parent: mongoose.Types.ObjectId | null;
     key: string;
     bucket: string;
     size: number;
-    public?: boolean;
     source: source;
+
+    public?: boolean;
 }
 
 export interface INewFolder {
     name: string;
-    parent?: mongoose.Types.ObjectId | null;
+    parent: mongoose.Types.ObjectId | null;
 }
 
 export interface INewShortcut {
     name: string;
-    parent?: mongoose.Types.ObjectId | null;
+    parent: mongoose.Types.ObjectId | null;
     ref: mongoose.Types.ObjectId;
 }
 
@@ -68,4 +98,7 @@ export interface IUpdateFolder {
     parent?: mongoose.Types.ObjectId | null;
 }
 
-export type IUpdateShortcut = IUpdateFolder;
+export interface IUpdateShortcut {
+    name?: string;
+    parent?: mongoose.Types.ObjectId | null;
+}

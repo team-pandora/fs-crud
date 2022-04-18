@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
-import { errorHandler } from '../../utils/mongoose';
+import { setDefaultSettings, setErrorHandler } from '../../utils/mongoose';
 import { IQuota } from './interface';
 
 const QuotaSchema = new mongoose.Schema<IQuota & mongoose.Document>(
@@ -13,21 +13,24 @@ const QuotaSchema = new mongoose.Schema<IQuota & mongoose.Document>(
         limit: {
             type: Number,
             required: true,
+            min: 0,
         },
         used: {
             type: Number,
             required: true,
+            min: 0,
         },
     },
     {
         timestamps: true,
-        versionKey: false,
     },
 );
 
 QuotaSchema.index({ userId: 1 });
 
-QuotaSchema.post(/save|update|findOneAndUpdate|insertMany/, errorHandler);
+setDefaultSettings(QuotaSchema);
+
+setErrorHandler(QuotaSchema);
 
 const QuotaModel = mongoose.model<IQuota & mongoose.Document>(config.mongo.quotasCollectionName, QuotaSchema);
 

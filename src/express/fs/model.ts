@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
-import { errorHandler } from '../../utils/mongoose';
+import { setDefaultSettings, setErrorHandler } from '../../utils/mongoose';
 import { IFile, IFolder, IFsObject, IShortcut } from './interface';
 
 const schemaOptions = {
@@ -59,10 +59,15 @@ const ShortcutSchema = new mongoose.Schema<IShortcut & mongoose.Document>({
     },
 });
 
-FsObjectSchema.post(/save|update|findOneAndUpdate|insertMany/, errorHandler);
-FileSchema.post(/save|update|findOneAndUpdate|insertMany/, errorHandler);
-FolderSchema.post(/save|update|findOneAndUpdate|insertMany/, errorHandler);
-ShortcutSchema.post(/save|update|findOneAndUpdate|insertMany/, errorHandler);
+setDefaultSettings(FsObjectSchema);
+setDefaultSettings(FileSchema);
+setDefaultSettings(FolderSchema);
+setDefaultSettings(ShortcutSchema);
+
+setErrorHandler(FsObjectSchema);
+setErrorHandler(FileSchema);
+setErrorHandler(FolderSchema);
+setErrorHandler(ShortcutSchema);
 
 const FsObjectModel = mongoose.model<IFsObject & mongoose.Document>(
     config.mongo.fsObjectsCollectionName,

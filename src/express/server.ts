@@ -4,8 +4,8 @@ import * as express from 'express';
 import helmet from 'helmet';
 import * as http from 'http';
 import config from '../config';
-import { loggerMiddleware, setStartTime } from '../utils/express/logger';
 import { errorMiddleware } from './error';
+import { loggerMiddleware, setStartTime } from './logger';
 import appRouter from './router';
 
 class Server {

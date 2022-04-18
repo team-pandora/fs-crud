@@ -2,6 +2,13 @@ import * as mongoose from 'mongoose';
 import { ClientSession } from 'mongoose';
 import { mongoDuplicateKeyError } from './express/errors';
 
+function setDefaultSettings(schema: mongoose.Schema) {
+    // eslint-disable-next-line func-names
+    schema.pre('*', function () {
+        this.lean();
+    });
+}
+
 function errorHandler(error: any, _res: any, next: any) {
     if (error.code === 11000) {
         next(mongoDuplicateKeyError(error));
@@ -9,6 +16,10 @@ function errorHandler(error: any, _res: any, next: any) {
         next();
     }
 }
+
+const setErrorHandler = (schema: mongoose.Schema) => {
+    schema.post(['update', 'findOneAndUpdate'], errorHandler);
+};
 
 const makeTransaction = async <Type>(transaction: (session: ClientSession) => Promise<Type>): Promise<Type> => {
     const session = await mongoose.startSession();
@@ -25,4 +36,4 @@ const makeTransaction = async <Type>(transaction: (session: ClientSession) => Pr
     }
 };
 
-export { errorHandler, makeTransaction };
+export { setDefaultSettings, setErrorHandler, makeTransaction };
