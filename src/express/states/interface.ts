@@ -34,11 +34,9 @@ export interface INewState {
     userId: string;
     fsObjectId: mongoose.Types.ObjectId;
     permission: permission;
-
     favorite?: boolean;
     trash?: boolean;
     trashRoot?: boolean;
-
     root?: boolean;
 }
 
@@ -47,6 +45,5 @@ export interface IUpdateState {
     trash?: boolean;
     trashRoot?: boolean;
     permission?: permission;
-
     root?: boolean;
 }

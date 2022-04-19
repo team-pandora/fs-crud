@@ -24,6 +24,12 @@ import * as apiRepository from '../repository';
 
 const { permissionPriority } = config.constants;
 
+/**
+ * Create user File.
+ * @param userId - The user to create the file.
+ * @param file - The new file object.
+ * @returns {Promise<FsObjectAndState>} Promise object containing the file.
+ */
 export const createFile = async (userId: string, file: INewFile): Promise<FsObjectAndState> => {
     return makeTransaction(async (session) => {
         const operations: Promise<any>[] = [];
@@ -50,6 +56,12 @@ export const createFile = async (userId: string, file: INewFile): Promise<FsObje
     });
 };
 
+/**
+ * Create user Folder.
+ * @param userId - The user to create the folder.
+ * @param folder - The new folder object.
+ * @returns {Promise<FsObjectAndState>} Promise object containing the folder.
+ */
 export const createFolder = async (userId: string, folder: INewFolder): Promise<FsObjectAndState> => {
     return makeTransaction(async (session) => {
         const createdFolder = await fsRepository.createFolder(folder, session);
@@ -68,6 +80,12 @@ export const createFolder = async (userId: string, folder: INewFolder): Promise<
     });
 };
 
+/**
+ * Create user Shortcut.
+ * @param userId - The user to create the shortcut.
+ * @param shortcut - The new shortcut object.
+ * @returns {Promise<FsObjectAndState>} Promise object containing the shortcut.
+ */
 export const createShortcut = async (userId: string, shortcut: INewShortcut): Promise<FsObjectAndState> => {
     return makeTransaction(async (session) => {
         const createdShortcut = await fsRepository.createShortcut(shortcut, session);
@@ -150,6 +168,12 @@ export const getFsObjectHierarchy = async (
     return hierarchy;
 };
 
+/**
+ * Update user State.
+ * @param userId - The user to create the shortcut.
+ * @param stateId - The State id.
+ * @returns {Promise<IState>} Promise object containing the updated State.
+ */
 export const updateState = async (
     userId: string,
     stateId: mongoose.Types.ObjectId,
@@ -158,6 +182,15 @@ export const updateState = async (
     return statesRepository.updateState({ userId, _id: stateId }, update);
 };
 
+/**
+ * Update user File.
+ *   1) validates the file
+ *   2) validates the file's permissions
+ *   3) update the file
+ * @param userId - The user that owns the file.
+ * @param fsObjectId - The file id.
+ * @returns {Promise<IFile>} Promise object containing the updated File.
+ */
 export const updateFile = async (
     userId: string,
     fsObjectId: mongoose.Types.ObjectId,
@@ -182,6 +215,15 @@ export const updateFile = async (
     });
 };
 
+/**
+ * Update user Folder.
+ *   1) validates the folder
+ *   2) validates the folder's permissions
+ *   3) update the folder
+ * @param userId - The user that owns the folder.
+ * @param fsObjectId - The folder id.
+ * @returns {Promise<IFolder>} Promise object containing the updated Folder.
+ */
 export const updateFolder = async (
     userId: string,
     fsObjectId: mongoose.Types.ObjectId,
@@ -196,6 +238,15 @@ export const updateFolder = async (
     return fsRepository.updateFolderById(fsObjectId, update);
 };
 
+/**
+ * Update user Shortcut.
+ *   1) validates the shortcut
+ *   2) validates the shortcut's permissions
+ *   3) update the shortcut
+ * @param userId - The user that owns the shortcut.
+ * @param fsObjectId - The shortcut id.
+ * @returns {Promise<IShortcut>} Promise object containing the updated Shortcut.
+ */
 export const updateShortcut = async (
     userId: string,
     fsObjectId: mongoose.Types.ObjectId,
@@ -209,6 +260,17 @@ export const updateShortcut = async (
     return fsRepository.updateShortcutById(fsObjectId, update);
 };
 
+/**
+ * Update user's shared file permission.
+ *   1) validate the file and its state.
+ *   2) validate the file and its shared state.
+ *   3) validate the permission rank.
+ *   4) update the shared state permission for user.
+ * @param userId - The user that owns the shortcut.
+ * @param fsObjectId - The shortcut id.
+ * @param sharedUserId - The shared user id.
+ * @returns {Promise<IState>} Promise object containing the State.
+ */
 export const unshareFsObject = async (
     userId: string,
     fsObjectId: mongoose.Types.ObjectId,
@@ -229,6 +291,11 @@ export const unshareFsObject = async (
     return statesRepository.deleteState({ userId, fsObjectId });
 };
 
+/**
+ * Move File to trash.
+ * @param fileAndState - The File and its state object.
+ * @returns {Promise<void>} Empty Promise.
+ */
 const moveFileToTrash = async (fileAndState: FsObjectAndState): Promise<void> => {
     const { userId, fsObjectId } = fileAndState;
 
@@ -254,8 +321,13 @@ const moveFileToTrash = async (fileAndState: FsObjectAndState): Promise<void> =>
     });
 };
 
+/**
+ * Delete File from trash.
+ * @param fileAndState - The File and its State object.
+ * @returns {Promise<void>} Empty Promise.
+ */
 const deleteFileFromTrash = async (fileAndState: FsObjectAndState): Promise<void> => {
-    if (!fileAndState.trashRoot) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found.');
+    if (!fileAndState.trashRoot) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
 
     const { userId, fsObjectId } = fileAndState;
 
@@ -276,9 +348,15 @@ const deleteFileFromTrash = async (fileAndState: FsObjectAndState): Promise<void
     });
 };
 
+/**
+ * Delete user File.
+ * @param userId - The user id.
+ * @param fsObjectId - The File id.
+ * @returns {Promise<void>} Empty Promise.
+ */
 export const deleteFile = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
     const [fileAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'file' });
-    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found.');
+    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
 
     if (fileAndState.trash) {
         await deleteFileFromTrash(fileAndState);
@@ -287,6 +365,12 @@ export const deleteFile = async (userId: string, fsObjectId: mongoose.Types.Obje
     }
 };
 
+/**
+ * Restore File from trash.
+ * @param userId - The user id.
+ * @param fsObjectId - The File id.
+ * @returns {Promise<void>} Empty Promise.
+ */
 export const restoreFileFromTrash = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
     const [fileAndState] = await apiRepository.aggregateStatesFsObjects({
         userId,
@@ -295,7 +379,7 @@ export const restoreFileFromTrash = async (userId: string, fsObjectId: mongoose.
         trash: true,
         trashRoot: true,
     });
-    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found in trash.');
+    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found in trash');
 
     await makeTransaction(async (session) => {
         const operations: Promise<any>[] = [];
@@ -315,6 +399,11 @@ export const restoreFileFromTrash = async (userId: string, fsObjectId: mongoose.
     });
 };
 
+/**
+ * Move Folder to trash.
+ * @param folderAndState - The Folder and its state object.
+ * @returns {Promise<void>} Empty Promise.
+ */
 const moveFolderToTrash = async (folderAndState: FsObjectAndState): Promise<void> => {
     const { userId, fsObjectId } = folderAndState;
     const fsObjectIds = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
@@ -348,8 +437,13 @@ const moveFolderToTrash = async (folderAndState: FsObjectAndState): Promise<void
     });
 };
 
+/**
+ * Delete Folder from trash.
+ * @param folderAndState - The Folder and its state object.
+ * @returns {Promise<void>} Empty Promise.
+ */
 const deleteFolderFromTrash = async (folderAndState: FsObjectAndState): Promise<void> => {
-    if (!folderAndState.trashRoot) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found.');
+    if (!folderAndState.trashRoot) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
 
     const { userId, fsObjectId } = folderAndState;
 
@@ -390,9 +484,15 @@ const deleteFolderFromTrash = async (folderAndState: FsObjectAndState): Promise<
     });
 };
 
+/**
+ * Delete user Folder.
+ * @param userId - The user id.
+ * @param fsObjectId - The Folder id.
+ * @returns {Promise<void>} Empty Promise.
+ */
 export const deleteFolder = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
     const [folderAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'folder' });
-    if (!folderAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found.');
+    if (!folderAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
 
     if (folderAndState.trash) {
         await deleteFolderFromTrash(folderAndState);
@@ -401,6 +501,12 @@ export const deleteFolder = async (userId: string, fsObjectId: mongoose.Types.Ob
     }
 };
 
+/**
+ * Restore Folder from trash.
+ * @param userId - The user id.
+ * @param fsObjectId - The Folder id.
+ * @returns {Promise<void>} Empty Promise.
+ */
 export const restoreFolderFromTrash = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
     const [folderAndState] = await apiRepository.aggregateStatesFsObjects({
         userId,
@@ -409,7 +515,7 @@ export const restoreFolderFromTrash = async (userId: string, fsObjectId: mongoos
         trash: true,
         trashRoot: true,
     });
-    if (!folderAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found in trash.');
+    if (!folderAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found in trash');
 
     await makeTransaction(async (session) => {
         const operations: Promise<any>[] = [];
@@ -434,9 +540,15 @@ export const restoreFolderFromTrash = async (userId: string, fsObjectId: mongoos
     });
 };
 
+/**
+ * Delete user Shortcut.
+ * @param userId - The user id.
+ * @param fsObjectId - The Shortcut id.
+ * @returns {Promise<void>} Empty Promise.
+ */
 export const deleteShortcut = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
     const [shortcutAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'shortcut' });
-    if (!shortcutAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found.');
+    if (!shortcutAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found');
 
     await makeTransaction(async (session) => {
         const operations: Promise<any>[] = [];
@@ -454,6 +566,12 @@ export const deleteShortcut = async (userId: string, fsObjectId: mongoose.Types.
     });
 };
 
+/**
+ * Restore Shortcut from trash.
+ * @param userId - The user id.
+ * @param fsObjectId - The Shortcut id.
+ * @returns {Promise<void>} Empty Promise.
+ */
 export const restoreShortcutFromTrash = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
     const [shortcutAndState] = await apiRepository.aggregateStatesFsObjects({
         userId,
@@ -462,7 +580,7 @@ export const restoreShortcutFromTrash = async (userId: string, fsObjectId: mongo
         trash: true,
         trashRoot: true,
     });
-    if (!shortcutAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found in trash.');
+    if (!shortcutAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found in trash');
 
     await statesRepository.updateState({ userId, fsObjectId }, { trash: false, trashRoot: false });
 };

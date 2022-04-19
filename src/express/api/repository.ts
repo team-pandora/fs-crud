@@ -6,6 +6,12 @@ import { FsObjectModel } from '../fs/model';
 import StateModel from '../states/model';
 import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from './interface';
 
+/**
+ * Get State and FsObjects objects by filters.
+ * Start aggregation from states collection and join with fsObjects collection.
+ * @param query - states and fsObjects filters.
+ * @returns {Promise<FsObjectAndState[]>} Promise object containing filtered objects.
+ */
 const aggregateStatesFsObjects = async (query: IAggregateStatesAndFsObjectsQuery): Promise<FsObjectAndState[]> => {
     const pipeline: mongoose.PipelineStage[] = [
         {
@@ -96,6 +102,12 @@ const aggregateStatesFsObjects = async (query: IAggregateStatesAndFsObjectsQuery
     return StateModel.aggregate(pipeline).exec();
 };
 
+/**
+ * Get FsObject and State objects by filters.
+ * Start aggregation from fsObjects collection and join with states collection.
+ * @param query - fsObjects and states filters.
+ * @returns {Promise<FsObjectAndState[]>} Promise object containing filtered objects.
+ */
 const aggregateFsObjectsStates = async (query: IAggregateStatesAndFsObjectsQuery): Promise<FsObjectAndState[]> => {
     const pipeline: mongoose.PipelineStage[] = [
         {
@@ -186,6 +198,11 @@ const aggregateFsObjectsStates = async (query: IAggregateStatesAndFsObjectsQuery
     return FsObjectModel.aggregate(pipeline).exec();
 };
 
+/**
+ * Get FsObjects under a Folder.
+ * @param fsObjectId - The Folder id.
+ * @returns {Promise<(IFile|IFolder|IShortcut)[]>} Promise object containing filtered objects.
+ */
 const getAllFsObjectsUnderFolder = async (
     fsObjectId: mongoose.Types.ObjectId,
 ): Promise<(IFile | IFolder | IShortcut)[]> => {
@@ -209,6 +226,11 @@ const getAllFsObjectsUnderFolder = async (
     return fsObjects;
 };
 
+/**
+ * Get FsObject Ids under a Folder.
+ * @param fsObjectId - The Folder id.
+ * @returns {Promise<mongoose.Types.ObjectId[]>} Promise object containing filtered objects ids.
+ */
 const getAllFsObjectIdsUnderFolder = async (
     fsObjectId: mongoose.Types.ObjectId,
 ): Promise<mongoose.Types.ObjectId[]> => {

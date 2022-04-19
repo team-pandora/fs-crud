@@ -6,10 +6,9 @@ import { IQuota } from './interface';
 import QuotaModel from './model';
 
 /**
- * Get the quota by userId, create new with default values if does not exist.
- * @param {string} userId - The userId to get the quota.
- * @param {ClientSession | undefined} session - Optional mongoose session.
- * @returns {Promise<IQuota>} - Promise object containing the Quota.
+ * Get a Quota document by userId.
+ * @param userId - The userId to get the Quota.
+ * @returns {Promise<IQuota>} Promise object containing the Quota.
  */
 const getQuotaByUserId = (userId: string, session?: ClientSession): Promise<IQuota> => {
     return QuotaModel.findOneAndUpdate(
@@ -20,11 +19,12 @@ const getQuotaByUserId = (userId: string, session?: ClientSession): Promise<IQuo
 };
 
 /**
- * Update the quota limit, create new with default values and provided limit if does not exist.
- * @param {string} userId - The userId to update the quota.
- * @param {number} limit  - The new limit.
- * @param {ClientSession | undefined} session - Optional mongoose session.
- * @returns {Promise<IQuota>} - Promise object containing the Quota.
+ * Update a Quota limit.
+ *   1) validations for the used and limit fields.
+ *   2) update quota.
+ * @param userId - The userId to update the Quota.
+ * @param limit - The new limit.
+ * @returns {Promise<IQuota>} Promise object containing the updated Quota.
  */
 const updateQuotaLimit = async (userId: string, limit: number, session?: ClientSession): Promise<IQuota> => {
     const { used } = await getQuotaByUserId(userId, session);
@@ -39,11 +39,12 @@ const updateQuotaLimit = async (userId: string, limit: number, session?: ClientS
 };
 
 /**
- * Raise or lower the used field of the quota by the amount provided.
- * @param {string} userId - The userId od the quota.
- * @param {number} difference - The amount to raise or lower the quota by.
- * @param {ClientSession | undefined} session - Optional mongoose session.
- * @returns {Promise<IQuota>} - Promise object containing the Quota.
+ * Update a Quota used.
+ *  1) validations for the used and limit fields.
+ *  2) update used quota (raise or lower it accordingly).
+ * @param userId - The userId to update the Quota.
+ * @param difference - The amount to update the Quota used.
+ * @returns {Promise<IQuota>} Promise object containing the updated Quota.
  */
 const changeQuotaUsed = async (userId: string, difference: number, session?: ClientSession): Promise<IQuota> => {
     const { used, limit } = await getQuotaByUserId(userId, session);
