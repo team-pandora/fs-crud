@@ -21,6 +21,4 @@ services:
       MONGO_QUOTAS_COLLECTION_NAME: quotas
       MONGO_STATES_COLLECTION_NAME: states
       MONGO_FS_OBJECTS_COLLECTION_NAME: fsobjects
-    ports:
-      - 8000:8000
     network_mode: "host"
