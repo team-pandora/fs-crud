@@ -49,7 +49,7 @@ usersRouter.post(
 );
 
 usersRouter.get(
-    'users/:userId/quota',
+    '/users/:userId/quota',
     ValidateRequest(usersValidator.getQuotaByUserIdRequestSchema),
     wrapMiddleware(usersController.getQuotaByUserId),
 );

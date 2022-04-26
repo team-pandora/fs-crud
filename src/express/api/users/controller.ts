@@ -65,7 +65,7 @@ export const updateShortcut = async (req: Request<IUserFsActionParams>, res: Res
 };
 
 export const unshareFsObject = async (req: Request<IUserFsActionParams>, res: Response) => {
-    res.json(await usersManager.unshareFsObject(req.params.userId, req.params.fsObjectId, req.body));
+    res.json(await usersManager.unshareFsObject(req.params.userId, req.params.fsObjectId, req.body.userId));
 };
 
 export const deleteFile = async (req: Request<IUserFsActionParams>, res: Response) => {

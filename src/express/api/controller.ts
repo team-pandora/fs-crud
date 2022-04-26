@@ -20,11 +20,11 @@ export const shareFsObject = async (req: Request<IFsActionParams>, res: Response
 };
 
 export const aggregateStatesFsObjects = async (req: Request, res: Response) => {
-    res.json(await apiManager.aggregateStatesFsObjects(req.body));
+    res.json(await apiManager.aggregateStatesFsObjects(req.query));
 };
 
 export const aggregateFsObjectsStates = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.aggregateFsObjectsStates(req.body));
+    res.json(await apiManager.aggregateFsObjectsStates(req.query));
 };
 
 export const getFsObjectHierarchy = async (req: Request<IFsActionParams>, res: Response) => {
