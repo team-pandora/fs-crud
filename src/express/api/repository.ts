@@ -199,7 +199,6 @@ const aggregateFsObjectsStates = async (query: IAggregateStatesAndFsObjectsQuery
 
 /**
  * Get FsObject Ids under a Folder.
- * 
  *  1) Match specific fsObjectId
  *  2) Graph lookup all fsObjects under a folder
  *  3) Map all fsObjects to an array of fsObjectIds
