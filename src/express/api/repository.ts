@@ -1,7 +1,6 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
 import { removeUndefinedFields } from '../../utils/object';
-import { IFile, IFolder, IShortcut } from '../fs/interface';
 import { FsObjectModel } from '../fs/model';
 import StateModel from '../states/model';
 import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from './interface';
@@ -199,14 +198,18 @@ const aggregateFsObjectsStates = async (query: IAggregateStatesAndFsObjectsQuery
 };
 
 /**
- * Get FsObjects under a Folder.
+ * Get FsObject Ids under a Folder.
+ * 
+ *  1) Match specific fsObjectId
+ *  2) Graph lookup all fsObjects under a folder
+ *  3) Map all fsObjects to an array of fsObjectIds
  * @param fsObjectId - The Folder id.
- * @returns {Promise<(IFile|IFolder|IShortcut)[]>} Promise object containing filtered objects.
+ * @returns {Promise<mongoose.Types.ObjectId[]>} Promise object containing filtered objects ids.
  */
-const getAllFsObjectsUnderFolder = async (
+const getAllFsObjectIdsUnderFolder = async (
     fsObjectId: mongoose.Types.ObjectId,
-): Promise<(IFile | IFolder | IShortcut)[]> => {
-    const [{ fsObjects }] = await FsObjectModel.aggregate([
+): Promise<mongoose.Types.ObjectId[]> => {
+    const [{ fsObjectIds }] = await FsObjectModel.aggregate([
         {
             $match: {
                 _id: fsObjectId,
@@ -221,28 +224,21 @@ const getAllFsObjectsUnderFolder = async (
                 as: 'fsObjects',
             },
         },
+        {
+            $project: {
+                _id: 0,
+                fsObjectsIds: {
+                    $map: {
+                        input: '$fsObjects',
+                        as: 'fsObject',
+                        in: '$$fsObject._id',
+                    },
+                },
+            },
+        },
     ]).exec();
 
-    return fsObjects;
+    return fsObjectIds;
 };
 
-/**
- * Get FsObject Ids under a Folder.
- * @param fsObjectId - The Folder id.
- * @returns {Promise<mongoose.Types.ObjectId[]>} Promise object containing filtered objects ids.
- */
-const getAllFsObjectIdsUnderFolder = async (
-    fsObjectId: mongoose.Types.ObjectId,
-): Promise<mongoose.Types.ObjectId[]> => {
-    const fsObjects = await getAllFsObjectsUnderFolder(fsObjectId);
-
-    // Faster implementation of Array.map() - NEEDED HERE
-    const objectIds: mongoose.Types.ObjectId[] = Array(fsObjects.length);
-    for (let index = 0; index < fsObjects.length; index++) {
-        objectIds[index] = fsObjects[index]._id;
-    }
-
-    return objectIds;
-};
-
-export { aggregateStatesFsObjects, aggregateFsObjectsStates, getAllFsObjectsUnderFolder, getAllFsObjectIdsUnderFolder };
+export { aggregateStatesFsObjects, aggregateFsObjectsStates, getAllFsObjectIdsUnderFolder };
