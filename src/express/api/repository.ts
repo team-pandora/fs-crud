@@ -242,7 +242,7 @@ const getAllFsObjectIdsUnderFolder = async (
 };
 
 const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId): Promise<IFolder[]> => {
-    const [{ hierarchy }] = await FsObjectModel.aggregate([
+    return FsObjectModel.aggregate([
         {
             $match: {
                 _id: fsObjectId,
@@ -259,19 +259,18 @@ const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId): Promis
             },
         },
         { $unwind: '$hierarchy' },
-        { $sort: { 'hierarchy.depth': 1 } },
+        { $sort: { 'hierarchy.depth': -1 } },
         {
-            $group: {
-                _id: '$_id',
-                hierarchy: {
-                    $push: '$hierarchy',
-                },
+            $project: {
+                _id: '$hierarchy._id',
+                name: '$hierarchy.name',
+                parent: '$hierarchy.parent',
+                type: '$hierarchy.type',
+                createdAt: '$hierarchy.createdAt',
+                updatedAt: '$hierarchy.updatedAt',
             },
         },
-        { $project: { 'hierarchy.depth': 0, 'hierarchy._id': 0 } },
     ]).exec();
-
-    return hierarchy;
 };
 
 export { aggregateStatesFsObjects, aggregateFsObjectsStates, getAllFsObjectIdsUnderFolder, getFsObjectHierarchy };

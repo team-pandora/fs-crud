@@ -11,6 +11,7 @@ const config = {
         quotasCollectionName: env.get('MONGO_QUOTAS_COLLECTION_NAME').required().asString(),
         statesCollectionName: env.get('MONGO_STATES_COLLECTION_NAME').required().asString(),
         fsObjectsCollectionName: env.get('MONGO_FS_OBJECTS_COLLECTION_NAME').required().asString(),
+        uploadsCollectionName: env.get('MONGO_UPLOADS_COLLECTION_NAME').required().asString(),
     },
     quota: {
         defaultLimitInBytes: env.get('QUOTA_DEFAULT_LIMIT_IN_BYTES').default('10737418240').asInt(),

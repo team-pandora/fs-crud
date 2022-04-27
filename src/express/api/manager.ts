@@ -17,6 +17,8 @@ import * as fsRepository from '../fs/repository';
 import * as quotasRepository from '../quotas/repository';
 import { INewState, IState, IUpdateState, permission } from '../states/interface';
 import * as statesRepository from '../states/repository';
+import { INewUpload, IUpdateUpload, IUpload, IUploadFilters } from '../uploads/interface';
+import * as uploadRepository from '../uploads/repository';
 import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from './interface';
 import * as apiRepository from './repository';
 
@@ -45,6 +47,22 @@ export const createFolder = async (folder: INewFolder): Promise<IFolder> => {
  */
 export const createShortcut = async (shortcut: INewShortcut): Promise<IShortcut> => {
     return fsRepository.createShortcut(shortcut);
+};
+
+/**
+ * Create a Upload document.
+ * @param upload - The new Upload object.
+ * @returns {Promise<INewUpload>} Promise object containing the Upload.
+ */
+export const createUpload = async (upload: INewUpload): Promise<void> => {
+    return makeTransaction(async (session) => {
+        const operations: Promise<any>[] = [];
+
+        operations.push(uploadRepository.createUpload(upload));
+        operations.push(quotasRepository.changeQuotaUsed(upload.userId, upload.uploadedBytes, session));
+
+        await Promise.all(operations);
+    });
 };
 
 /**
@@ -111,6 +129,24 @@ export const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId):
 };
 
 /**
+ * Get a Upload.
+ * @param upload - The Upload id.
+ * @returns {Promise<IUpload>} Promise object containing the Upload.
+ */
+export const getUpload = async (uploadId: string): Promise<IUpload> => {
+    return uploadRepository.getUpload(uploadId);
+};
+
+/**
+ * Get filtered Uploads.
+ * @param filters - The filters object.
+ * @returns {Promise<IUpload[]>} Promise object containing the Uploads.
+ */
+export const getUploads = async (filters: IUploadFilters): Promise<IUpload[]> => {
+    return uploadRepository.getUploads(filters);
+};
+
+/**
  * Delete State documents.
  * @param stateId - The State id.
  * @returns {Promise<IState>} Promise object containing the amount of deleted States.
@@ -150,6 +186,26 @@ export const updateShortcut = async (
     update: IUpdateShortcut,
 ): Promise<IShortcut> => {
     return fsRepository.updateShortcutById(fsObjectId, update);
+};
+
+/**
+ * Update a Upload.
+ * @param uploadId - The Upload id.
+ * @param update - The update object.
+ * @returns {Promise<IUpload>} Promise object containing the updated Upload.
+ */
+export const updateUpload = async (uploadId: string, update: IUpdateUpload): Promise<void> => {
+    const upload = await getUpload(uploadId);
+    const sizeDifference = update.uploadedBytes - upload.uploadedBytes;
+
+    return makeTransaction(async (session) => {
+        const operations: Promise<any>[] = [];
+
+        if (sizeDifference) operations.push(quotasRepository.changeQuotaUsed(upload.userId, sizeDifference, session));
+        operations.push(uploadRepository.updateUpload(uploadId, update));
+
+        await Promise.all(operations);
+    });
 };
 
 /**
@@ -241,4 +297,13 @@ export const deleteShortcut = async (fsObjectId: mongoose.Types.ObjectId): Promi
 
         await Promise.all(operations);
     });
+};
+
+/**
+ * delete a Upload.
+ * @param uploadId - The id of the Upload object.
+ * @returns {Promise<IUpload>} Promise object containing the Upload.
+ */
+export const deleteUpload = async (uploadId: string): Promise<IUpload> => {
+    return uploadRepository.deleteUpload(uploadId);
 };
