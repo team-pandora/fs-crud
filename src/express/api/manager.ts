@@ -1,6 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
 import * as mongoose from 'mongoose';
-import config from '../../config';
 import { makeTransaction } from '../../utils/mongoose';
 import { ServerError } from '../error';
 import {
@@ -97,25 +96,16 @@ export const aggregateFsObjectsStates = async (
     return apiRepository.aggregateFsObjectsStates(query);
 };
 
-// TODO translate to aggregation
 /**
  * Get FsObject Hierarchy.
  * @param fsObjectId - The FsObject id.
  * @returns {Promise<FsObjectAndState[]>} Promise object containing the Hierarchy of FsObjects.
  */
-export const getFsObjectHierarchy = async (
-    fsObjectId: mongoose.Types.ObjectId,
-): Promise<(IFile | IFolder | IShortcut)[]> => {
+export const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId): Promise<IFolder[]> => {
     const fsObject = await fsRepository.getFsObject({ _id: fsObjectId });
-    if (!fsObject) throw new ServerError(StatusCodes.NOT_FOUND, 'Provided object does not exist.');
+    if (!fsObject) throw new ServerError(StatusCodes.NOT_FOUND, 'Provided fsObject does not exist.');
 
-    const hierarchy: (IFile | IFolder | IShortcut)[] = [fsObject];
-
-    for (let depth = 0; hierarchy[0]?.parent && depth < config.fs.maxHierarchySearchDepth; depth++) {
-        if (!hierarchy[0]) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Broken hierarchy.');
-        // eslint-disable-next-line no-await-in-loop -- It's OK to await here.
-        hierarchy.unshift(await fsRepository.getFsObject({ _id: hierarchy[0].parent }));
-    }
+    const hierarchy = apiRepository.getFsObjectHierarchy(fsObject._id);
 
     return hierarchy;
 };

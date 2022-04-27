@@ -147,23 +147,11 @@ export const getQuotaByUserId = async (userId: string): Promise<IQuota> => {
     return quotasRepository.getQuotaByUserId(userId);
 };
 
-// TODO translate to aggregation
-export const getFsObjectHierarchy = async (
-    userId: string,
-    fsObjectId: mongoose.Types.ObjectId,
-): Promise<FsObjectAndState[]> => {
+export const getFsObjectHierarchy = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<IFolder[]> => {
     const [fileAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
-    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Provided file does not exist.');
+    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Provided fsObject does not exist');
 
-    const hierarchy: FsObjectAndState[] = [fileAndState];
-
-    for (let depth = 0; !hierarchy[0]?.root && depth < config.fs.maxHierarchySearchDepth; depth++) {
-        if (!hierarchy[0]?.parent) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Broken hierarchy.');
-        hierarchy.unshift(
-            // eslint-disable-next-line no-await-in-loop -- It's OK to await here.
-            (await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId: hierarchy[0].parent }))[0],
-        );
-    }
+    const hierarchy = apiRepository.getFsObjectHierarchy(fileAndState.fsObjectId);
 
     return hierarchy;
 };

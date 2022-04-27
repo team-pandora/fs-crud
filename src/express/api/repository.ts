@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
 import { removeUndefinedFields } from '../../utils/object';
+import { IFolder } from '../fs/interface';
 import { FsObjectModel } from '../fs/model';
 import StateModel from '../states/model';
 import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from './interface';
@@ -240,4 +241,37 @@ const getAllFsObjectIdsUnderFolder = async (
     return fsObjectIds;
 };
 
-export { aggregateStatesFsObjects, aggregateFsObjectsStates, getAllFsObjectIdsUnderFolder };
+const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId): Promise<IFolder[]> => {
+    const [{ hierarchy }] = await FsObjectModel.aggregate([
+        {
+            $match: {
+                _id: fsObjectId,
+            },
+        },
+        {
+            $graphLookup: {
+                from: 'fsobjects',
+                startWith: '$parent',
+                connectFromField: 'parent',
+                connectToField: '_id',
+                as: 'hierarchy',
+                depthField: 'depth',
+            },
+        },
+        { $unwind: '$hierarchy' },
+        { $sort: { 'hierarchy.depth': 1 } },
+        {
+            $group: {
+                _id: '$_id',
+                hierarchy: {
+                    $push: '$hierarchy',
+                },
+            },
+        },
+        { $project: { 'hierarchy.depth': 0, 'hierarchy._id': 0 } },
+    ]).exec();
+
+    return hierarchy;
+};
+
+export { aggregateStatesFsObjects, aggregateFsObjectsStates, getAllFsObjectIdsUnderFolder, getFsObjectHierarchy };
