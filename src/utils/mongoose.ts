@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-import { ClientSession } from 'mongoose';
 import { mongoDuplicateKeyError } from './express/errors';
 
 function setDefaultSettings(schema: mongoose.Schema) {
@@ -22,19 +21,14 @@ const setErrorHandler = (schema: mongoose.Schema) => {
     schema.post(['save'], errorHandler);
 };
 
-const makeTransaction = async <Type>(transaction: (session: ClientSession) => Promise<Type>): Promise<Type> => {
-    const session = await mongoose.startSession();
-    try {
-        session.startTransaction();
-        const result = await transaction(session);
-        await session.commitTransaction();
-        return result;
-    } catch (err) {
-        await session.abortTransaction();
-        throw err;
-    } finally {
-        session.endSession();
-    }
+const makeTransaction = async <Type>(
+    transaction: (session: mongoose.ClientSession) => Promise<Type>,
+): Promise<Type> => {
+    let result: Type;
+    await mongoose.connection.transaction(async (session) => {
+        result = await transaction(session);
+    });
+    return result!;
 };
 
 export { setDefaultSettings, setErrorHandler, makeTransaction };

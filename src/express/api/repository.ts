@@ -23,14 +23,13 @@ const { permissionPriority } = config.constants;
  */
 const parentStateCheck = async (userId: string, fsObject: INewFile | INewFolder | INewShortcut): Promise<void> => {
     const parent = fsObject.parent && (await statesRepository.getState({ userId, fsObjectId: fsObject.parent }));
-    if (!parent) {
-        throw new ServerError(StatusCodes.BAD_REQUEST, 'Parent folder does not exist');
-    }
-    if (parent && parent.trash) {
-        throw new ServerError(StatusCodes.FORBIDDEN, `Cannot create object under a folder in trash`);
-    }
-    if (parent && permissionPriority[parent.permission] < permissionPriority.write) {
-        throw new ServerError(StatusCodes.FORBIDDEN, `User doesn't have permission to create fsObject`);
+    if (parent) {
+        if (parent.trash) {
+            throw new ServerError(StatusCodes.FORBIDDEN, `Cannot create object under a folder in trash`);
+        }
+        if (permissionPriority[parent.permission] < permissionPriority.write) {
+            throw new ServerError(StatusCodes.FORBIDDEN, `User doesn't have permission to create fsObject`);
+        }
     }
 };
 
