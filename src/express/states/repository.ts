@@ -40,15 +40,6 @@ const getState = async (filters: IStateFilters): Promise<IState> => {
 };
 
 /**
- * Get State documents.
- * @param filters - The State filters.
- * @returns {Promise<IState[]>} Promise object containing the States.
- */
-const getStates = (filters: IStateFilters): Promise<IState[]> => {
-    return StateModel.find(filters).exec();
-};
-
-/**
  * Update State document.
  * @param filters - The State filters.
  * @param update - The update object.
@@ -98,4 +89,4 @@ const deleteStates = async (filters: IStateFilters, session?: ClientSession): Pr
     return result.deletedCount;
 };
 
-export { createState, getStateById, getState, getStates, updateState, updateStates, deleteState, deleteStates };
+export { createState, getStateById, getState, updateState, updateStates, deleteState, deleteStates };

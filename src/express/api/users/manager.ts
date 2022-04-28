@@ -270,10 +270,10 @@ export const unshareFsObject = async (
     fsObjectId: mongoose.Types.ObjectId,
     sharedUserId: string,
 ): Promise<IState> => {
-    const [state] = await statesRepository.getStates({ userId, fsObjectId });
+    const state = await statesRepository.getState({ userId, fsObjectId });
     if (!state) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
 
-    const [sharedState] = await statesRepository.getStates({ userId: sharedUserId, fsObjectId });
+    const sharedState = await statesRepository.getState({ userId: sharedUserId, fsObjectId });
     if (!sharedState) throw new ServerError(StatusCodes.BAD_REQUEST, 'Object is not shared with provided user');
 
     if (permissionPriority[state.permission] <= permissionPriority[sharedState.permission])
