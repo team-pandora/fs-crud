@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import config from '../../config';
 import { removeUndefinedFields } from '../../utils/object';
 import { ServerError } from '../error';
-import { IFolder, INewFile, INewFolder, INewShortcut } from '../fs/interface';
+import { IFolder } from '../fs/interface';
 import { FsObjectModel } from '../fs/model';
 import StateModel from '../states/model';
 import * as statesRepository from '../states/repository';
@@ -21,15 +21,16 @@ const { permissionPriority } = config.constants;
  * @param fsObject - The new created fsObject.
  * @returns {Promise<void>} Empty Promise.
  */
-const parentStateCheck = async (userId: string, fsObject: INewFile | INewFolder | INewShortcut): Promise<void> => {
-    const parent = fsObject.parent && (await statesRepository.getState({ userId, fsObjectId: fsObject.parent }));
-    if (parent) {
-        if (parent.trash) {
-            throw new ServerError(StatusCodes.FORBIDDEN, `Cannot create object under a folder in trash`);
-        }
-        if (permissionPriority[parent.permission] < permissionPriority.write) {
-            throw new ServerError(StatusCodes.FORBIDDEN, `User doesn't have permission to create fsObject`);
-        }
+const parentStateCheck = async (userId: string, parentFsObjectId: mongoose.Types.ObjectId): Promise<void> => {
+    const parent = await statesRepository.getState({ userId, fsObjectId: parentFsObjectId });
+    if (!parent) {
+        throw new ServerError(StatusCodes.BAD_REQUEST, 'Parent does not exist');
+    }
+    if (parent.trash) {
+        throw new ServerError(StatusCodes.FORBIDDEN, `Cannot create object under a folder in trash`);
+    }
+    if (permissionPriority[parent.permission] < permissionPriority.write) {
+        throw new ServerError(StatusCodes.FORBIDDEN, `User doesn't have permission to create fsObject`);
     }
 };
 

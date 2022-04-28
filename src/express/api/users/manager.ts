@@ -31,7 +31,7 @@ const { permissionPriority } = config.constants;
  * @returns {Promise<FsObjectAndState>} Promise object containing the file.
  */
 export const createFile = async (userId: string, file: INewFile): Promise<FsObjectAndState> => {
-    await apiRepository.parentStateCheck(userId, file);
+    if (file.parent) await apiRepository.parentStateCheck(userId, file.parent);
 
     return makeTransaction(async (session) => {
         const operations: Promise<any>[] = [];
@@ -65,7 +65,7 @@ export const createFile = async (userId: string, file: INewFile): Promise<FsObje
  * @returns {Promise<FsObjectAndState>} Promise object containing the folder.
  */
 export const createFolder = async (userId: string, folder: INewFolder): Promise<FsObjectAndState> => {
-    await apiRepository.parentStateCheck(userId, folder);
+    if (folder.parent) await apiRepository.parentStateCheck(userId, folder.parent);
 
     return makeTransaction(async (session) => {
         const createdFolder = await fsRepository.createFolder(folder, session);
@@ -91,7 +91,7 @@ export const createFolder = async (userId: string, folder: INewFolder): Promise<
  * @returns {Promise<FsObjectAndState>} Promise object containing the shortcut.
  */
 export const createShortcut = async (userId: string, shortcut: INewShortcut): Promise<FsObjectAndState> => {
-    await apiRepository.parentStateCheck(userId, shortcut);
+    if (shortcut.parent) await apiRepository.parentStateCheck(userId, shortcut.parent);
 
     return makeTransaction(async (session) => {
         const createdShortcut = await fsRepository.createShortcut(shortcut, session);
