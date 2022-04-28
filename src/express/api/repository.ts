@@ -1,10 +1,32 @@
+import { StatusCodes } from 'http-status-codes';
 import * as mongoose from 'mongoose';
 import config from '../../config';
 import { removeUndefinedFields } from '../../utils/object';
-import { IFolder } from '../fs/interface';
+import { ServerError } from '../error';
+import { IFolder, INewFile, INewFolder, INewShortcut } from '../fs/interface';
 import { FsObjectModel } from '../fs/model';
 import StateModel from '../states/model';
+import * as statesRepository from '../states/repository';
 import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from './interface';
+
+const { permissionPriority } = config.constants;
+
+/**
+ * Check users permission on a folder.
+ *    1) Check if folder exists
+ *    2) Check if the permission user has on the folder,
+ *       throws an error if permission is lower than write
+ *  @param userId - The user id.
+ * @param fsObject - The new created fsObject.
+ * @returns {Promise<void>} Empty Promise.
+ */
+const parentPermissionCheck = async (userId: string, fsObject: INewFile | INewFolder | INewShortcut): Promise<void> => {
+    const parentPermission =
+        fsObject.parent && (await statesRepository.getState({ userId, fsObjectId: fsObject.parent })).permission;
+    if (parentPermission && permissionPriority[parentPermission] < permissionPriority.write) {
+        throw new ServerError(StatusCodes.FORBIDDEN, `User doesn't have permission to create fsObject`);
+    }
+};
 
 /**
  * Get State and FsObjects objects by filters.
@@ -273,4 +295,10 @@ const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId): Promis
     ]).exec();
 };
 
-export { aggregateStatesFsObjects, aggregateFsObjectsStates, getAllFsObjectIdsUnderFolder, getFsObjectHierarchy };
+export {
+    aggregateStatesFsObjects,
+    aggregateFsObjectsStates,
+    getAllFsObjectIdsUnderFolder,
+    getFsObjectHierarchy,
+    parentPermissionCheck,
+};
