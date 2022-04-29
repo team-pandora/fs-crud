@@ -24,11 +24,16 @@ const setErrorHandler = (schema: mongoose.Schema) => {
 const makeTransaction = async <Type>(
     transaction: (session: mongoose.ClientSession) => Promise<Type>,
 ): Promise<Type> => {
-    let result: Type;
-    await mongoose.connection.transaction(async (session) => {
-        result = await transaction(session);
-    });
-    return result!;
+    const session = await mongoose.startSession();
+    try {
+        let result: Type;
+        await session.withTransaction(async () => {
+            result = await transaction(session);
+        });
+        return result!;
+    } finally {
+        session.endSession();
+    }
 };
 
 export { setDefaultSettings, setErrorHandler, makeTransaction };

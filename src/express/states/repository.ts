@@ -32,11 +32,8 @@ const getStateById = async (stateId: mongoose.Types.ObjectId): Promise<IState> =
  * @param filters - The State filters.
  * @returns {Promise<IState>} Promise object containing the State.
  */
-const getState = async (filters: IStateFilters): Promise<IState> => {
-    const result = await StateModel.findOne(filters).exec();
-    if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'State not found.');
-
-    return result;
+const getState = async (filters: IStateFilters): Promise<IState | null> => {
+    return StateModel.findOne(filters).exec();
 };
 
 /**

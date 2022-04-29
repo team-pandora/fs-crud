@@ -34,27 +34,21 @@ export const createFile = async (userId: string, file: INewFile): Promise<FsObje
     if (file.parent) await apiRepository.parentStateCheck(userId, file.parent);
 
     return makeTransaction(async (session) => {
-        const operations: Promise<any>[] = [];
-
-        operations.push(quotasRepository.changeQuotaUsed(userId, file.size, session));
+        await quotasRepository.changeQuotaUsed(userId, file.size, session);
 
         const createdFile = await fsRepository.createFile(file, session);
 
-        operations.push(
-            statesRepository.createState(
-                {
-                    userId,
-                    fsObjectId: createdFile._id,
-                    permission: 'owner',
-                    root: !createdFile.parent,
-                },
-                session,
-            ),
+        const createdState = await statesRepository.createState(
+            {
+                userId,
+                fsObjectId: createdFile._id,
+                permission: 'owner',
+                root: !createdFile.parent,
+            },
+            session,
         );
 
-        const results = await Promise.all(operations);
-
-        return new FsObjectAndState(createdFile, results[1]);
+        return new FsObjectAndState(createdFile, createdState);
     });
 };
 
