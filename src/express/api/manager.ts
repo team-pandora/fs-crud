@@ -72,7 +72,7 @@ export const createUpload = async (upload: INewUpload): Promise<void> => {
  * @param sharedPermission - The share permission.
  * @returns {Promise<IFile>} Promise object containing the FsObject.
  */
-export const shareFsObject = async (
+export const shareFsObjectById = async (
     fsObjectId: mongoose.Types.ObjectId,
     sharedUserId: string,
     sharedPermission: permission,
@@ -119,7 +119,7 @@ export const aggregateFsObjectsStates = async (
  * @param fsObjectId - The FsObject id.
  * @returns {Promise<FsObjectAndState[]>} Promise object containing the Hierarchy of FsObjects.
  */
-export const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId): Promise<IFolder[]> => {
+export const getFsObjectHierarchyById = async (fsObjectId: mongoose.Types.ObjectId): Promise<IFolder[]> => {
     const fsObject = await fsRepository.getFsObject({ _id: fsObjectId });
     if (!fsObject) throw new ServerError(StatusCodes.NOT_FOUND, 'Provided fsObject does not exist.');
 
@@ -133,7 +133,7 @@ export const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId):
  * @param upload - The Upload id.
  * @returns {Promise<IUpload>} Promise object containing the Upload.
  */
-export const getUpload = async (uploadId: string): Promise<IUpload> => {
+export const getUploadById = async (uploadId: string): Promise<IUpload> => {
     return uploadRepository.getUpload(uploadId);
 };
 
@@ -151,7 +151,7 @@ export const getUploads = async (filters: IUploadFilters): Promise<IUpload[]> =>
  * @param stateId - The State id.
  * @returns {Promise<IState>} Promise object containing the amount of deleted States.
  */
-export const updateState = async (stateId: mongoose.Types.ObjectId, update: IUpdateState): Promise<IState> => {
+export const updateStateById = async (stateId: mongoose.Types.ObjectId, update: IUpdateState): Promise<IState> => {
     return statesRepository.updateState({ _id: stateId }, update);
 };
 
@@ -161,7 +161,7 @@ export const updateState = async (stateId: mongoose.Types.ObjectId, update: IUpd
  * @param update - The update object.
  * @returns {Promise<IFile>} Promise object containing the updated File.
  */
-export const updateFile = async (fsObjectId: mongoose.Types.ObjectId, update: IUpdateFile): Promise<IFile> => {
+export const updateFileById = async (fsObjectId: mongoose.Types.ObjectId, update: IUpdateFile): Promise<IFile> => {
     return fsRepository.updateFileById(fsObjectId, update);
 };
 
@@ -171,7 +171,10 @@ export const updateFile = async (fsObjectId: mongoose.Types.ObjectId, update: IU
  * @param update - The update object.
  * @returns {Promise<IFolder>} Promise object containing the updated Folder.
  */
-export const updateFolder = async (fsObjectId: mongoose.Types.ObjectId, update: IUpdateFolder): Promise<IFolder> => {
+export const updateFolderById = async (
+    fsObjectId: mongoose.Types.ObjectId,
+    update: IUpdateFolder,
+): Promise<IFolder> => {
     return fsRepository.updateFolderById(fsObjectId, update);
 };
 
@@ -181,7 +184,7 @@ export const updateFolder = async (fsObjectId: mongoose.Types.ObjectId, update: 
  * @param update - The update object.
  * @returns {Promise<IShortcut>} Promise object containing the updated Shortcut.
  */
-export const updateShortcut = async (
+export const updateShortcutById = async (
     fsObjectId: mongoose.Types.ObjectId,
     update: IUpdateShortcut,
 ): Promise<IShortcut> => {
@@ -194,8 +197,8 @@ export const updateShortcut = async (
  * @param update - The update object.
  * @returns {Promise<IUpload>} Promise object containing the updated Upload.
  */
-export const updateUpload = async (uploadId: string, update: IUpdateUpload): Promise<void> => {
-    const upload = await getUpload(uploadId);
+export const updateUploadById = async (uploadId: string, update: IUpdateUpload): Promise<void> => {
+    const upload = await getUploadById(uploadId);
     const sizeDifference = update.uploadedBytes - upload.uploadedBytes;
 
     return makeTransaction(async (session) => {
@@ -214,7 +217,7 @@ export const updateUpload = async (uploadId: string, update: IUpdateUpload): Pro
  * @param fsObjectId - The FsObject id.
  * @returns {Promise<IState>} Promise object containing the State.
  */
-export const unshareFsObject = async (
+export const unshareFsObjectById = async (
     fsObjectId: mongoose.Types.ObjectId,
     userId: string | { $in: string[] },
 ): Promise<IState> => {
@@ -226,7 +229,7 @@ export const unshareFsObject = async (
  * @param fsObjectId - The File id.
  * @returns {Promise<void>} Empty Promise.
  */
-export const deleteFile = async (fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
+export const deleteFileById = async (fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
     const [ownerFsObjectAndState] = await apiRepository.aggregateStatesFsObjects({
         fsObjectId,
         permission: 'owner',
@@ -253,7 +256,7 @@ export const deleteFile = async (fsObjectId: mongoose.Types.ObjectId): Promise<v
  * @param fsObjectId - The Folder id.
  * @returns {Promise<void>} Empty Promise.
  */
-export const deleteFolder = async (fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
+export const deleteFolderById = async (fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
     const fsObjectIds = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
     const ownerFilesAndStates = await apiRepository.aggregateStatesFsObjects({
         fsObjectId: { $in: fsObjectIds },
@@ -288,7 +291,7 @@ export const deleteFolder = async (fsObjectId: mongoose.Types.ObjectId): Promise
  * @param fsObjectId - The Shortcut id.
  * @returns {Promise<void>} Empty Promise.
  */
-export const deleteShortcut = async (fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
+export const deleteShortcutById = async (fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
     return makeTransaction(async (session) => {
         const operations: Promise<any>[] = [
             statesRepository.deleteStates({ fsObjectId }, session),
@@ -304,6 +307,6 @@ export const deleteShortcut = async (fsObjectId: mongoose.Types.ObjectId): Promi
  * @param uploadId - The id of the Upload object.
  * @returns {Promise<IUpload>} Promise object containing the Upload.
  */
-export const deleteUpload = async (uploadId: string): Promise<IUpload> => {
+export const deleteUploadById = async (uploadId: string): Promise<IUpload> => {
     return uploadRepository.deleteUpload(uploadId);
 };

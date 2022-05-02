@@ -94,7 +94,7 @@ apiRouter.patch(
 );
 
 apiRouter.patch(
-    '/uploads/upload/:uploadId',
+    '/uploads/:uploadId',
     ValidateRequest(apiValidator.updateUploadRequestSchema),
     wrapMiddleware(apiController.updateUpload),
 );
@@ -124,7 +124,7 @@ apiRouter.delete(
 );
 
 apiRouter.delete(
-    '/:uploadId',
+    '/upload/:uploadId',
     ValidateRequest(apiValidator.deleteUploadRequestSchema),
     wrapMiddleware(apiController.deleteUpload),
 );

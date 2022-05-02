@@ -20,7 +20,7 @@ export const createUpload = async (req: Request, res: Response) => {
 
 export const shareFsObject = async (req: Request<IFsActionParams>, res: Response) => {
     const { sharedUserId, sharedPermission } = req.body;
-    res.json(await apiManager.shareFsObject(req.params.fsObjectId, sharedUserId, sharedPermission));
+    res.json(await apiManager.shareFsObjectById(req.params.fsObjectId, sharedUserId, sharedPermission));
 };
 
 export const aggregateStatesFsObjects = async (req: Request, res: Response) => {
@@ -32,11 +32,11 @@ export const aggregateFsObjectsStates = async (req: Request<IFsActionParams>, re
 };
 
 export const getFsObjectHierarchy = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.getFsObjectHierarchy(req.params.fsObjectId));
+    res.json(await apiManager.getFsObjectHierarchyById(req.params.fsObjectId));
 };
 
 export const getUpload = async (req: Request, res: Response) => {
-    res.json(await apiManager.getUpload(req.params.uploadId));
+    res.json(await apiManager.getUploadById(req.params.uploadId));
 };
 
 export const getUploads = async (req: Request, res: Response) => {
@@ -44,41 +44,41 @@ export const getUploads = async (req: Request, res: Response) => {
 };
 
 export const updateState = async (req: Request<IStateActionParams>, res: Response) => {
-    res.json(await apiManager.updateState(req.params.stateId, req.body));
+    res.json(await apiManager.updateStateById(req.params.stateId, req.body));
 };
 
 export const updateFile = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.updateFile(req.params.fsObjectId, req.body));
+    res.json(await apiManager.updateFileById(req.params.fsObjectId, req.body));
 };
 
 export const updateFolder = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.updateFolder(req.params.fsObjectId, req.body));
+    res.json(await apiManager.updateFolderById(req.params.fsObjectId, req.body));
 };
 
 export const updateShortcut = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.updateShortcut(req.params.fsObjectId, req.body));
+    res.json(await apiManager.updateShortcutById(req.params.fsObjectId, req.body));
 };
 
 export const updateUpload = async (req: Request, res: Response) => {
-    res.json(await apiManager.updateUpload(req.params.uploadId, req.body));
+    res.json(await apiManager.updateUploadById(req.params.uploadId, req.body));
 };
 
 export const unshareFsObject = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.unshareFsObject(req.params.fsObjectId, req.body.userId));
+    res.json(await apiManager.unshareFsObjectById(req.params.fsObjectId, req.body.userId));
 };
 
 export const deleteFile = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.deleteFile(req.params.fsObjectId));
+    res.json(await apiManager.deleteFileById(req.params.fsObjectId));
 };
 
 export const deleteFolder = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.deleteFolder(req.params.fsObjectId));
+    res.json(await apiManager.deleteFolderById(req.params.fsObjectId));
 };
 
 export const deleteShortcut = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.deleteShortcut(req.params.fsObjectId));
+    res.json(await apiManager.deleteShortcutById(req.params.fsObjectId));
 };
 
 export const deleteUpload = async (req: Request, res: Response) => {
-    res.json(await apiManager.deleteUpload(req.params.uploadId));
+    res.json(await apiManager.deleteUploadById(req.params.uploadId));
 };
