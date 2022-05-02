@@ -3,14 +3,14 @@ import * as request from 'supertest';
 import config from '../src/config';
 import Server from '../src/express/server';
 
-jest.setTimeout(30000);
+jest.setTimeout(60000);
 
 const removeFsObjectsCollection = async () =>
     mongoose.connection.collections[config.mongo.fsObjectsCollectionName].deleteMany({});
 const removeStateCollection = async () =>
     mongoose.connection.collections[config.mongo.statesCollectionName].deleteMany({});
 
-describe('users tests:', () => {
+describe('Users tests:', () => {
     let app: Express.Application;
 
     beforeAll(async () => {
@@ -30,7 +30,7 @@ describe('users tests:', () => {
     });
 
     describe('Create file', () => {
-        it('should fail to create file, the parameters are incorrect', async () => {
+        it('should not create file, all the parameters are incorrect', async () => {
             await request(app)
                 .post('/api/users/*/fs/file')
                 .send({
@@ -58,33 +58,31 @@ describe('users tests:', () => {
                 })
                 .expect(200);
         });
+        it('should create 10 files in parallel ', async () => {
+            const files: Promise<any>[] = [];
+            for (let i = 0; i < 10; i++) {
+                files.push(
+                    request(app)
+                        .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                        .send({
+                            name: `file-test-${i}`,
+                            parent: null,
+                            key: 'string',
+                            bucket: 'string',
+                            size: 50,
+                            public: false,
+                            source: 'drive',
+                        })
+                        .expect(200),
+                );
+            }
+            await Promise.all(files);
+            expect(files.length).toBe(10);
+        });
     });
 
-    // describe('Create 10 files with for loop and async', () => {
-    //     it('should create 10 files', async () => {
-    //         const promises: Promise<any>[] = [];
-    //         for (let i = 0; i < 10; i++) {
-    //             promises.push(
-    //                 request(app)
-    //                     .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
-    //                     .send({
-    //                         name: `file-test-${i}`,
-    //                         parent: null,
-    //                         key: 'string',
-    //                         bucket: 'string',
-    //                         size: 50,
-    //                         public: false,
-    //                         source: 'drive',
-    //                     })
-    //                     .expect(200),
-    //             );
-    //         }
-    //         await Promise.all(promises);
-    //     });
-    // });
-
     describe('Create folder', () => {
-        it('should fail to create a folder, the parameters are incorrect', async () => {
+        it('should not create a folder, all the parameters are incorrect', async () => {
             await request(app).post('/api/users/*/fs/folder').send({ name: 123, parent: '12345678910' }).expect(400);
         });
 
@@ -100,7 +98,7 @@ describe('users tests:', () => {
     });
 
     describe('Create shortcut', () => {
-        it('should fail to create shortcut, the parameters are incorrect', async () => {
+        it('should not create shortcut, all the parameters are incorrect', async () => {
             await request(app)
                 .post('/api/users/*/fs/shortcut')
                 .send({
@@ -138,7 +136,7 @@ describe('users tests:', () => {
 
     describe('Restore file from trash', () => {
         it('should restore file from trash', async () => {
-            const createdFile = await request(app)
+            const { body: createdFile } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
                 .send({
                     name: 'file-test',
@@ -152,18 +150,25 @@ describe('users tests:', () => {
                 .expect(200);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.body.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
                 .expect(200);
 
             await request(app)
-                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.body.fsObjectId}/restore`)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}/restore`)
                 .expect(200);
+
+            const { body: restoredFile } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({ fsObjectId: createdFile.fsObjectId })
+                .expect(200);
+
+            expect(restoredFile[0].fsObjectId).toBe(createdFile.fsObjectId);
         });
     });
 
     describe('Restore folder from trash', () => {
         it('should restore folder from trash', async () => {
-            const createdFolder = await request(app)
+            const { body: createdFolder } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
                 .send({
                     name: 'folder-test',
@@ -172,45 +177,59 @@ describe('users tests:', () => {
                 .expect(200);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.body.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
                 .expect(200);
 
             await request(app)
-                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.body.fsObjectId}/restore`)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}/restore`)
                 .expect(200);
+
+            const { body: restoredFolder } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({ fsObjectId: createdFolder.fsObjectId })
+                .expect(200);
+
+            expect(restoredFolder[0].fsObjectId).toBe(createdFolder.fsObjectId);
         });
     });
 
     describe('Restore shortcut from trash', () => {
         it('should restore shortcut from trash', async () => {
-            const createdFolder = await request(app)
+            const { body: createdFolder } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
                 .send({
                     name: 'folder-test',
                     parent: null,
                 })
                 .expect(200);
-            const createdShortcut = await request(app)
+            const { body: createdShortcut } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut')
                 .send({
                     name: 'shortcut',
                     parent: null,
-                    ref: `${createdFolder.body.fsObjectId}`,
+                    ref: `${createdFolder.fsObjectId}`,
                 })
                 .expect(200);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/${createdShortcut.body.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/${createdShortcut.fsObjectId}`)
                 .expect(200);
 
             await request(app)
-                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/${createdShortcut.body.fsObjectId}/restore`)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/${createdShortcut.fsObjectId}/restore`)
                 .expect(200);
+
+            const { body: restoredShortcut } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({ fsObjectId: createdShortcut.fsObjectId })
+                .expect(200);
+
+            expect(restoredShortcut[0].ref).toBe(createdFolder.fsObjectId);
         });
     });
 
     describe('Share fsObject', () => {
-        it('should fail to share a FsObject', async () => {
+        it('should not share a FsObject', async () => {
             await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/626694a390e68455bbd4dabb/share')
                 .send({
@@ -220,7 +239,7 @@ describe('users tests:', () => {
                 .expect(404);
         });
 
-        it('should share a FsObject', async () => {
+        it('should not share FsObject, higher permission than own', async () => {
             const { body: file } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
                 .send({
@@ -238,13 +257,41 @@ describe('users tests:', () => {
                 .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${file.fsObjectId}/share`)
                 .send({
                     sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
+                    sharedPermission: 'owner',
+                })
+                .expect(400);
+        });
+
+        it('should share a FsObject', async () => {
+            const { body: file } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: sharedFsObject } = await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${file.fsObjectId}/share`)
+                .send({
+                    sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
                     sharedPermission: 'read',
                 })
+                .expect(200);
+
+            await request(app)
+                .get('/api/users/d7e4d4e4f7c8e8d4f7c8e58f/states/fsObjects')
+                .query({ fsObjectId: file.fsObjectId, permission: sharedFsObject.permission })
                 .expect(200);
         });
     });
 
-    describe('Get the quota of user', () => {
+    describe('Get user quota', () => {
         it('should get quota', async () => {
             await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
@@ -293,8 +340,10 @@ describe('users tests:', () => {
                 .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
                 .query({
                     trash: true,
+                    fsObjectId: createdFile.fsObjectId,
                 })
                 .expect(200);
+
             expect(trashFile.length).toEqual(1);
         });
     });
@@ -314,7 +363,7 @@ describe('users tests:', () => {
                 })
                 .expect(200);
 
-            await request(app)
+            const { body: createdFolder } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
                 .send({
                     name: 'folder-test',
@@ -326,8 +375,10 @@ describe('users tests:', () => {
                 .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
                 .query({
                     type: 'folder',
+                    fsObjectId: createdFolder.fsObjectId,
                 })
                 .expect(200);
+
             expect(folder.length).toEqual(1);
         });
     });
@@ -366,6 +417,7 @@ describe('users tests:', () => {
             const { body: fileHierarchy } = await request(app)
                 .get(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${file.fsObjectId}/hierarchy`)
                 .expect(200);
+
             expect(fileHierarchy.length).toBe(2);
         });
     });
@@ -391,6 +443,7 @@ describe('users tests:', () => {
                     favorite: true,
                 })
                 .expect(200);
+
             expect(updatedState.favorite).toBe(true);
         });
     });
@@ -416,6 +469,7 @@ describe('users tests:', () => {
                     name: 'file-test-updated',
                 })
                 .expect(200);
+
             expect(updatedFile.name).toBe('file-test-updated');
         });
     });
@@ -436,6 +490,7 @@ describe('users tests:', () => {
                     name: 'folder-test-updated',
                 })
                 .expect(200);
+
             expect(updatedFolder.name).toBe('folder-test-updated');
         });
     });
@@ -470,12 +525,13 @@ describe('users tests:', () => {
                     name: 'shortcut-test-updated',
                 })
                 .expect(200);
+
             expect(updatedShortcut.name).toBe('shortcut-test-updated');
         });
     });
 
     describe('Delete shared fsObject', () => {
-        it('should delete shared fsObject', async () => {
+        it('should delete shared fsObject by owner', async () => {
             const { body: createdFile } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
                 .send({
@@ -489,21 +545,31 @@ describe('users tests:', () => {
                 })
                 .expect(200);
 
-            const { body: createdShareFile } = await request(app)
+            const { body: sharedFileState } = await request(app)
                 .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
                 .send({
                     sharedUserId: '62655a5dd681ae7e5f9eafe1',
                     sharedPermission: 'write',
                 })
                 .expect(200);
-            expect(createdShareFile.permission).toBe('write');
 
-            await request(app)
+            expect(sharedFileState.permission).toBe('write');
+
+            const { body: deletedState } = await request(app)
                 .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
                 .send({
                     userId: '62655a5dd681ae7e5f9eafe1',
                 })
                 .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe1/states/fsObjects')
+                .query({
+                    stateId: deletedState._id,
+                })
+                .expect(200);
+
+            expect(result.length).toBe(0);
         });
     });
 
@@ -526,6 +592,45 @@ describe('users tests:', () => {
                 .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
                 .expect(200);
         });
+
+        it('should delete shared file', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: sharedFileState } = await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'write',
+                })
+                .expect(200);
+
+            expect(sharedFileState.permission).toBe('write');
+
+            const { body: deleteFile } = await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/file/${createdFile.fsObjectId}`)
+                .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe1/states/fsObjects')
+                .query({
+                    stateId: deleteFile._id,
+                })
+                .expect(200);
+
+            expect(result.length).toBe(1);
+            expect(result[0].trash).toBe(true);
+        });
     });
 
     describe('Delete folder', () => {
@@ -541,6 +646,40 @@ describe('users tests:', () => {
             await request(app)
                 .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
                 .expect(200);
+        });
+
+        it('should delete shared folder', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+                .send({
+                    name: 'folder-test',
+                    parent: null,
+                })
+                .expect(200);
+
+            const { body: sharedFolderState } = await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFolder.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'write',
+                })
+                .expect(200);
+
+            expect(sharedFolderState.permission).toBe('write');
+
+            const { body: deleteFolder } = await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/folder/${createdFolder.fsObjectId}`)
+                .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe1/states/fsObjects')
+                .query({
+                    stateId: deleteFolder._id,
+                })
+                .expect(200);
+
+            expect(result.length).toBe(1);
+            expect(result[0].trash).toBe(true);
         });
     });
 
@@ -571,6 +710,188 @@ describe('users tests:', () => {
             await request(app)
                 .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/${createdShortcut.fsObjectId}`)
                 .expect(200);
+        });
+
+        it('should delete shared shortcut', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: sharedFile } = await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'write',
+                })
+                .expect(200);
+
+            const { body: createdShortcut } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe1/fs/shortcut')
+                .send({
+                    name: 'shortcut-test',
+                    parent: null,
+                    ref: sharedFile.fsObjectId,
+                })
+                .expect(200);
+
+            const { body: deleteShortcut } = await request(app).delete(
+                `/api/users/62655a5dd681ae7e5f9eafe1/fs/shortcut/${createdShortcut.fsObjectId}`,
+            );
+
+            const { body: result } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe1/states/fsObjects')
+                .query({
+                    stateId: deleteShortcut._id,
+                    userId: '62655a5dd681ae7e5f9eafe1',
+                    type: 'shortcut',
+                })
+                .expect(200);
+
+            expect(result.length).toBe(1);
+            expect(result[0].trash).toBe(true);
+        });
+    });
+
+    describe('Delete trash', () => {
+        it('should delete fsObject from trash', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+                .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({
+                    stateId: createdFile._id,
+                })
+                .expect(200);
+
+            expect(result.length).toBe(1);
+            expect(result[0].trash).toBe(true);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+                .expect(200);
+
+            const { body: result2 } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({
+                    stateId: createdFile._id,
+                })
+                .expect(200);
+
+            expect(result2.length).toBe(0);
+        });
+
+        // it('should delete folder from trash', async () => {
+        //     const { body: createdFolder } = await request(app)
+        //         .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+        //         .send({
+        //             name: 'folder-test',
+        //             parent: null,
+        //         })
+        //         .expect(200);
+
+        //     await request(app)
+        //         .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
+        //         .expect(200);
+
+        //     const { body: result } = await request(app)
+        //         .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+        //         .query({
+        //             fsObjectId: createdFolder.fsObjectId,
+        //         })
+        //         .expect(200);
+
+        //     expect(result.length).toBe(1);
+        //     expect(result[0].trash).toBe(true);
+
+        //     await request(app)
+        //         .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
+        //         .expect(200);
+
+        //     const { body: result2 } = await request(app)
+        //         .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+        //         .query({
+        //             stateId: createdFolder._id,
+        //         })
+        //         .expect(200);
+
+        //     expect(result2.length).toBe(0);
+        // });
+
+        it('should delete shortcut from trash', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: createdShortcut } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut')
+                .send({
+                    name: 'shortcut-test',
+                    parent: null,
+                    ref: createdFile.fsObjectId,
+                })
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/${createdShortcut.fsObjectId}`)
+                .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({
+                    stateId: createdShortcut._id,
+                    type: 'shortcut',
+                })
+                .expect(200);
+
+            expect(result.length).toBe(1);
+            expect(result[0].trash).toBe(true);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/${createdShortcut.fsObjectId}`)
+                .expect(200);
+
+            const { body: result2 } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({
+                    stateId: createdShortcut._id,
+                    type: 'shortcut',
+                })
+                .expect(200);
+
+            expect(result2.length).toBe(0);
         });
     });
 });
