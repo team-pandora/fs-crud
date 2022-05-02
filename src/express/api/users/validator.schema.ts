@@ -47,6 +47,13 @@ export const restoreShortcutFromTrashRequestSchema = Joi.object({
 
 export const shareFsObjectRequestSchema = apiValidator.shareFsObjectRequestSchema.keys({
     params: apiUserFsActionParamsRequestSchema,
+    body: {
+        sharedUserId: Joi.string().regex(config.users.idRegex).required(),
+        sharedPermission: Joi.string()
+            .valid(...config.constants.permissions)
+            .invalid('owner')
+            .required(),
+    },
 });
 
 export const aggregateStatesFsObjectsRequestSchema = apiValidator.aggregateStatesFsObjectsRequestSchema.keys({

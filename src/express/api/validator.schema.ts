@@ -55,7 +55,7 @@ export const createUploadRequestSchema = Joi.object({
     body: {
         userId: Joi.string().regex(config.users.idRegex).required(),
         name: Joi.string().regex(nameRegex).required(),
-        parent: JoiObjectId.optional(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
         uploadedBytes: Joi.number().required(),
         key: Joi.string().regex(fileKeyRegex).required(),
         bucket: Joi.string().regex(fileBucketRegex).required(),
@@ -136,7 +136,7 @@ export const getFsObjectHierarchyRequestSchema = Joi.object({
 export const getUploadRequestSchema = Joi.object({
     query: {},
     params: {
-        uploadId: JoiObjectId.required(),
+        uploadId: Joi.string().hex().length(24).required(),
     },
     body: {},
 });
