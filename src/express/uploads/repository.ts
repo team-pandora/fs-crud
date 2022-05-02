@@ -10,7 +10,7 @@ import UploadModel from './model';
  * @returns {Promise<IUpload>} Promise object containing the new Upload.
  */
 const createUpload = async (upload: INewUpload): Promise<IUpload> => {
-    return UploadModel.create([{ ...upload }])[0];
+    return UploadModel.create({ ...upload });
 };
 
 /**
@@ -18,7 +18,7 @@ const createUpload = async (upload: INewUpload): Promise<IUpload> => {
  * @param uploadId - The Upload id.
  * @returns {Promise<IUpload>} Promise object containing the Upload.
  */
-const getUpload = async (uploadId: string): Promise<IUpload> => {
+const getUploadById = async (uploadId: string): Promise<IUpload> => {
     const result = await UploadModel.findById(uploadId).exec();
     if (result === null) throw new ServerError(404, 'Upload not found');
 
@@ -44,7 +44,7 @@ const getUploads = async (filters: IUploadFilters): Promise<IUpload[]> => {
  * @param update - The update object.
  * @returns {Promise<IUpload>} Promise object containing the updated Upload.
  */
-const updateUpload = async (uploadId: string, update: IUpdateUpload): Promise<IUpload> => {
+const updateUploadById = async (uploadId: string, update: IUpdateUpload): Promise<IUpload> => {
     const newUpload = await UploadModel.findByIdAndUpdate(uploadId, update, { new: true }).exec();
     if (newUpload === null) throw new ServerError(404, 'Upload not found');
 
@@ -56,11 +56,11 @@ const updateUpload = async (uploadId: string, update: IUpdateUpload): Promise<IU
  * @param uploadId - The id of the Upload object.
  * @returns {Promise<IUpload>} Promise object containing the Upload.
  */
-const deleteUpload = async (uploadId: string): Promise<IUpload> => {
+const deleteUploadById = async (uploadId: string): Promise<IUpload> => {
     const result = await UploadModel.findByIdAndDelete(uploadId).exec();
     if (result === null) throw new ServerError(404, 'Upload not found');
 
     return result;
 };
 
-export { createUpload, getUpload, getUploads, updateUpload, deleteUpload };
+export { createUpload, getUploadById, getUploads, updateUploadById, deleteUploadById };

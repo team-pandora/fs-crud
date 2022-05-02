@@ -255,7 +255,7 @@ const getAllFsObjectIdsUnderFolder = async (
         {
             $project: {
                 _id: 0,
-                fsObjectsIds: {
+                fsObjectIds: {
                     $map: {
                         input: '$fsObjects',
                         as: 'fsObject',

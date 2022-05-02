@@ -54,14 +54,16 @@ export const createShortcut = async (shortcut: INewShortcut): Promise<IShortcut>
  * @param upload - The new Upload object.
  * @returns {Promise<INewUpload>} Promise object containing the Upload.
  */
-export const createUpload = async (upload: INewUpload): Promise<void> => {
+export const createUpload = async (upload: INewUpload): Promise<any[]> => {
     return makeTransaction(async (session) => {
         const operations: Promise<any>[] = [];
 
         operations.push(uploadRepository.createUpload(upload));
         operations.push(quotasRepository.changeQuotaUsed(upload.userId, upload.uploadedBytes, session));
 
-        await Promise.all(operations);
+        const result = await Promise.all(operations);
+
+        return result[0];
     });
 };
 
@@ -134,7 +136,7 @@ export const getFsObjectHierarchyById = async (fsObjectId: mongoose.Types.Object
  * @returns {Promise<IUpload>} Promise object containing the Upload.
  */
 export const getUploadById = async (uploadId: string): Promise<IUpload> => {
-    return uploadRepository.getUpload(uploadId);
+    return uploadRepository.getUploadById(uploadId);
 };
 
 /**
@@ -205,9 +207,11 @@ export const updateUploadById = async (uploadId: string, update: IUpdateUpload):
         const operations: Promise<any>[] = [];
 
         if (sizeDifference) operations.push(quotasRepository.changeQuotaUsed(upload.userId, sizeDifference, session));
-        operations.push(uploadRepository.updateUpload(uploadId, update));
+        operations.push(uploadRepository.updateUploadById(uploadId, update));
 
-        await Promise.all(operations);
+        const result = await Promise.all(operations);
+
+        return result[1];
     });
 };
 
@@ -308,5 +312,5 @@ export const deleteShortcutById = async (fsObjectId: mongoose.Types.ObjectId): P
  * @returns {Promise<IUpload>} Promise object containing the Upload.
  */
 export const deleteUploadById = async (uploadId: string): Promise<IUpload> => {
-    return uploadRepository.deleteUpload(uploadId);
+    return uploadRepository.deleteUploadById(uploadId);
 };
