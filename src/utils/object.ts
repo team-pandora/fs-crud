@@ -25,4 +25,26 @@ export const removeUndefinedFields = (obj: object): object => {
     return newObject;
 };
 
-export default { subtractObjectFields };
+export const bfs = <fieldType>(
+    array: any[],
+    startValue: fieldType,
+    fromField: string,
+    toField: string,
+): fieldType[] => {
+    const queue = [startValue];
+    const visited: Set<fieldType> = new Set();
+
+    while (queue.length) {
+        const current = queue.shift()!;
+        visited.add(current);
+        for (let i = 0; i < array.length; i++) {
+            if (array[i][toField] === current && !visited.has(array[i][fromField])) {
+                queue.push(array[i][fromField]);
+            }
+        }
+    }
+
+    visited.delete(startValue);
+
+    return Array.from(visited);
+};

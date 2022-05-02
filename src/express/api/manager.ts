@@ -1,6 +1,7 @@
 import { StatusCodes } from 'http-status-codes';
 import * as mongoose from 'mongoose';
 import { makeTransaction } from '../../utils/mongoose';
+import { bfs } from '../../utils/object';
 import { ServerError } from '../error';
 import {
     IFile,
@@ -221,10 +222,21 @@ export const updateUploadById = async (uploadId: string, update: IUpdateUpload):
  * @param fsObjectId - The FsObject id.
  * @returns {Promise<IState>} Promise object containing the State.
  */
-export const unshareFsObjectById = async (
-    fsObjectId: mongoose.Types.ObjectId,
-    userId: string | { $in: string[] },
-): Promise<IState> => {
+export const unshareFsObjectById = async (fsObjectId: mongoose.Types.ObjectId, userId: string): Promise<IState> => {
+    const fsObject = await fsRepository.getFsObject({ _id: fsObjectId });
+
+    if (fsObject.type === 'folder') {
+        const childrenIds = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
+        const children = await apiRepository.aggregateStatesFsObjects({
+            userId,
+            fsObjectId: { $in: childrenIds },
+            root: false,
+            permission: { $nin: ['owner'] },
+        });
+        const filteredChildrenIds = bfs(children, fsObjectId, 'fsObjectId', 'parent');
+        await statesRepository.deleteStates({ userId, fsObjectId: { $in: filteredChildrenIds } });
+    }
+
     return statesRepository.deleteState({ fsObjectId, userId });
 };
 

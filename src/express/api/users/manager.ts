@@ -2,6 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 import * as mongoose from 'mongoose';
 import config from '../../../config';
 import { makeTransaction } from '../../../utils/mongoose';
+import { bfs } from '../../../utils/object';
 import { ServerError } from '../../error';
 import {
     IFile,
@@ -264,19 +265,31 @@ export const unshareFsObject = async (
     fsObjectId: mongoose.Types.ObjectId,
     sharedUserId: string,
 ): Promise<IState> => {
-    const state = await statesRepository.getState({ userId, fsObjectId });
-    if (!state) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
+    const [fsObjectAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
+    if (!fsObjectAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
 
     const sharedState = await statesRepository.getState({ userId: sharedUserId, fsObjectId });
     if (!sharedState) throw new ServerError(StatusCodes.BAD_REQUEST, 'Object is not shared with provided user');
 
-    if (permissionPriority[state.permission] <= permissionPriority[sharedState.permission])
+    if (permissionPriority[fsObjectAndState.permission] <= permissionPriority[sharedState.permission])
         throw new ServerError(
             StatusCodes.BAD_REQUEST,
             'Trying to unshare user with equal or higher permission than own.',
         );
 
-    return statesRepository.deleteState({ userId, fsObjectId });
+    if (fsObjectAndState.type === 'folder') {
+        const childrenIds = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
+        const children = await apiRepository.aggregateStatesFsObjects({
+            userId: sharedUserId,
+            fsObjectId: { $in: childrenIds },
+            root: false,
+            permission: { $nin: ['owner'] },
+        });
+        const filteredChildrenIds = bfs(children, fsObjectId, 'fsObjectId', 'parent');
+        await statesRepository.deleteStates({ userId: sharedUserId, fsObjectId: { $in: filteredChildrenIds } });
+    }
+
+    return statesRepository.deleteState({ userId: sharedUserId, fsObjectId });
 };
 
 /**

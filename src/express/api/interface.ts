@@ -26,7 +26,7 @@ export interface IAggregateStatesAndFsObjectsQuery {
     trash?: boolean;
     trashRoot?: boolean;
     root?: boolean;
-    permission?: permission | { $in: Array<permission> };
+    permission?: permission | { $in: Array<permission> } | { $nin: Array<permission> };
 
     // FsObject filters
     key?: string;

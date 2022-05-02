@@ -208,10 +208,7 @@ export const unshareFsObjectRequestSchema = Joi.object({
     query: {},
     params: apiFsActionParamsRequestSchema,
     body: {
-        userId: Joi.alternatives()
-            .try(Joi.string().regex(config.users.idRegex), Joi.array().items(Joi.string().regex(config.users.idRegex)))
-            .custom((value) => (Array.isArray(value) ? { $in: value } : value))
-            .required(),
+        userId: Joi.string().regex(config.users.idRegex).required(),
     },
 });
 
