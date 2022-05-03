@@ -33,12 +33,6 @@ apiRouter.post(
     wrapMiddleware(apiController.shareFsObject),
 );
 
-apiRouter.post(
-    '/uploads/upload',
-    ValidateRequest(apiValidator.createUploadRequestSchema),
-    wrapMiddleware(apiController.createUpload),
-);
-
 apiRouter.get(
     '/states/fsObjects',
     ValidateRequest(apiValidator.aggregateStatesFsObjectsRequestSchema),
@@ -55,18 +49,6 @@ apiRouter.get(
     '/fs/:fsObjectId/hierarchy',
     ValidateRequest(apiValidator.getFsObjectHierarchyRequestSchema),
     wrapMiddleware(apiController.getFsObjectHierarchy),
-);
-
-apiRouter.get(
-    '/uploads/:uploadId',
-    ValidateRequest(apiValidator.getUploadRequestSchema),
-    wrapMiddleware(apiController.getUpload),
-);
-
-apiRouter.get(
-    '/uploads',
-    ValidateRequest(apiValidator.getUploadsRequestSchema),
-    wrapMiddleware(apiController.getUploads),
 );
 
 apiRouter.patch(
@@ -93,12 +75,6 @@ apiRouter.patch(
     wrapMiddleware(apiController.updateShortcut),
 );
 
-apiRouter.patch(
-    '/uploads/:uploadId',
-    ValidateRequest(apiValidator.updateUploadRequestSchema),
-    wrapMiddleware(apiController.updateUpload),
-);
-
 apiRouter.delete(
     '/fs/:fsObjectId/share',
     ValidateRequest(apiValidator.unshareFsObjectRequestSchema),
@@ -121,12 +97,6 @@ apiRouter.delete(
     '/fs/:fsObjectId/shortcut',
     ValidateRequest(apiValidator.deleteShortcutRequestSchema),
     wrapMiddleware(apiController.deleteShortcut),
-);
-
-apiRouter.delete(
-    '/upload/:uploadId',
-    ValidateRequest(apiValidator.deleteUploadRequestSchema),
-    wrapMiddleware(apiController.deleteUpload),
 );
 
 export default apiRouter;

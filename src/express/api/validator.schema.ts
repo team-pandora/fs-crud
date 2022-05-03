@@ -49,23 +49,6 @@ export const createShortcutRequestSchema = Joi.object({
     },
 });
 
-export const createUploadRequestSchema = Joi.object({
-    query: {},
-    params: {},
-    body: {
-        userId: Joi.string().regex(config.users.idRegex).required(),
-        name: Joi.string().regex(nameRegex).required(),
-        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
-        uploadedBytes: Joi.number().required(),
-        key: Joi.string().regex(fileKeyRegex).required(),
-        bucket: Joi.string().regex(fileBucketRegex).required(),
-        size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
-        source: Joi.string()
-            .valid(...apps)
-            .optional(),
-    },
-});
-
 export const shareFsObjectRequestSchema = Joi.object({
     query: {},
     params: apiFsActionParamsRequestSchema,
@@ -133,26 +116,6 @@ export const getFsObjectHierarchyRequestSchema = Joi.object({
     body: {},
 });
 
-export const getUploadRequestSchema = Joi.object({
-    query: {},
-    params: {
-        uploadId: Joi.string().hex().length(24).required(),
-    },
-    body: {},
-});
-
-export const getUploadsRequestSchema = Joi.object({
-    query: {
-        userId: Joi.string().regex(config.users.idRegex).optional(),
-        name: Joi.string().regex(nameRegex).optional(),
-        source: Joi.string()
-            .valid(...apps)
-            .optional(),
-    },
-    params: {},
-    body: {},
-});
-
 export const updateStateRequestSchema = Joi.object({
     query: {},
     params: apiStateActionParamsRequestSchema,
@@ -196,14 +159,6 @@ export const updateShortcutRequestSchema = Joi.object({
     }).min(1),
 });
 
-export const updateUploadRequestSchema = Joi.object({
-    query: {},
-    params: { uploadId: JoiObjectId.required() },
-    body: {
-        uploadedBytes: Joi.number().required(),
-    },
-});
-
 export const unshareFsObjectRequestSchema = Joi.object({
     query: {},
     params: apiFsActionParamsRequestSchema,
@@ -227,11 +182,5 @@ export const deleteFolderRequestSchema = Joi.object({
 export const deleteShortcutRequestSchema = Joi.object({
     query: {},
     params: apiFsActionParamsRequestSchema,
-    body: {},
-});
-
-export const deleteUploadRequestSchema = Joi.object({
-    query: {},
-    params: { uploadId: JoiObjectId.required() },
     body: {},
 });

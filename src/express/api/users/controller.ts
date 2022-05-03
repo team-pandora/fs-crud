@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { IUserActionParams, IUserFsActionParams, IUserStateActionParams } from './interface';
+import { IUserActionParams, IUserFsActionParams, IUserStateActionParams, IUserUploadActionParams } from './interface';
 import * as usersManager from './manager';
 
 export const createFile = async (req: Request<IUserActionParams>, res: Response) => {
@@ -12,6 +12,10 @@ export const createFolder = async (req: Request<IUserActionParams>, res: Respons
 
 export const createShortcut = async (req: Request<IUserActionParams>, res: Response) => {
     res.json(await usersManager.createShortcut(req.params.userId, req.body));
+};
+
+export const createUpload = async (req: Request, res: Response) => {
+    res.json(await usersManager.createUpload(req.body));
 };
 
 export const restoreFileFromTrash = async (req: Request<IUserFsActionParams>, res: Response) => {
@@ -48,6 +52,14 @@ export const getFsObjectHierarchy = async (req: Request<IUserFsActionParams>, re
     res.json(await usersManager.getFsObjectHierarchy(req.params.userId, req.params.fsObjectId));
 };
 
+export const getUpload = async (req: Request, res: Response) => {
+    res.json(await usersManager.getUpload(req.query));
+};
+
+export const getUploads = async (req: Request, res: Response) => {
+    res.json(await usersManager.getUploads(req.query));
+};
+
 export const updateState = async (req: Request<IUserStateActionParams>, res: Response) => {
     res.json(await usersManager.updateState(req.params.userId, req.params.stateId, req.body));
 };
@@ -64,6 +76,10 @@ export const updateShortcut = async (req: Request<IUserFsActionParams>, res: Res
     res.json(await usersManager.updateShortcut(req.params.userId, req.params.fsObjectId, req.body));
 };
 
+export const updateUpload = async (req: Request<IUserUploadActionParams>, res: Response) => {
+    res.json(await usersManager.updateUploadById(req.params.userId, req.params.uploadId, req.body));
+};
+
 export const unshareFsObject = async (req: Request<IUserFsActionParams>, res: Response) => {
     res.json(await usersManager.unshareFsObject(req.params.userId, req.params.fsObjectId, req.body.userId));
 };
@@ -78,4 +94,8 @@ export const deleteFolder = async (req: Request<IUserFsActionParams>, res: Respo
 
 export const deleteShortcut = async (req: Request<IUserFsActionParams>, res: Response) => {
     res.json(await usersManager.deleteShortcut(req.params.userId, req.params.fsObjectId));
+};
+
+export const deleteUpload = async (req: Request<IUserUploadActionParams>, res: Response) => {
+    res.json(await usersManager.deleteUploadById(req.params.userId, req.params.uploadId));
 };

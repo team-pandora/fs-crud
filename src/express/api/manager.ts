@@ -1,8 +1,6 @@
-import { StatusCodes } from 'http-status-codes';
 import * as mongoose from 'mongoose';
 import { makeTransaction } from '../../utils/mongoose';
 import { bfs } from '../../utils/object';
-import { ServerError } from '../error';
 import {
     IFile,
     IFolder,
@@ -18,8 +16,6 @@ import * as fsRepository from '../fs/repository';
 import * as quotasRepository from '../quotas/repository';
 import { INewState, IState, IUpdateState, permission } from '../states/interface';
 import * as statesRepository from '../states/repository';
-import { INewUpload, IUpdateUpload, IUpload, IUploadFilters } from '../uploads/interface';
-import * as uploadRepository from '../uploads/repository';
 import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from './interface';
 import * as apiRepository from './repository';
 
@@ -48,24 +44,6 @@ export const createFolder = async (folder: INewFolder): Promise<IFolder> => {
  */
 export const createShortcut = async (shortcut: INewShortcut): Promise<IShortcut> => {
     return fsRepository.createShortcut(shortcut);
-};
-
-/**
- * Create a Upload document.
- * @param upload - The new Upload object.
- * @returns {Promise<INewUpload>} Promise object containing the Upload.
- */
-export const createUpload = async (upload: INewUpload): Promise<any[]> => {
-    return makeTransaction(async (session) => {
-        const operations: Promise<any>[] = [];
-
-        operations.push(uploadRepository.createUpload(upload));
-        operations.push(quotasRepository.changeQuotaUsed(upload.userId, upload.uploadedBytes, session));
-
-        const result = await Promise.all(operations);
-
-        return result[0];
-    });
 };
 
 /**
@@ -124,29 +102,9 @@ export const aggregateFsObjectsStates = async (
  */
 export const getFsObjectHierarchyById = async (fsObjectId: mongoose.Types.ObjectId): Promise<IFolder[]> => {
     const fsObject = await fsRepository.getFsObject({ _id: fsObjectId });
-    if (!fsObject) throw new ServerError(StatusCodes.NOT_FOUND, 'Provided fsObject does not exist.');
-
     const hierarchy = apiRepository.getFsObjectHierarchy(fsObject._id);
 
     return hierarchy;
-};
-
-/**
- * Get a Upload.
- * @param upload - The Upload id.
- * @returns {Promise<IUpload>} Promise object containing the Upload.
- */
-export const getUploadById = async (uploadId: string): Promise<IUpload> => {
-    return uploadRepository.getUploadById(uploadId);
-};
-
-/**
- * Get filtered Uploads.
- * @param filters - The filters object.
- * @returns {Promise<IUpload[]>} Promise object containing the Uploads.
- */
-export const getUploads = async (filters: IUploadFilters): Promise<IUpload[]> => {
-    return uploadRepository.getUploads(filters);
 };
 
 /**
@@ -192,28 +150,6 @@ export const updateShortcutById = async (
     update: IUpdateShortcut,
 ): Promise<IShortcut> => {
     return fsRepository.updateShortcutById(fsObjectId, update);
-};
-
-/**
- * Update a Upload.
- * @param uploadId - The Upload id.
- * @param update - The update object.
- * @returns {Promise<IUpload>} Promise object containing the updated Upload.
- */
-export const updateUploadById = async (uploadId: string, update: IUpdateUpload): Promise<void> => {
-    const upload = await getUploadById(uploadId);
-    const sizeDifference = update.uploadedBytes - upload.uploadedBytes;
-
-    return makeTransaction(async (session) => {
-        const operations: Promise<any>[] = [];
-
-        if (sizeDifference) operations.push(quotasRepository.changeQuotaUsed(upload.userId, sizeDifference, session));
-        operations.push(uploadRepository.updateUploadById(uploadId, update));
-
-        const result = await Promise.all(operations);
-
-        return result[1];
-    });
 };
 
 /**
@@ -316,13 +252,4 @@ export const deleteShortcutById = async (fsObjectId: mongoose.Types.ObjectId): P
 
         await Promise.all(operations);
     });
-};
-
-/**
- * delete a Upload.
- * @param uploadId - The id of the Upload object.
- * @returns {Promise<IUpload>} Promise object containing the Upload.
- */
-export const deleteUploadById = async (uploadId: string): Promise<IUpload> => {
-    return uploadRepository.deleteUploadById(uploadId);
 };

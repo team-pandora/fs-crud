@@ -17,6 +17,10 @@ export interface IStateActionParams {
     stateId: mongoose.Types.ObjectId;
 }
 
+export interface IUploadActionParams {
+    uploadId: mongoose.Types.ObjectId;
+}
+
 export interface IAggregateStatesAndFsObjectsQuery {
     // State filters
     stateId?: mongoose.Types.ObjectId;

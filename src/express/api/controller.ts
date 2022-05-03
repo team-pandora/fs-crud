@@ -14,10 +14,6 @@ export const createShortcut = async (req: Request, res: Response) => {
     res.json(await apiManager.createShortcut(req.body));
 };
 
-export const createUpload = async (req: Request, res: Response) => {
-    res.json(await apiManager.createUpload(req.body));
-};
-
 export const shareFsObject = async (req: Request<IFsActionParams>, res: Response) => {
     const { sharedUserId, sharedPermission } = req.body;
     res.json(await apiManager.shareFsObjectById(req.params.fsObjectId, sharedUserId, sharedPermission));
@@ -33,14 +29,6 @@ export const aggregateFsObjectsStates = async (req: Request<IFsActionParams>, re
 
 export const getFsObjectHierarchy = async (req: Request<IFsActionParams>, res: Response) => {
     res.json(await apiManager.getFsObjectHierarchyById(req.params.fsObjectId));
-};
-
-export const getUpload = async (req: Request, res: Response) => {
-    res.json(await apiManager.getUploadById(req.params.uploadId));
-};
-
-export const getUploads = async (req: Request, res: Response) => {
-    res.json(await apiManager.getUploads(req.query));
 };
 
 export const updateState = async (req: Request<IStateActionParams>, res: Response) => {
@@ -59,10 +47,6 @@ export const updateShortcut = async (req: Request<IFsActionParams>, res: Respons
     res.json(await apiManager.updateShortcutById(req.params.fsObjectId, req.body));
 };
 
-export const updateUpload = async (req: Request, res: Response) => {
-    res.json(await apiManager.updateUploadById(req.params.uploadId, req.body));
-};
-
 export const unshareFsObject = async (req: Request<IFsActionParams>, res: Response) => {
     res.json(await apiManager.unshareFsObjectById(req.params.fsObjectId, req.body.userId));
 };
@@ -77,8 +61,4 @@ export const deleteFolder = async (req: Request<IFsActionParams>, res: Response)
 
 export const deleteShortcut = async (req: Request<IFsActionParams>, res: Response) => {
     res.json(await apiManager.deleteShortcutById(req.params.fsObjectId));
-};
-
-export const deleteUpload = async (req: Request, res: Response) => {
-    res.json(await apiManager.deleteUploadById(req.params.uploadId));
 };

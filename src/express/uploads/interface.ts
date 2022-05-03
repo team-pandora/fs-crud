@@ -32,6 +32,7 @@ export interface IUpdateUpload {
 
 export type IUploadFilters = {
     userId?: string;
+    uploadId?: mongoose.Types.ObjectId;
     name?: string;
     source?: source;
 };

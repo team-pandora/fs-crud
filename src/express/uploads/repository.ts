@@ -1,3 +1,4 @@
+import * as mongoose from 'mongoose';
 import { ServerError } from '../error';
 import { INewUpload, IUpdateUpload, IUpload, IUploadFilters } from './interface';
 import UploadModel from './model';
@@ -18,8 +19,8 @@ const createUpload = async (upload: INewUpload): Promise<IUpload> => {
  * @param uploadId - The Upload id.
  * @returns {Promise<IUpload>} Promise object containing the Upload.
  */
-const getUploadById = async (uploadId: string): Promise<IUpload> => {
-    const result = await UploadModel.findById(uploadId).exec();
+const getUpload = async (filters: IUploadFilters): Promise<IUpload> => {
+    const result = await UploadModel.findOne(filters).exec();
     if (result === null) throw new ServerError(404, 'Upload not found');
 
     return result;
@@ -40,12 +41,17 @@ const getUploads = async (filters: IUploadFilters): Promise<IUpload[]> => {
  *   2) calculate size
  *   3) update quota used
  *   4) update upload
+ * @param userId - The user id.
  * @param uploadId - The Upload id.
  * @param update - The update object.
  * @returns {Promise<IUpload>} Promise object containing the updated Upload.
  */
-const updateUploadById = async (uploadId: string, update: IUpdateUpload): Promise<IUpload> => {
-    const newUpload = await UploadModel.findByIdAndUpdate(uploadId, update, { new: true }).exec();
+const updateUploadById = async (
+    userId: string,
+    uploadId: mongoose.Types.ObjectId,
+    update: IUpdateUpload,
+): Promise<IUpload> => {
+    const newUpload = await UploadModel.findByIdAndUpdate({ userId, uploadId }, update, { new: true }).exec();
     if (newUpload === null) throw new ServerError(404, 'Upload not found');
 
     return newUpload;
@@ -53,14 +59,15 @@ const updateUploadById = async (uploadId: string, update: IUpdateUpload): Promis
 
 /**
  * delete a Upload.
+ * @param userId - The user id.
  * @param uploadId - The id of the Upload object.
  * @returns {Promise<IUpload>} Promise object containing the Upload.
  */
-const deleteUploadById = async (uploadId: string): Promise<IUpload> => {
-    const result = await UploadModel.findByIdAndDelete(uploadId).exec();
+const deleteUploadById = async (userId: string, uploadId: mongoose.Types.ObjectId): Promise<IUpload> => {
+    const result = await UploadModel.findByIdAndDelete({ userId, uploadId }).exec();
     if (result === null) throw new ServerError(404, 'Upload not found');
 
     return result;
 };
 
-export { createUpload, getUploadById, getUploads, updateUploadById, deleteUploadById };
+export { createUpload, getUpload, getUploads, updateUploadById, deleteUploadById };

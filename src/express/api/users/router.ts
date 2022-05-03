@@ -48,6 +48,12 @@ usersRouter.post(
     wrapMiddleware(usersController.shareFsObject),
 );
 
+usersRouter.post(
+    '/users/:userId/uploads',
+    ValidateRequest(usersValidator.createUploadRequestSchema),
+    wrapMiddleware(usersController.createUpload),
+);
+
 usersRouter.get(
     '/users/:userId/quota',
     ValidateRequest(usersValidator.getQuotaByUserIdRequestSchema),
@@ -70,6 +76,18 @@ usersRouter.get(
     '/users/:userId/fs/:fsObjectId/hierarchy',
     ValidateRequest(usersValidator.getFsObjectHierarchyRequestSchema),
     wrapMiddleware(usersController.getFsObjectHierarchy),
+);
+
+usersRouter.get(
+    '/users/:userId/uploads/upload',
+    ValidateRequest(usersValidator.getUploadRequestSchema),
+    wrapMiddleware(usersController.getUpload),
+);
+
+usersRouter.get(
+    '/users/:userId/uploads',
+    ValidateRequest(usersValidator.getUploadsRequestSchema),
+    wrapMiddleware(usersController.getUploads),
 );
 
 usersRouter.patch(
@@ -96,6 +114,12 @@ usersRouter.patch(
     wrapMiddleware(usersController.updateShortcut),
 );
 
+usersRouter.patch(
+    '/users/:userId/uploads/:uploadId',
+    ValidateRequest(usersValidator.updateUploadRequestSchema),
+    wrapMiddleware(usersController.updateUpload),
+);
+
 usersRouter.delete(
     '/users/:userId/fs/:fsObjectId/share',
     ValidateRequest(usersValidator.unshareFsObjectRequestSchema),
@@ -118,6 +142,12 @@ usersRouter.delete(
     '/users/:userId/fs/shortcut/:fsObjectId',
     ValidateRequest(usersValidator.deleteShortcutRequestSchema),
     wrapMiddleware(usersController.deleteShortcut),
+);
+
+usersRouter.delete(
+    '/users/:userId/uploads/:uploadId',
+    ValidateRequest(usersValidator.deleteUploadRequestSchema),
+    wrapMiddleware(usersController.deleteUpload),
 );
 
 export default usersRouter;

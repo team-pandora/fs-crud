@@ -20,6 +20,8 @@ import { IQuota } from '../../quotas/interface';
 import * as quotasRepository from '../../quotas/repository';
 import { INewState, IState, IUpdateState, permission } from '../../states/interface';
 import * as statesRepository from '../../states/repository';
+import { INewUpload, IUpdateUpload, IUpload, IUploadFilters } from '../../uploads/interface';
+import * as uploadRepository from '../../uploads/repository';
 import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from '../interface';
 import * as apiRepository from '../repository';
 
@@ -105,6 +107,24 @@ export const createShortcut = async (userId: string, shortcut: INewShortcut): Pr
     });
 };
 
+/**
+ * Create a Upload document.
+ * @param upload - The new Upload object.
+ * @returns {Promise<INewUpload>} Promise object containing the Upload.
+ */
+export const createUpload = async (upload: INewUpload): Promise<any[]> => {
+    return makeTransaction(async (session) => {
+        const operations: Promise<any>[] = [];
+
+        operations.push(uploadRepository.createUpload(upload));
+        operations.push(quotasRepository.changeQuotaUsed(upload.userId, upload.uploadedBytes, session));
+
+        const result = await Promise.all(operations);
+
+        return result[0];
+    });
+};
+
 export const shareFsObject = async (
     userId: string,
     fsObjectId: mongoose.Types.ObjectId,
@@ -155,6 +175,24 @@ export const getFsObjectHierarchy = async (userId: string, fsObjectId: mongoose.
     const hierarchy = apiRepository.getFsObjectHierarchy(fileAndState.fsObjectId);
 
     return hierarchy;
+};
+
+/**
+ * Get a Upload.
+ * @param filters - The filters object.
+ * @returns {Promise<IUpload>} Promise object containing the Upload.
+ */
+export const getUpload = async (filters: IUploadFilters): Promise<IUpload> => {
+    return uploadRepository.getUpload(filters);
+};
+
+/**
+ * Get filtered Uploads.
+ * @param filters - The filters object.
+ * @returns {Promise<IUpload[]>} Promise object containing the Uploads.
+ */
+export const getUploads = async (filters: IUploadFilters): Promise<IUpload[]> => {
+    return uploadRepository.getUploads(filters);
 };
 
 /**
@@ -247,6 +285,33 @@ export const updateShortcut = async (
     if (!shortcutAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found');
 
     return fsRepository.updateShortcutById(fsObjectId, update);
+};
+
+/**
+ * Update a Upload.
+ * @param userId - The user id.
+ * @param uploadId - The Upload id.
+ * @param update - The update object.
+ * @returns {Promise<IUpload>} Promise object containing the updated Upload.
+ */
+export const updateUploadById = async (
+    userId: string,
+    uploadId: mongoose.Types.ObjectId,
+    update: IUpdateUpload,
+): Promise<void> => {
+    const upload = await uploadRepository.getUpload({ userId, uploadId });
+    const sizeDifference = update.uploadedBytes - upload.uploadedBytes;
+
+    return makeTransaction(async (session) => {
+        const operations: Promise<any>[] = [];
+
+        if (sizeDifference) operations.push(quotasRepository.changeQuotaUsed(userId, sizeDifference, session));
+        operations.push(uploadRepository.updateUploadById(userId, uploadId, update));
+
+        const result = await Promise.all(operations);
+
+        return result[1];
+    });
 };
 
 /**
@@ -565,6 +630,16 @@ export const deleteShortcut = async (userId: string, fsObjectId: mongoose.Types.
 
         await Promise.all(operations);
     });
+};
+
+/**
+ * delete a Upload.
+ * @param userId - The user id.
+ * @param uploadId - The id of the Upload object.
+ * @returns {Promise<IUpload>} Promise object containing the Upload.
+ */
+export const deleteUploadById = async (userId: string, uploadId: mongoose.Types.ObjectId): Promise<IUpload> => {
+    return uploadRepository.deleteUploadById(userId, uploadId);
 };
 
 /**
