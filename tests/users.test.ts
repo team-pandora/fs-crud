@@ -110,6 +110,14 @@ describe('Users tests:', () => {
         });
 
         it('should create a shortcut', async () => {
+            const { body: folder } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder-test',
+                })
+                .expect(200);
+
             const { body: createdFile } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
                 .send({
@@ -124,9 +132,9 @@ describe('Users tests:', () => {
                 .expect(200);
 
             await request(app)
-                .post('/api/users/62655a5dd681ae7e5f9eafe1/fs/shortcut')
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut')
                 .send({
-                    parent: null,
+                    parent: folder.fsObjectId,
                     name: 'shortcut-test',
                     ref: createdFile.fsObjectId,
                 })
@@ -253,11 +261,28 @@ describe('Users tests:', () => {
                 })
                 .expect(200);
 
+            const { body: shortcutFile } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut')
+                .send({
+                    parent: null,
+                    name: 'shortcut-test',
+                    ref: file.fsObjectId,
+                })
+                .expect(200);
+
             await request(app)
-                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${file.fsObjectId}/share`)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${shortcutFile.fsObjectId}/share`)
                 .send({
                     sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
-                    sharedPermission: 'owner',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
+            await request(app)
+                .post(`/api/users/d7e4d4e4f7c8e8d4f7c8e58f/fs/${file.fsObjectId}/share`)
+                .send({
+                    sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58e',
+                    sharedPermission: 'write',
                 })
                 .expect(400);
         });
@@ -372,7 +397,7 @@ describe('Users tests:', () => {
                 .expect(200);
 
             const { body: folder } = await request(app)
-                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/fsObjects/states')
                 .query({
                     type: 'folder',
                     fsObjectId: createdFolder.fsObjectId,
@@ -384,6 +409,12 @@ describe('Users tests:', () => {
     });
 
     describe('Get the hierarchy of fsObject ', () => {
+        it('should fail to get the hierarchy of fsObject', async () => {
+            await request(app)
+                .get(`/api/users/62655a5dd681ae7e5f9eafe0/fs/62655a5dd681ae7e5f9eafe1/hierarchy`)
+                .expect(404);
+        });
+
         it('should get hierarchy of fsObject', async () => {
             const { body: folder } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
@@ -449,6 +480,50 @@ describe('Users tests:', () => {
     });
 
     describe('Update file', () => {
+        it('should fail update the file, file not found', async () => {
+            await request(app)
+                .patch('/api/users/62655a5dd681ae7e5f9eafe0/fs/file/62655a5dd681ae7e5f9eafe1')
+                .send({
+                    name: 'test',
+                    parent: null,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                })
+                .expect(404);
+        });
+
+        it('should fail update the file, permission denied', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
+            await request(app)
+                .patch(`/api/users/62655a5dd681ae7e5f9eafe1/fs/file/${createdFile.fsObjectId}`)
+                .send({
+                    name: 'test',
+                })
+                .expect(403);
+        });
+
         it('should update file', async () => {
             const { body: createdFile } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
@@ -471,10 +546,53 @@ describe('Users tests:', () => {
                 .expect(200);
 
             expect(updatedFile.name).toBe('file-test-updated');
+
+            const { body: updatedFileSize } = await request(app)
+                .patch(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+                .send({
+                    size: 500,
+                })
+                .expect(200);
+
+            expect(updatedFileSize.size).toBe(500);
         });
     });
 
     describe('Update folder', () => {
+        it('should fail update the file, folder not found', async () => {
+            await request(app)
+                .patch('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/62655a5dd681ae7e5f9eafe1')
+                .send({
+                    name: 'test',
+                })
+                .expect(404);
+        });
+
+        it('should fail update the folder, permission denied', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+                .send({
+                    name: 'folder-test',
+                    parent: null,
+                })
+                .expect(200);
+
+            await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFolder.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
+            await request(app)
+                .patch(`/api/users/62655a5dd681ae7e5f9eafe1/fs/folder/${createdFolder.fsObjectId}`)
+                .send({
+                    name: 'test-updated',
+                })
+                .expect(403);
+        });
+
         it('should update folder', async () => {
             const { body: createdFolder } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
@@ -496,6 +614,15 @@ describe('Users tests:', () => {
     });
 
     describe('Update shortcut', () => {
+        it('should fail update the shortcut, shortcut not found', async () => {
+            await request(app)
+                .patch('/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/62655a5dd681ae7e5f9eafe1')
+                .send({
+                    name: 'test',
+                })
+                .expect(404);
+        });
+
         it('should update user shortcut', async () => {
             const { body: createdFile } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
@@ -531,6 +658,75 @@ describe('Users tests:', () => {
     });
 
     describe('Delete shared fsObject', () => {
+        it('should fail delete shared fsObject, fsObject not found', async () => {
+            await request(app)
+                .delete('/api/users/62655a5dd681ae7e5f9eafe0/fs/626e6c3c4560b39744dcd248/share')
+                .send({
+                    userId: '62655a5dd681ae7e5f9eafe1',
+                })
+                .expect(404);
+        });
+
+        it('should fail delete shared fsObject, fsObject is not shared with provided user', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .send({
+                    userId: '62655a5dd681ae7e5f9eafe1',
+                })
+                .expect(400);
+        });
+
+        it('should fail delete shared fsObject, permission denied', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
+            await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe2',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/${createdFile.fsObjectId}/share`)
+                .send({
+                    userId: '62655a5dd681ae7e5f9eafe2',
+                })
+                .expect(400);
+        });
+
         it('should delete shared fsObject by owner', async () => {
             const { body: createdFile } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
@@ -762,6 +958,37 @@ describe('Users tests:', () => {
     });
 
     describe('Delete trash', () => {
+        it('should fail to delete trash, fs not found ', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+                .send({
+                    name: 'folder-test',
+                    parent: null,
+                })
+                .expect(200);
+
+            const { body: createdFile } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: createdFolder.fsObjectId,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFolder.fsObjectId}`)
+                .expect(404);
+        });
+
         it('should delete fsObject from trash', async () => {
             const { body: createdFile } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')

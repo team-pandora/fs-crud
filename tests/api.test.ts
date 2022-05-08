@@ -146,27 +146,25 @@ describe('Api Tests:', () => {
     describe('Create upload', () => {
         it('should not create an upload', async () => {
             await request(app)
-                .post('/api/uploads/upload')
+                .post('/api/users/d7e4d4e4f7c8e8d4f7c8e58f/uploads')
                 .send({
-                    name: 'abc',
-                    parent: null,
-                    userId: 'd7e4d4e4f7c8e8d4f7c8e58f',
+                    name: 123,
+                    parent: 'abc',
                     uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    source: 'drive',
+                    key: 123,
+                    bucket: 123,
+                    size: 107374182401,
+                    source: 'abc',
                 })
-                .expect(200);
+                .expect(400);
         });
 
         it('should create an upload', async () => {
             await request(app)
-                .post('/api/uploads/upload')
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
                 .send({
                     name: 'abc',
                     parent: null,
-                    userId: 'd7e4d4e4f7c8e8d4f7c8e58f',
                     uploadedBytes: 123,
                     key: 'abc',
                     bucket: 'abc',
@@ -274,15 +272,43 @@ describe('Api Tests:', () => {
     });
 
     describe('Get upload', () => {
-        it('should not get upload by id', async () => {
-            await request(app).get('/api/uploads/5d7e4d4e4f7c8e8d4f72sc8321s').expect(400);
+        it('should get all uploads of user', async () => {
+            await request(app)
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    uploadedBytes: 123,
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
+                .send({
+                    name: 'file-test-1',
+                    parent: null,
+                    uploadedBytes: 123,
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
+                .expect(200);
+            expect(result.length).toBe(2);
         });
 
-        it('should get upload by id', async () => {
-            const { body: createdUpload } = await request(app)
-                .post('/api/uploads/upload')
+        it('should get uploads by filters', async () => {
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
                 .send({
-                    userId: '62655a5dd681ae7e5f9eafe0',
                     parent: null,
                     name: 'upload1',
                     uploadedBytes: 123,
@@ -293,48 +319,28 @@ describe('Api Tests:', () => {
                 })
                 .expect(200);
 
-            await request(app).get(`/api/uploads/${createdUpload._id}`).expect(200);
-        });
-    });
-
-    describe('Get uploads', () => {
-        it('should get uploads', async () => {
             await request(app)
-                .post('/api/uploads/upload')
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
                 .send({
-                    name: 'abc',
-                    uploadedBytes: 123,
                     parent: null,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    source: 'drive',
-                    userId: '5d7e4d4e4f7c8e8d4f72sc8321s',
-                })
-                .expect(200);
-
-            await request(app)
-                .post('/api/uploads/upload')
-                .send({
-                    name: 'abc',
+                    name: 'upload1',
                     uploadedBytes: 123,
                     key: 'abc',
                     bucket: 'abc',
-                    parent: null,
                     size: 123,
-                    source: 'drive',
-                    userId: '5d7e4d4e4f7c8e8d4f72sc8321s',
+                    source: 'dropbox',
                 })
                 .expect(200);
 
             const { body: result } = await request(app)
-                .get('/api/uploads')
+                .get(`/api/users/62655a5dd681ae7e5f9eafe0/uploads`)
                 .query({
-                    userId: '5d7e4d4e4f7c8e8d4f72sc8321s',
+                    source: 'dropbox',
                 })
                 .expect(200);
 
-            expect(result.length).toBe(2);
+            expect(result.length).toBe(1);
+            expect(result[0].source).toBe('dropbox');
         });
     });
 
@@ -462,50 +468,44 @@ describe('Api Tests:', () => {
     describe('Update upload', () => {
         it('should not update upload', async () => {
             const { body: createdUpload } = await request(app)
-                .post('/api/uploads/upload')
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
                 .send({
-                    name: 'abc',
-                    uploadedBytes: 123,
                     parent: null,
+                    name: 'upload1',
+                    uploadedBytes: 123,
                     key: 'abc',
                     bucket: 'abc',
                     size: 123,
                     source: 'drive',
-                    userId: 'd7e4d4e4f7c8e8d4f7c8e58f',
                 })
                 .expect(200);
 
             await request(app)
-                .patch(`/api/uploads/${createdUpload._id}`)
-                .send({
-                    name: 'abcd',
-                })
+                .patch(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload.uploadId}`)
+                .send({ name: 'upload2' })
                 .expect(400);
         });
 
         it('should update upload', async () => {
             const { body: createdUpload } = await request(app)
-                .post('/api/uploads/upload')
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
                 .send({
-                    name: 'abc',
+                    parent: null,
+                    name: 'upload1',
                     uploadedBytes: 123,
                     key: 'abc',
                     bucket: 'abc',
-                    parent: null,
                     size: 123,
                     source: 'drive',
-                    userId: 'd7e4d4e4f7c8e8d4f7c8e58f',
                 })
                 .expect(200);
 
             const { body: updatedUpload } = await request(app)
-                .patch(`/api/uploads/${createdUpload._id}`)
-                .send({
-                    uploadedBytes: 999,
-                })
+                .patch(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload._id}`)
+                .send({ uploadedBytes: 12 })
                 .expect(200);
 
-            expect(updatedUpload.uploadedBytes).toBe(999);
+            expect(updatedUpload.uploadedBytes).toBe(12);
         });
     });
 
@@ -562,22 +562,21 @@ describe('Api Tests:', () => {
         });
     });
 
-    // describe('Delete folder', () => {
-    //     it('should delete a folder', async () => {
-    //         const { body: createdFolder } = await request(app)
-    //             .post('/api/fs/folder')
-    //             .send({
-    //                 parent: null,
-    //                 name: 'folder',
-    //             })
-    //             .expect(200);
-    //         console.log(createdFolder);
-    //         await request(app).delete(`/api/fs/${createdFolder._id}/folder`).expect(200);
-    //     });
-    //     it('should fail deleting a folder', async () => {
-    //         await request(app).delete('/api/fs/5d7e4d4e4f7c8e8d4f72sb/folder').expect(400);
-    //     });
-    // });
+    describe('Delete folder', () => {
+        it('should delete a folder', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder',
+                })
+                .expect(200);
+            await request(app).delete(`/api/fs/${createdFolder._id}/folder`).expect(200);
+        });
+        it('should fail deleting a folder', async () => {
+            await request(app).delete('/api/fs/5d7e4d4e4f7c8e8d4f72sb/folder').expect(400);
+        });
+    });
 
     describe('Delete shortcut', () => {
         it('should delete a shortcut', async () => {
@@ -612,25 +611,26 @@ describe('Api Tests:', () => {
 
     describe('Delete upload', () => {
         it('should not delete upload', async () => {
-            await request(app).delete('/api/upload/5d7e4d4e4f7c8e8d4f72sd').expect(400);
+            await request(app).delete('/api/users/5d7e4d4e4f7c8e8d4f72sd/uploads/5d7e4d4e4f7c8e8d4f72sd').expect(400);
         });
 
         it('should delete upload', async () => {
             const { body: createdUpload } = await request(app)
-                .post('/api/uploads/upload')
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
                 .send({
-                    name: 'abc',
+                    parent: null,
+                    name: 'upload1',
                     uploadedBytes: 123,
                     key: 'abc',
-                    parent: null,
                     bucket: 'abc',
                     size: 123,
                     source: 'drive',
-                    userId: 'd7e4d4e4f7c8e8d4f7c8e58f',
                 })
                 .expect(200);
 
-            await request(app).delete(`/api/upload/${createdUpload._id}`).expect(200);
+            await request(app)
+                .delete(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload._id}`)
+                .expect(200);
         });
     });
 });
