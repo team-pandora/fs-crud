@@ -14,8 +14,8 @@ export const createShortcut = async (req: Request<IUserActionParams>, res: Respo
     res.json(await usersManager.createShortcut(req.params.userId, req.body));
 };
 
-export const createUpload = async (req: Request, res: Response) => {
-    res.json(await usersManager.createUpload(req.body));
+export const createUpload = async (req: Request<IUserActionParams>, res: Response) => {
+    res.json(await usersManager.createUpload(req.params.userId, req.body));
 };
 
 export const restoreFileFromTrash = async (req: Request<IUserFsActionParams>, res: Response) => {
@@ -52,12 +52,8 @@ export const getFsObjectHierarchy = async (req: Request<IUserFsActionParams>, re
     res.json(await usersManager.getFsObjectHierarchy(req.params.userId, req.params.fsObjectId));
 };
 
-export const getUpload = async (req: Request, res: Response) => {
-    res.json(await usersManager.getUpload(req.query));
-};
-
 export const getUploads = async (req: Request, res: Response) => {
-    res.json(await usersManager.getUploads(req.query));
+    res.json(await usersManager.getUploads(req.params.userId, req.query));
 };
 
 export const updateState = async (req: Request<IUserStateActionParams>, res: Response) => {

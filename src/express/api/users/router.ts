@@ -79,12 +79,6 @@ usersRouter.get(
 );
 
 usersRouter.get(
-    '/users/:userId/uploads/upload',
-    ValidateRequest(usersValidator.getUploadRequestSchema),
-    wrapMiddleware(usersController.getUpload),
-);
-
-usersRouter.get(
     '/users/:userId/uploads',
     ValidateRequest(usersValidator.getUploadsRequestSchema),
     wrapMiddleware(usersController.getUploads),

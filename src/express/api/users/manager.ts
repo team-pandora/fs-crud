@@ -112,12 +112,12 @@ export const createShortcut = async (userId: string, shortcut: INewShortcut): Pr
  * @param upload - The new Upload object.
  * @returns {Promise<INewUpload>} Promise object containing the Upload.
  */
-export const createUpload = async (upload: INewUpload): Promise<any[]> => {
+export const createUpload = async (userId: string, upload: INewUpload): Promise<any[]> => {
     return makeTransaction(async (session) => {
         const operations: Promise<any>[] = [];
 
-        operations.push(uploadRepository.createUpload(upload));
-        operations.push(quotasRepository.changeQuotaUsed(upload.userId, upload.uploadedBytes, session));
+        operations.push(uploadRepository.createUpload({ ...upload, userId }, session));
+        operations.push(quotasRepository.changeQuotaUsed(userId, upload.uploadedBytes, session));
 
         const result = await Promise.all(operations);
 
@@ -177,13 +177,8 @@ export const getFsObjectHierarchy = async (userId: string, fsObjectId: mongoose.
     return hierarchy;
 };
 
-/**
- * Get a Upload.
- * @param filters - The filters object.
- * @returns {Promise<IUpload>} Promise object containing the Upload.
- */
-export const getUpload = async (filters: IUploadFilters): Promise<IUpload> => {
-    return uploadRepository.getUpload(filters);
+export const getUpload = async (userId: string, uploadId: mongoose.Types.ObjectId): Promise<IUpload> => {
+    return uploadRepository.getUpload({ userId, _id: uploadId });
 };
 
 /**
@@ -191,8 +186,8 @@ export const getUpload = async (filters: IUploadFilters): Promise<IUpload> => {
  * @param filters - The filters object.
  * @returns {Promise<IUpload[]>} Promise object containing the Uploads.
  */
-export const getUploads = async (filters: IUploadFilters): Promise<IUpload[]> => {
-    return uploadRepository.getUploads(filters);
+export const getUploads = async (userId: string, filters: IUploadFilters): Promise<IUpload[]> => {
+    return uploadRepository.getUploads({ ...filters, userId });
 };
 
 /**
@@ -299,14 +294,16 @@ export const updateUploadById = async (
     uploadId: mongoose.Types.ObjectId,
     update: IUpdateUpload,
 ): Promise<void> => {
-    const upload = await uploadRepository.getUpload({ userId, uploadId });
+    const upload = await uploadRepository.getUpload({ userId, _id: uploadId });
+    if (!upload) throw new ServerError(StatusCodes.NOT_FOUND, 'Upload not found.');
+
     const sizeDifference = update.uploadedBytes - upload.uploadedBytes;
 
     return makeTransaction(async (session) => {
         const operations: Promise<any>[] = [];
 
         if (sizeDifference) operations.push(quotasRepository.changeQuotaUsed(userId, sizeDifference, session));
-        operations.push(uploadRepository.updateUploadById(userId, uploadId, update));
+        operations.push(uploadRepository.updateUploadById(uploadId, update, session));
 
         const result = await Promise.all(operations);
 
@@ -393,8 +390,6 @@ const moveFileToTrash = async (fileAndState: FsObjectAndState): Promise<void> =>
  * @returns {Promise<void>} Empty Promise.
  */
 const deleteFileFromTrash = async (fileAndState: FsObjectAndState): Promise<void> => {
-    if (!fileAndState.trashRoot) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
-
     const { userId, fsObjectId } = fileAndState;
 
     await makeTransaction(async (session) => {
@@ -639,7 +634,7 @@ export const deleteShortcut = async (userId: string, fsObjectId: mongoose.Types.
  * @returns {Promise<IUpload>} Promise object containing the Upload.
  */
 export const deleteUploadById = async (userId: string, uploadId: mongoose.Types.ObjectId): Promise<IUpload> => {
-    return uploadRepository.deleteUploadById(userId, uploadId);
+    return uploadRepository.deleteUpload({ _id: uploadId, userId });
 };
 
 /**

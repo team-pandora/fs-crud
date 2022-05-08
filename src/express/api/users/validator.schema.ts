@@ -19,7 +19,7 @@ const apiUserStateActionParamsRequestSchema = apiUserActionParamsRequestSchema.k
 });
 
 const apiUserUploadActionParamsRequestSchema = apiUserActionParamsRequestSchema.keys({
-    uploadId: Joi.string().hex().length(24).required(),
+    uploadId: JoiObjectId.required(),
 });
 
 export const createFileRequestSchema = apiValidator.createFileRequestSchema.keys({
@@ -38,7 +38,6 @@ export const createUploadRequestSchema = Joi.object({
     query: {},
     params: apiUserActionParamsRequestSchema,
     body: {
-        userId: Joi.string().regex(config.users.idRegex).required(),
         name: Joi.string().regex(nameRegex).required(),
         parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
         uploadedBytes: Joi.number().required(),
@@ -85,7 +84,7 @@ export const aggregateStatesFsObjectsRequestSchema = apiValidator.aggregateState
 });
 
 export const aggregateFsObjectsStatesRequestSchema = apiValidator.aggregateFsObjectsStatesRequestSchema.keys({
-    params: apiUserFsActionParamsRequestSchema,
+    params: apiUserActionParamsRequestSchema,
 });
 
 export const getQuotaByUserIdRequestSchema = Joi.object({
@@ -106,13 +105,12 @@ export const getUploadRequestSchema = Joi.object({
 
 export const getUploadsRequestSchema = Joi.object({
     query: {
-        userId: Joi.string().regex(config.users.idRegex).optional(),
         name: Joi.string().regex(nameRegex).optional(),
         source: Joi.string()
             .valid(...apps)
             .optional(),
     },
-    params: apiUserUploadActionParamsRequestSchema,
+    params: apiUserActionParamsRequestSchema,
     body: {},
 });
 

@@ -10,8 +10,8 @@ import UploadModel from './model';
  * @param upload - The new Upload object.
  * @returns {Promise<IUpload>} Promise object containing the new Upload.
  */
-const createUpload = async (upload: INewUpload): Promise<IUpload> => {
-    return UploadModel.create({ ...upload });
+const createUpload = async (upload: INewUpload, session: mongoose.ClientSession): Promise<IUpload> => {
+    return (await UploadModel.create([upload], { session }))[0];
 };
 
 /**
@@ -21,7 +21,7 @@ const createUpload = async (upload: INewUpload): Promise<IUpload> => {
  */
 const getUpload = async (filters: IUploadFilters): Promise<IUpload> => {
     const result = await UploadModel.findOne(filters).exec();
-    if (result === null) throw new ServerError(404, 'Upload not found');
+    if (!result) throw new ServerError(404, 'Upload not found');
 
     return result;
 };
@@ -47,27 +47,21 @@ const getUploads = async (filters: IUploadFilters): Promise<IUpload[]> => {
  * @returns {Promise<IUpload>} Promise object containing the updated Upload.
  */
 const updateUploadById = async (
-    userId: string,
     uploadId: mongoose.Types.ObjectId,
     update: IUpdateUpload,
+    session: mongoose.ClientSession,
 ): Promise<IUpload> => {
-    const newUpload = await UploadModel.findByIdAndUpdate({ userId, uploadId }, update, { new: true }).exec();
-    if (newUpload === null) throw new ServerError(404, 'Upload not found');
+    const newUpload = await UploadModel.findByIdAndUpdate(uploadId, update, { new: true, session }).exec();
+    if (!newUpload) throw new ServerError(404, 'Upload not found');
 
     return newUpload;
 };
 
-/**
- * delete a Upload.
- * @param userId - The user id.
- * @param uploadId - The id of the Upload object.
- * @returns {Promise<IUpload>} Promise object containing the Upload.
- */
-const deleteUploadById = async (userId: string, uploadId: mongoose.Types.ObjectId): Promise<IUpload> => {
-    const result = await UploadModel.findByIdAndDelete({ userId, uploadId }).exec();
-    if (result === null) throw new ServerError(404, 'Upload not found');
+const deleteUpload = async (filters: IUploadFilters): Promise<IUpload> => {
+    const result = await UploadModel.findOneAndDelete(filters).exec();
+    if (!result) throw new ServerError(404, 'Upload not found');
 
     return result;
 };
 
-export { createUpload, getUpload, getUploads, updateUploadById, deleteUploadById };
+export { createUpload, getUpload, getUploads, updateUploadById, deleteUpload };
