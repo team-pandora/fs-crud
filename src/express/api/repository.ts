@@ -237,7 +237,7 @@ const aggregateFsObjectsStates = async (query: IAggregateStatesAndFsObjectsQuery
 const getAllFsObjectIdsUnderFolder = async (
     fsObjectId: mongoose.Types.ObjectId,
 ): Promise<mongoose.Types.ObjectId[]> => {
-    const [{ fsObjectIds }] = await FsObjectModel.aggregate([
+    const [result] = await FsObjectModel.aggregate([
         {
             $match: {
                 _id: fsObjectId,
@@ -266,7 +266,9 @@ const getAllFsObjectIdsUnderFolder = async (
         },
     ]).exec();
 
-    return fsObjectIds;
+    if (!result?.fsObjectIds) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
+
+    return result.fsObjectIds;
 };
 
 const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId): Promise<IFolder[]> => {
