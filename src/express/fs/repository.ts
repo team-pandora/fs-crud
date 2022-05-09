@@ -5,16 +5,12 @@ import { defaultNewFile } from '../../config/defaults';
 import { ServerError } from '../error';
 import {
     IFile,
-    IFileFilters,
     IFolder,
-    IFolderFilters,
-    IFsObject,
     IFsObjectFilters,
     INewFile,
     INewFolder,
     INewShortcut,
     IShortcut,
-    IShortcutFilters,
     IUpdateFile,
     IUpdateFolder,
     IUpdateShortcut,
@@ -29,42 +25,6 @@ import { FileModel, FolderModel, FsObjectModel, ShortcutModel } from './model';
 const getFsObject = async (filters: IFsObjectFilters): Promise<IFile | IFolder | IShortcut> => {
     const result = await FsObjectModel.findOne(filters).exec();
     if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
-
-    return result;
-};
-
-/**
- * Get a File.
- * @param filters - The File filters.
- * @returns {Promise<IFile>} Promise object containing the File.
- */
-const getFile = async (filters: IFileFilters): Promise<IFile> => {
-    const result = await FileModel.findOne(filters).exec();
-    if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
-
-    return result;
-};
-
-/**
- * Get a Folder.
- * @param filters - The Folder filters.
- * @returns {Promise<IFolder>} Promise object containing the Folder.
- */
-const getFolder = async (filters: IFolderFilters): Promise<IFolder> => {
-    const result = await FolderModel.findOne(filters).exec();
-    if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
-
-    return result;
-};
-
-/**
- * Get a Shortcut.
- * @param filters - The Shortcut filters.
- * @returns {Promise<IShortcut>} Promise object containing the Shortcut.
- */
-const getShortcut = async (filters: IShortcutFilters): Promise<IShortcut> => {
-    const result = await ShortcutModel.findOne(filters).exec();
-    if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found');
 
     return result;
 };
@@ -88,20 +48,6 @@ const fsObjectParentCheck = async (parent: mongoose.Types.ObjectId | null): Prom
 const fsObjectNameCheck = async (parent: mongoose.Types.ObjectId | null, name: string): Promise<void> => {
     if (parent && (await FsObjectModel.exists({ parent, name })))
         throw new ServerError(StatusCodes.CONFLICT, 'Object with this name already exists in folder');
-};
-
-/**
- * Check fsObject ref file.
- * @param ref - The ref file id.
- * @returns {Promise<mongoose.Types.ObjectId>} Promise object containing the ref ObjectId.
- */
-const fsObjectRefCheck = async (ref: mongoose.Types.ObjectId): Promise<mongoose.Types.ObjectId> => {
-    const fsObject = await getFsObject({ _id: ref });
-    if (!fsObject) throw new ServerError(StatusCodes.BAD_REQUEST, 'Provided reference does not exist');
-
-    if (fsObject.type === 'shortcut') return (fsObject as IShortcut).ref;
-
-    return ref;
 };
 
 /**
@@ -143,10 +89,8 @@ const createFolder = async (folder: INewFolder, session?: ClientSession): Promis
 const createShortcut = async (shortcut: INewShortcut, session?: ClientSession): Promise<IShortcut> => {
     await fsObjectParentCheck(shortcut.parent);
     await fsObjectNameCheck(shortcut.parent, shortcut.name);
-    await fsObjectRefCheck(shortcut.ref);
 
     const refFsObject = await getFsObject({ _id: shortcut.ref });
-    if (!refFsObject) throw new ServerError(StatusCodes.BAD_REQUEST, 'Provided reference does not exist');
 
     const newShortcut = { ...shortcut };
     if (refFsObject.type === 'shortcut') {
@@ -190,7 +134,7 @@ const updateFileById = async (
     await fsObjectUpdateCheck(fileId, update);
 
     const result = await FileModel.findOneAndUpdate({ _id: fileId }, { $set: update }, { new: true, session }).exec();
-    if (!result) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
+    if (!result) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to update file');
 
     return result;
 };
@@ -213,7 +157,7 @@ const updateFolderById = async (
         { $set: update },
         { new: true, session },
     ).exec();
-    if (!result) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
+    if (!result) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to update folder');
 
     return result;
 };
@@ -236,19 +180,7 @@ const updateShortcutById = async (
         { $set: update },
         { new: true, session },
     ).exec();
-    if (!result) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found');
-
-    return result;
-};
-
-/**
- * Delete a FsObject.
- * @param filters - The FsObject filters.
- * @returns {Promise<IFsObject>} Promise object containing the FsObject.
- */
-const deleteFsObject = async (filters: IFsObjectFilters, session?: ClientSession): Promise<IFsObject> => {
-    const result = await FsObjectModel.findOneAndDelete(filters, { session }).exec();
-    if (!result) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
+    if (!result) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to update shortcut');
 
     return result;
 };
@@ -260,7 +192,7 @@ const deleteFsObject = async (filters: IFsObjectFilters, session?: ClientSession
  */
 const deleteFsObjects = async (filters: IFsObjectFilters, session?: ClientSession): Promise<number> => {
     const result = await FsObjectModel.deleteMany(filters, { session }).exec();
-    if (!result.acknowledged) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
+    if (!result.acknowledged) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to delete fsObjects');
 
     return result.deletedCount;
 };
@@ -272,8 +204,8 @@ const deleteFsObjects = async (filters: IFsObjectFilters, session?: ClientSessio
  */
 const deleteFileById = async (fileId: mongoose.Types.ObjectId, session?: ClientSession): Promise<IFile> => {
     const result = await FileModel.findByIdAndDelete(fileId, { session }).exec();
+    if (!result) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to delete file');
 
-    if (!result) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
     return result;
 };
 
@@ -284,19 +216,7 @@ const deleteFileById = async (fileId: mongoose.Types.ObjectId, session?: ClientS
  */
 const deleteShortcutById = async (shortcutId: mongoose.Types.ObjectId, session?: ClientSession): Promise<IShortcut> => {
     const result = await ShortcutModel.findByIdAndDelete(shortcutId, { session }).exec();
-
-    if (!result) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found');
-    return result;
-};
-
-/**
- * Delete a Folder.
- * @param folderId - The Folder id.
- * @returns {Promise<IFolder>} Promise object containing the Folder.
- */
-const deleteFolderById = async (folderId: mongoose.Types.ObjectId, session?: ClientSession): Promise<IFolder> => {
-    const result = await FolderModel.findByIdAndDelete(folderId, { session }).exec();
-    if (!result) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
+    if (!result) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to delete shortcut');
 
     return result;
 };
@@ -306,15 +226,10 @@ export {
     createFolder,
     createShortcut,
     getFsObject,
-    getFile,
-    getFolder,
-    getShortcut,
     updateFileById,
     updateFolderById,
     updateShortcutById,
     deleteFileById,
     deleteShortcutById,
-    deleteFolderById,
-    deleteFsObject,
     deleteFsObjects,
 };

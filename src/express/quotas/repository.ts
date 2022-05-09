@@ -19,26 +19,6 @@ const getQuotaByUserId = (userId: string, session?: ClientSession): Promise<IQuo
 };
 
 /**
- * Update a Quota limit.
- *   1) validations for the used and limit fields.
- *   2) update quota.
- * @param userId - The userId to update the Quota.
- * @param limit - The new limit.
- * @returns {Promise<IQuota>} Promise object containing the updated Quota.
- */
-const updateQuotaLimit = async (userId: string, limit: number, session?: ClientSession): Promise<IQuota> => {
-    const { used } = await getQuotaByUserId(userId, session);
-    if (limit < used) {
-        throw new ServerError(StatusCodes.BAD_REQUEST, 'New quota limit is lower than current used');
-    }
-
-    const result = await QuotaModel.findOneAndUpdate({ userId }, { $set: { limit } }, { new: true, session }).exec();
-    if (!result) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to update quota limit');
-
-    return result;
-};
-
-/**
  * Update a Quota used.
  *  1) validations for the used and limit fields.
  *  2) update used quota (raise or lower it accordingly).
@@ -62,4 +42,4 @@ const changeQuotaUsed = async (userId: string, difference: number, session?: Cli
     return result;
 };
 
-export { getQuotaByUserId, updateQuotaLimit, changeQuotaUsed };
+export { getQuotaByUserId, changeQuotaUsed };
