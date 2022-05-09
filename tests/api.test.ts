@@ -143,38 +143,6 @@ describe('Api Tests:', () => {
         });
     });
 
-    describe('Create upload', () => {
-        it('should not create an upload', async () => {
-            await request(app)
-                .post('/api/users/d7e4d4e4f7c8e8d4f7c8e58f/uploads')
-                .send({
-                    name: 123,
-                    parent: 'abc',
-                    uploadedBytes: 123,
-                    key: 123,
-                    bucket: 123,
-                    size: 107374182401,
-                    source: 'abc',
-                })
-                .expect(400);
-        });
-
-        it('should create an upload', async () => {
-            await request(app)
-                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
-                .send({
-                    name: 'abc',
-                    parent: null,
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    source: 'drive',
-                })
-                .expect(200);
-        });
-    });
-
     describe('Aggregate fsObjects and states', () => {
         it('should get aggregated FsObject and State', async () => {
             await request(app)
@@ -268,79 +236,6 @@ describe('Api Tests:', () => {
 
             const { body: hierarchy } = await request(app).get(`/api/fs/${file.fsObjectId}/hierarchy`).expect(200);
             expect(hierarchy.length).toBe(0);
-        });
-    });
-
-    describe('Get upload', () => {
-        it('should get all uploads of user', async () => {
-            await request(app)
-                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .send({
-                    name: 'file-test',
-                    parent: null,
-                    uploadedBytes: 123,
-                    key: '123',
-                    bucket: '123',
-                    size: 123,
-                    source: 'drive',
-                })
-                .expect(200);
-
-            await request(app)
-                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .send({
-                    name: 'file-test-1',
-                    parent: null,
-                    uploadedBytes: 123,
-                    key: '123',
-                    bucket: '123',
-                    size: 123,
-                    source: 'drive',
-                })
-                .expect(200);
-
-            const { body: result } = await request(app)
-                .get('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .expect(200);
-            expect(result.length).toBe(2);
-        });
-
-        it('should get uploads by filters', async () => {
-            await request(app)
-                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
-                .send({
-                    parent: null,
-                    name: 'upload1',
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    source: 'drive',
-                })
-                .expect(200);
-
-            await request(app)
-                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
-                .send({
-                    parent: null,
-                    name: 'upload1',
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    source: 'dropbox',
-                })
-                .expect(200);
-
-            const { body: result } = await request(app)
-                .get(`/api/users/62655a5dd681ae7e5f9eafe0/uploads`)
-                .query({
-                    source: 'dropbox',
-                })
-                .expect(200);
-
-            expect(result.length).toBe(1);
-            expect(result[0].source).toBe('dropbox');
         });
     });
 
@@ -465,50 +360,6 @@ describe('Api Tests:', () => {
         });
     });
 
-    describe('Update upload', () => {
-        it('should not update upload', async () => {
-            const { body: createdUpload } = await request(app)
-                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .send({
-                    parent: null,
-                    name: 'upload1',
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    source: 'drive',
-                })
-                .expect(200);
-
-            await request(app)
-                .patch(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload.uploadId}`)
-                .send({ name: 'upload2' })
-                .expect(400);
-        });
-
-        it('should update upload', async () => {
-            const { body: createdUpload } = await request(app)
-                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .send({
-                    parent: null,
-                    name: 'upload1',
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    source: 'drive',
-                })
-                .expect(200);
-
-            const { body: updatedUpload } = await request(app)
-                .patch(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload._id}`)
-                .send({ uploadedBytes: 12 })
-                .expect(200);
-
-            expect(updatedUpload.uploadedBytes).toBe(12);
-        });
-    });
-
     describe('Unshare fsObject', () => {
         it('should unshare a fsObject', async () => {
             const { body: createdFile } = await request(app)
@@ -606,31 +457,6 @@ describe('Api Tests:', () => {
 
         it('should fail deleting a shortcut', async () => {
             await request(app).delete('/api/fs/5d7e4d4e4f7c8e8d4f72sd/shortcut').expect(400);
-        });
-    });
-
-    describe('Delete upload', () => {
-        it('should not delete upload', async () => {
-            await request(app).delete('/api/users/5d7e4d4e4f7c8e8d4f72sd/uploads/5d7e4d4e4f7c8e8d4f72sd').expect(400);
-        });
-
-        it('should delete upload', async () => {
-            const { body: createdUpload } = await request(app)
-                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .send({
-                    parent: null,
-                    name: 'upload1',
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    source: 'drive',
-                })
-                .expect(200);
-
-            await request(app)
-                .delete(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload._id}`)
-                .expect(200);
         });
     });
 });
