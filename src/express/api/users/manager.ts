@@ -177,10 +177,6 @@ export const getFsObjectHierarchy = async (userId: string, fsObjectId: mongoose.
     return hierarchy;
 };
 
-export const getUpload = async (userId: string, uploadId: mongoose.Types.ObjectId): Promise<IUpload> => {
-    return uploadRepository.getUpload({ userId, _id: uploadId });
-};
-
 /**
  * Get filtered Uploads.
  * @param filters - The filters object.
@@ -295,7 +291,6 @@ export const updateUploadById = async (
     update: IUpdateUpload,
 ): Promise<void> => {
     const upload = await uploadRepository.getUpload({ userId, _id: uploadId });
-    if (!upload) throw new ServerError(StatusCodes.NOT_FOUND, 'Upload not found.');
 
     const sizeDifference = update.uploadedBytes - upload.uploadedBytes;
 
@@ -373,12 +368,11 @@ const moveFileToTrash = async (fileAndState: FsObjectAndState): Promise<void> =>
                     session,
                 ),
             );
-            operations.push(
-                statesRepository.updateState({ userId, fsObjectId }, { trash: true, trashRoot: true }, session),
-            );
-        } else {
-            operations.push(statesRepository.updateState({ userId, fsObjectId }, { trash: true }, session));
         }
+
+        operations.push(
+            statesRepository.updateState({ userId, fsObjectId }, { trash: true, trashRoot: true }, session),
+        );
 
         await Promise.all(operations);
     });
@@ -417,7 +411,8 @@ const deleteFileFromTrash = async (fileAndState: FsObjectAndState): Promise<void
  */
 export const deleteFile = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
     const [fileAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'file' });
-    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
+    if (!fileAndState || (fileAndState.trash && !fileAndState.trashRoot))
+        throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
 
     if (fileAndState.trash) {
         await deleteFileFromTrash(fileAndState);
@@ -452,9 +447,11 @@ export const restoreFileFromTrash = async (userId: string, fsObjectId: mongoose.
             operations.push(
                 statesRepository.updateState({ userId, fsObjectId }, { trash: false, trashRoot: false }, session),
             );
-        } else {
-            operations.push(statesRepository.updateState({ userId, fsObjectId }, { trash: false }, session));
         }
+
+        operations.push(
+            statesRepository.updateState({ userId, fsObjectId }, { trash: false, trashRoot: false }, session),
+        );
 
         await Promise.all(operations);
     });
@@ -634,6 +631,8 @@ export const deleteShortcut = async (userId: string, fsObjectId: mongoose.Types.
  * @returns {Promise<IUpload>} Promise object containing the Upload.
  */
 export const deleteUploadById = async (userId: string, uploadId: mongoose.Types.ObjectId): Promise<IUpload> => {
+    await uploadRepository.getUpload({ userId, _id: uploadId });
+
     return uploadRepository.deleteUpload({ _id: uploadId, userId });
 };
 

@@ -1,3 +1,4 @@
+import { StatusCodes } from 'http-status-codes';
 import * as mongoose from 'mongoose';
 import { ServerError } from '../error';
 import { INewUpload, IUpdateUpload, IUpload, IUploadFilters } from './interface';
@@ -52,14 +53,14 @@ const updateUploadById = async (
     session: mongoose.ClientSession,
 ): Promise<IUpload> => {
     const newUpload = await UploadModel.findByIdAndUpdate(uploadId, update, { new: true, session }).exec();
-    if (!newUpload) throw new ServerError(404, 'Upload not found');
+    if (!newUpload) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to update upload');
 
     return newUpload;
 };
 
 const deleteUpload = async (filters: IUploadFilters): Promise<IUpload> => {
     const result = await UploadModel.findOneAndDelete(filters).exec();
-    if (!result) throw new ServerError(404, 'Upload not found');
+    if (!result) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to delete upload');
 
     return result;
 };

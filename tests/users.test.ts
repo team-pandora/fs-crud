@@ -9,6 +9,8 @@ const removeFsObjectsCollection = async () =>
     mongoose.connection.collections[config.mongo.fsObjectsCollectionName].deleteMany({});
 const removeStateCollection = async () =>
     mongoose.connection.collections[config.mongo.statesCollectionName].deleteMany({});
+const removeUploadCollection = async () =>
+    mongoose.connection.collections[config.mongo.uploadsCollectionName].deleteMany({});
 
 describe('Users tests:', () => {
     let app: Express.Application;
@@ -17,12 +19,14 @@ describe('Users tests:', () => {
         await mongoose.connect(config.mongo.uri);
         await removeFsObjectsCollection();
         await removeStateCollection();
+        await removeUploadCollection();
         app = Server.createExpressApp();
     });
 
     afterEach(async () => {
         await removeFsObjectsCollection();
         await removeStateCollection();
+        await removeUploadCollection();
     });
 
     afterAll(async () => {
@@ -78,6 +82,135 @@ describe('Users tests:', () => {
             }
             await Promise.all(files);
             expect(files.length).toBe(10);
+        });
+
+        it('should not create file, reached quota limit', async () => {
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file1',
+                    parent: null,
+                    key: '123',
+                    bucket: '123',
+                    size: 20000,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file2',
+                    parent: null,
+                    key: '123',
+                    bucket: '123',
+                    size: 10737418240,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(400);
+        });
+
+        it('should not create file, reached quota limit', async () => {
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file1',
+                    parent: null,
+                    key: '123',
+                    bucket: '123',
+                    size: 20000,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file2',
+                    parent: null,
+                    key: '123',
+                    bucket: '123',
+                    size: 10737418240,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(400);
+        });
+
+        it('should not create file, parent not found', async () => {
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file1',
+                    parent: '62655a5dd681ae7e5f9eafe0',
+                    key: '123',
+                    bucket: '123',
+                    size: 500,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(400);
+        });
+
+        it('should not create file, parent in trash', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder-test',
+                })
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
+                .expect(200);
+
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file1',
+                    parent: createdFolder.fsObjectId,
+                    key: '123',
+                    bucket: '123',
+                    size: 500,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(403);
+        });
+
+        it('should not create file, higher permission than shared folder', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder-test',
+                })
+                .expect(200);
+
+            await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFolder.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe1/fs/file')
+                .send({
+                    name: 'file1',
+                    parent: createdFolder.fsObjectId,
+                    key: '123',
+                    bucket: '123',
+                    size: 500,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(403);
         });
     });
 
@@ -142,7 +275,44 @@ describe('Users tests:', () => {
         });
     });
 
+    describe('Create upload', () => {
+        it('should not create an upload', async () => {
+            await request(app)
+                .post('/api/users/d7e4d4e4f7c8e8d4f7c8e58f/uploads')
+                .send({
+                    name: 123,
+                    parent: 'abc',
+                    uploadedBytes: 123,
+                    key: 123,
+                    bucket: 123,
+                    size: 107374182401,
+                    source: 'abc',
+                })
+                .expect(400);
+        });
+
+        it('should create an upload', async () => {
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
+                .send({
+                    name: 'abc',
+                    parent: null,
+                    uploadedBytes: 123,
+                    key: 'abc',
+                    bucket: 'abc',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+        });
+    });
+
     describe('Restore file from trash', () => {
+        it('should fail to restore file from trash, file not found', async () => {
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file/62655a5dd681ae7e5f9eafe1/restore')
+                .expect(404);
+        });
         it('should restore file from trash', async () => {
             const { body: createdFile } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
@@ -175,6 +345,12 @@ describe('Users tests:', () => {
     });
 
     describe('Restore folder from trash', () => {
+        it('should fail to restore folder from trash, folder not found', async () => {
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/62655a5dd681ae7e5f9eafe1/restore')
+                .expect(404);
+        });
+
         it('should restore folder from trash', async () => {
             const { body: createdFolder } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
@@ -185,23 +361,54 @@ describe('Users tests:', () => {
                 .expect(200);
 
             await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFolder.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
+            await request(app)
                 .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
                 .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({ fsObjectId: createdFolder.fsObjectId })
+                .expect(200);
+
+            expect(result[0].trash).toBe(true);
+            expect(result[0].trashRoot).toBe(true);
 
             await request(app)
                 .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}/restore`)
                 .expect(200);
 
-            const { body: restoredFolder } = await request(app)
+            const { body: restore } = await request(app)
                 .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
                 .query({ fsObjectId: createdFolder.fsObjectId })
                 .expect(200);
 
-            expect(restoredFolder[0].fsObjectId).toBe(createdFolder.fsObjectId);
+            expect(restore[0].trash).toBe(false);
+            expect(restore[0].trashRoot).toBe(false);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/folder/${createdFolder.fsObjectId}`)
+                .expect(200);
+
+            await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe1/fs/folder/${createdFolder.fsObjectId}/restore`)
+                .expect(200);
         });
     });
 
     describe('Restore shortcut from trash', () => {
+        it('should fail to restore shortcut from trash, shortcut not found', async () => {
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/62655a5dd681ae7e5f9eafe1/restore')
+                .expect(404);
+        });
+
         it('should restore shortcut from trash', async () => {
             const { body: createdFolder } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
@@ -405,6 +612,79 @@ describe('Users tests:', () => {
                 .expect(200);
 
             expect(folder.length).toEqual(1);
+        });
+    });
+
+    describe('Get upload', () => {
+        it('should get all uploads of user', async () => {
+            await request(app)
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    uploadedBytes: 123,
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
+                .send({
+                    name: 'file-test-1',
+                    parent: null,
+                    uploadedBytes: 123,
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
+                .expect(200);
+            expect(result.length).toBe(2);
+        });
+
+        it('should get uploads by filters', async () => {
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
+                .send({
+                    parent: null,
+                    name: 'upload1',
+                    uploadedBytes: 123,
+                    key: 'abc',
+                    bucket: 'abc',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
+                .send({
+                    parent: null,
+                    name: 'upload1',
+                    uploadedBytes: 123,
+                    key: 'abc',
+                    bucket: 'abc',
+                    size: 123,
+                    source: 'dropbox',
+                })
+                .expect(200);
+
+            const { body: result } = await request(app)
+                .get(`/api/users/62655a5dd681ae7e5f9eafe0/uploads`)
+                .query({
+                    source: 'dropbox',
+                })
+                .expect(200);
+
+            expect(result.length).toBe(1);
+            expect(result[0].source).toBe('dropbox');
         });
     });
 
@@ -657,6 +937,50 @@ describe('Users tests:', () => {
         });
     });
 
+    describe('Update upload', () => {
+        it('should not update upload', async () => {
+            const { body: createdUpload } = await request(app)
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
+                .send({
+                    parent: null,
+                    name: 'upload1',
+                    uploadedBytes: 123,
+                    key: 'abc',
+                    bucket: 'abc',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .patch(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload.uploadId}`)
+                .send({ name: 'upload2' })
+                .expect(400);
+        });
+
+        it('should update upload', async () => {
+            const { body: createdUpload } = await request(app)
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
+                .send({
+                    parent: null,
+                    name: 'upload1',
+                    uploadedBytes: 123,
+                    key: 'abc',
+                    bucket: 'abc',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: updatedUpload } = await request(app)
+                .patch(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload._id}`)
+                .send({ uploadedBytes: 12 })
+                .expect(200);
+
+            expect(updatedUpload.uploadedBytes).toBe(12);
+        });
+    });
+
     describe('Delete shared fsObject', () => {
         it('should fail delete shared fsObject, fsObject not found', async () => {
             await request(app)
@@ -727,12 +1051,19 @@ describe('Users tests:', () => {
                 .expect(400);
         });
 
-        it('should delete shared fsObject by owner', async () => {
-            const { body: createdFile } = await request(app)
+        it('should unshare fsObject', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+                .send({
+                    name: 'folder-test',
+                    parent: null,
+                });
+
+            await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
                 .send({
                     name: 'file-test',
-                    parent: null,
+                    parent: createdFolder.fsObjectId,
                     key: 'string',
                     bucket: 'string',
                     size: 50,
@@ -742,7 +1073,7 @@ describe('Users tests:', () => {
                 .expect(200);
 
             const { body: sharedFileState } = await request(app)
-                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFolder.fsObjectId}/share`)
                 .send({
                     sharedUserId: '62655a5dd681ae7e5f9eafe1',
                     sharedPermission: 'write',
@@ -752,7 +1083,7 @@ describe('Users tests:', () => {
             expect(sharedFileState.permission).toBe('write');
 
             const { body: deletedState } = await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFolder.fsObjectId}/share`)
                 .send({
                     userId: '62655a5dd681ae7e5f9eafe1',
                 })
@@ -830,6 +1161,12 @@ describe('Users tests:', () => {
     });
 
     describe('Delete folder', () => {
+        it('should fail to delete folder, folder not found', async () => {
+            await request(app)
+                .delete('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/62655a5dd681ae7e5f9eafe1')
+                .expect(404);
+        });
+
         it('should delete folder', async () => {
             const { body: createdFolder } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
@@ -850,6 +1187,19 @@ describe('Users tests:', () => {
                 .send({
                     name: 'folder-test',
                     parent: null,
+                })
+                .expect(200);
+
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: createdFolder.fsObjectId,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
                 })
                 .expect(200);
 
@@ -880,6 +1230,12 @@ describe('Users tests:', () => {
     });
 
     describe('Delete shortcut', () => {
+        it('should fail to delete shortcut, shortcut not found', async () => {
+            await request(app)
+                .delete('/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/62655a5dd681ae7e5f9eafe1')
+                .expect(404);
+        });
+
         it('should delete shortcut', async () => {
             const { body: createdFile } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
@@ -980,16 +1336,95 @@ describe('Users tests:', () => {
                 })
                 .expect(200);
 
-            await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+            const { body: createdFolder2 } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+                .send({
+                    name: 'folder-test2',
+                    parent: createdFolder.fsObjectId,
+                })
                 .expect(200);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFolder.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+                .expect(404);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder2.fsObjectId}`)
                 .expect(404);
         });
 
-        it('should delete fsObject from trash', async () => {
+        it('should delete fsObject from trash. (owner, and not owner)', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+                .send({
+                    name: 'folder-test',
+                    parent: null,
+                })
+                .expect(200);
+
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: createdFolder.fsObjectId,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFolder.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'write',
+                })
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/folder/${createdFolder.fsObjectId}`)
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/folder/${createdFolder.fsObjectId}`)
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
+                .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({
+                    stateId: createdFolder._id,
+                })
+                .expect(200);
+
+            expect(result.length).toBe(2);
+            expect(result[0].trashRoot).toBe(true);
+            expect(result[1].trashRoot).toBe(false);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
+                .expect(200);
+
+            const { body: result2 } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({
+                    stateId: createdFolder._id,
+                })
+                .expect(200);
+
+            expect(result2.length).toBe(0);
+        });
+
+        it('should delete shared fsObject from trash', async () => {
             const { body: createdFile } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
                 .send({
@@ -1003,14 +1438,30 @@ describe('Users tests:', () => {
                 })
                 .expect(200);
 
+            const { body: sharedFile } = await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe2',
+                    sharedPermission: 'write',
+                })
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/file/${sharedFile.fsObjectId}`)
                 .expect(200);
 
             const { body: result } = await request(app)
-                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .get('/api/users/62655a5dd681ae7e5f9eafe1/states/fsObjects')
                 .query({
-                    stateId: createdFile._id,
+                    stateId: sharedFile._id,
                 })
                 .expect(200);
 
@@ -1018,55 +1469,63 @@ describe('Users tests:', () => {
             expect(result[0].trash).toBe(true);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/file/${sharedFile.fsObjectId}`)
                 .expect(200);
 
             const { body: result2 } = await request(app)
                 .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
                 .query({
-                    stateId: createdFile._id,
+                    stateId: sharedFile._id,
+                })
+                .expect(200);
+
+            expect(result2.length).toBe(0);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+                .expect(200);
+        });
+
+        it('should delete folder from trash', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+                .send({
+                    name: 'folder-test',
+                    parent: null,
+                })
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
+                .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({
+                    fsObjectId: createdFolder.fsObjectId,
+                })
+                .expect(200);
+
+            expect(result.length).toBe(1);
+            expect(result[0].trash).toBe(true);
+
+            await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
+                .expect(200);
+
+            const { body: result2 } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({
+                    stateId: createdFolder._id,
                 })
                 .expect(200);
 
             expect(result2.length).toBe(0);
         });
-
-        // it('should delete folder from trash', async () => {
-        //     const { body: createdFolder } = await request(app)
-        //         .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
-        //         .send({
-        //             name: 'folder-test',
-        //             parent: null,
-        //         })
-        //         .expect(200);
-
-        //     await request(app)
-        //         .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
-        //         .expect(200);
-
-        //     const { body: result } = await request(app)
-        //         .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
-        //         .query({
-        //             fsObjectId: createdFolder.fsObjectId,
-        //         })
-        //         .expect(200);
-
-        //     expect(result.length).toBe(1);
-        //     expect(result[0].trash).toBe(true);
-
-        //     await request(app)
-        //         .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
-        //         .expect(200);
-
-        //     const { body: result2 } = await request(app)
-        //         .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
-        //         .query({
-        //             stateId: createdFolder._id,
-        //         })
-        //         .expect(200);
-
-        //     expect(result2.length).toBe(0);
-        // });
 
         it('should delete shortcut from trash', async () => {
             const { body: createdFile } = await request(app)
@@ -1119,6 +1578,31 @@ describe('Users tests:', () => {
                 .expect(200);
 
             expect(result2.length).toBe(0);
+        });
+    });
+
+    describe('Delete upload', () => {
+        it('should not delete upload', async () => {
+            await request(app).delete('/api/users/5d7e4d4e4f7c8e8d4f72sd/uploads/5d7e4d4e4f7c8e8d4f72sd').expect(400);
+        });
+
+        it('should delete upload', async () => {
+            const { body: createdUpload } = await request(app)
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
+                .send({
+                    parent: null,
+                    name: 'upload1',
+                    uploadedBytes: 123,
+                    key: 'abc',
+                    bucket: 'abc',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app)
+                .delete(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload._id}`)
+                .expect(200);
         });
     });
 });
