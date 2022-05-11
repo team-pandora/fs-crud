@@ -147,7 +147,15 @@ export const shareFsObject = async (
         newState.fsObjectId = fsObjectAndState.ref;
     }
 
-    return statesRepository.createState(newState);
+    return makeTransaction(async (session) => {
+        const createdState = await statesRepository.createState(newState, session);
+
+        if (fsObjectAndState.type === 'folder') {
+            await apiRepository.shareWithAllFsObjectsInFolder(fsObjectId, sharedUserId, sharedPermission, session);
+        }
+
+        return createdState;
+    });
 };
 
 export const aggregateStatesFsObjects = async (

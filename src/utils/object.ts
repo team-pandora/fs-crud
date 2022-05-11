@@ -1,3 +1,5 @@
+import * as mongoose from 'mongoose';
+
 /**
  * Get a new object containing the fields that exist in the first object but not in the second.
  * @param {Object} obj1 - The first object.
@@ -47,4 +49,26 @@ export const bfs = <fieldType>(
     visited.delete(startValue);
 
     return Array.from(visited);
+};
+
+const objectIdsArrayIncludes = (array: mongoose.Types.ObjectId[], value: mongoose.Types.ObjectId): boolean => {
+    for (let i = 0; i < array.length; i++) {
+        if (array[i].equals(value)) {
+            return true;
+        }
+    }
+    return false;
+};
+
+export const subtractObjectIdArrays = (
+    array1: mongoose.Types.ObjectId[],
+    array2: mongoose.Types.ObjectId[],
+): mongoose.Types.ObjectId[] => {
+    const newArray: mongoose.Types.ObjectId[] = [];
+    for (let i = 0; i < array1.length; i++) {
+        if (!objectIdsArrayIncludes(array2, array1[i])) {
+            newArray.push(array1[i]);
+        }
+    }
+    return newArray;
 };

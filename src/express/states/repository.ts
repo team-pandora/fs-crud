@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import * as mongoose from 'mongoose';
 import { ClientSession } from 'mongoose';
 import { defaultNewState } from '../../config/defaults';
 import { ServerError } from '../error';
@@ -14,6 +15,11 @@ const createState = async (state: INewState, session?: ClientSession): Promise<I
     return (await StateModel.create([{ ...defaultNewState, ...state }], { session }))[0];
 };
 
+const createStates = async (states: INewState[], session?: ClientSession): Promise<IState[]> => {
+    const formattedStates = states.map((state) => ({ ...defaultNewState, ...state }));
+    return StateModel.create(formattedStates, { session });
+};
+
 /**
  * Get State document.
  * @param filters - The State filters.
@@ -21,6 +27,10 @@ const createState = async (state: INewState, session?: ClientSession): Promise<I
  */
 const getState = async (filters: IStateFilters): Promise<IState | null> => {
     return StateModel.findOne(filters).exec();
+};
+
+const getStateFsObjectIds = async (filters: IStateFilters): Promise<mongoose.Types.ObjectId[]> => {
+    return (await StateModel.find(filters).exec()).map((state) => state.fsObjectId);
 };
 
 /**
@@ -73,4 +83,13 @@ const deleteStates = async (filters: IStateFilters, session?: ClientSession): Pr
     return result.deletedCount;
 };
 
-export { createState, getState, updateState, updateStates, deleteState, deleteStates };
+export {
+    createState,
+    createStates,
+    getState,
+    getStateFsObjectIds,
+    updateState,
+    updateStates,
+    deleteState,
+    deleteStates,
+};

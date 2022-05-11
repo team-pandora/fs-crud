@@ -66,11 +66,20 @@ export const shareFsObjectById = async (
     };
 
     const fsObject = await fsRepository.getFsObject({ _id: fsObjectId });
+
     if (fsObject.type === 'shortcut') {
         state.fsObjectId = (fsObject as IShortcut).ref;
     }
 
-    return statesRepository.createState(state);
+    return makeTransaction(async (session) => {
+        const createdState = await statesRepository.createState(state, session);
+
+        if (fsObject.type === 'folder') {
+            await apiRepository.shareWithAllFsObjectsInFolder(fsObjectId, sharedUserId, sharedPermission, session);
+        }
+
+        return createdState;
+    });
 };
 
 /**

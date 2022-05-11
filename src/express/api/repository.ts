@@ -1,10 +1,11 @@
 import { StatusCodes } from 'http-status-codes';
 import * as mongoose from 'mongoose';
 import config from '../../config';
-import { removeUndefinedFields } from '../../utils/object';
+import { removeUndefinedFields, subtractObjectIdArrays } from '../../utils/object';
 import { ServerError } from '../error';
 import { IFolder } from '../fs/interface';
 import { FsObjectModel } from '../fs/model';
+import { permission } from '../states/interface';
 import StateModel from '../states/model';
 import * as statesRepository from '../states/repository';
 import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from './interface';
@@ -303,10 +304,47 @@ const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId): Promis
     ]).exec();
 };
 
+const shareWithAllFsObjectsInFolder = async (
+    fsObjectId: mongoose.Types.ObjectId,
+    sharedUserId: string,
+    sharedPermission: permission,
+    session?: mongoose.ClientSession,
+): Promise<void> => {
+    const fsObjectIds = await getAllFsObjectIdsUnderFolder(fsObjectId);
+    const permissionsToUpdate = Object.entries(permissionPriority)
+        .filter(([_, value]) => value < permissionPriority[sharedPermission])
+        .map(([key]) => key) as permission[];
+
+    if (permissionsToUpdate.length) {
+        await statesRepository.updateStates(
+            {
+                fsObjectId: { $in: fsObjectIds },
+                permission: { $in: permissionsToUpdate },
+                userId: sharedUserId,
+            },
+            { permission: sharedPermission },
+            session,
+        );
+    }
+
+    const existingStatesFsObjectIds = await statesRepository.getStateFsObjectIds({
+        fsObjectId: { $in: fsObjectIds },
+        userId: sharedUserId,
+    });
+
+    const statesToCreate = subtractObjectIdArrays(fsObjectIds, existingStatesFsObjectIds).map((id) => ({
+        fsObjectId: id,
+        permission: sharedPermission,
+        userId: sharedUserId,
+    }));
+    await statesRepository.createStates(statesToCreate, session);
+};
+
 export {
     aggregateStatesFsObjects,
     aggregateFsObjectsStates,
     getAllFsObjectIdsUnderFolder,
     getFsObjectHierarchy,
     parentStateCheck,
+    shareWithAllFsObjectsInFolder,
 };
