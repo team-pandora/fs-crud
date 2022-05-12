@@ -10,10 +10,6 @@ export const createFolder = async (req: Request, res: Response) => {
     res.json(await apiManager.createFolder(req.body));
 };
 
-export const createShortcut = async (req: Request, res: Response) => {
-    res.json(await apiManager.createShortcut(req.body));
-};
-
 export const shareFsObject = async (req: Request<IFsActionParams>, res: Response) => {
     const { sharedUserId, sharedPermission } = req.body;
     res.json(await apiManager.shareFsObjectById(req.params.fsObjectId, sharedUserId, sharedPermission));
@@ -43,10 +39,6 @@ export const updateFolder = async (req: Request<IFsActionParams>, res: Response)
     res.json(await apiManager.updateFolderById(req.params.fsObjectId, req.body));
 };
 
-export const updateShortcut = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.updateShortcutById(req.params.fsObjectId, req.body));
-};
-
 export const unshareFsObject = async (req: Request<IFsActionParams>, res: Response) => {
     res.json(await apiManager.unshareFsObjectById(req.params.fsObjectId, req.body.userId));
 };
@@ -57,8 +49,4 @@ export const deleteFile = async (req: Request<IFsActionParams>, res: Response) =
 
 export const deleteFolder = async (req: Request<IFsActionParams>, res: Response) => {
     res.json(await apiManager.deleteFolderById(req.params.fsObjectId));
-};
-
-export const deleteShortcut = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.deleteShortcutById(req.params.fsObjectId));
 };

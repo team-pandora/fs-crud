@@ -22,12 +22,6 @@ apiRouter.post(
 );
 
 apiRouter.post(
-    '/fs/shortcut',
-    ValidateRequest(apiValidator.createShortcutRequestSchema),
-    wrapMiddleware(apiController.createShortcut),
-);
-
-apiRouter.post(
     '/fs/:fsObjectId/share',
     ValidateRequest(apiValidator.shareFsObjectRequestSchema),
     wrapMiddleware(apiController.shareFsObject),
@@ -69,12 +63,6 @@ apiRouter.patch(
     wrapMiddleware(apiController.updateFolder),
 );
 
-apiRouter.patch(
-    '/fs/shortcut/:fsObjectId',
-    ValidateRequest(apiValidator.updateShortcutRequestSchema),
-    wrapMiddleware(apiController.updateShortcut),
-);
-
 apiRouter.delete(
     '/fs/:fsObjectId/share',
     ValidateRequest(apiValidator.unshareFsObjectRequestSchema),
@@ -91,12 +79,6 @@ apiRouter.delete(
     '/fs/:fsObjectId/folder',
     ValidateRequest(apiValidator.deleteFolderRequestSchema),
     wrapMiddleware(apiController.deleteFolder),
-);
-
-apiRouter.delete(
-    '/fs/:fsObjectId/shortcut',
-    ValidateRequest(apiValidator.deleteShortcutRequestSchema),
-    wrapMiddleware(apiController.deleteShortcut),
 );
 
 export default apiRouter;

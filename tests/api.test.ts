@@ -110,78 +110,6 @@ describe('Api tests:', () => {
         });
     });
 
-    describe('Create shortcut', () => {
-        it('should fail to create a shortcut', async () => {
-            await request(app).post('/api/fs/shortcut').send({}).expect(400);
-        });
-
-        it('should fail to create a shortcut, ref does not exist', async () => {
-            await request(app)
-                .post('/api/fs/shortcut')
-                .send({
-                    parent: null,
-                    name: 'shortcut',
-                    ref: '62655a5dd681ae7e5f9eafe0',
-                })
-                .expect(404);
-        });
-
-        it('should fail to create a shortcut, shortcut to a shortcut', async () => {
-            const { body: createdFile } = await request(app)
-                .post('/api/fs/file')
-                .send({
-                    parent: null,
-                    name: 'abc',
-                    key: '123',
-                    bucket: '123',
-                    size: 123,
-                    source: 'drive',
-                })
-                .expect(200);
-
-            const { body: createdShortcut } = await request(app)
-                .post('/api/fs/shortcut')
-                .send({
-                    parent: null,
-                    name: 'shortcut',
-                    ref: createdFile._id,
-                })
-                .expect(200);
-
-            await request(app)
-                .post('/api/fs/shortcut')
-                .send({
-                    parent: null,
-                    name: 'shortcut',
-                    ref: createdShortcut._id,
-                })
-                .expect(200);
-        });
-
-        it('should create a shortcut', async () => {
-            const { body: createdFile } = await request(app)
-                .post('/api/fs/file')
-                .send({
-                    parent: null,
-                    name: 'abc',
-                    key: '123',
-                    bucket: '123',
-                    size: 123,
-                    source: 'drive',
-                })
-                .expect(200);
-
-            await request(app)
-                .post('/api/fs/shortcut')
-                .send({
-                    parent: null,
-                    name: 'abc',
-                    ref: createdFile._id,
-                })
-                .expect(200);
-        });
-    });
-
     describe('Share fsObject', () => {
         it('should fail to share a FsObject', async () => {
             await request(app)
@@ -665,40 +593,6 @@ describe('Api tests:', () => {
             });
         });
 
-        describe('Update shortcut', () => {
-            it('should update a shortcut', async () => {
-                const { body: createdFile } = await request(app)
-                    .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/fs/file')
-                    .send({
-                        parent: null,
-                        name: 'file1',
-                        key: '123',
-                        bucket: '123',
-                        size: 123,
-                        source: 'drive',
-                    })
-                    .expect(200);
-
-                const { body: createdShortcut } = await request(app)
-                    .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/fs/shortcut')
-                    .send({
-                        parent: null,
-                        name: 'shortcut1',
-                        ref: createdFile.fsObjectId,
-                    })
-                    .expect(200);
-
-                expect(createdShortcut.name).toBe('shortcut1');
-
-                const { body: updatedShortcut } = await request(app)
-                    .patch(`/api/fs/shortcut/${createdShortcut.fsObjectId}`)
-                    .send({ name: 'shortcut2' })
-                    .expect(200);
-
-                expect(updatedShortcut.name).toBe('shortcut2');
-            });
-        });
-
         describe('Unshare fsObject', () => {
             it('should unshare a file', async () => {
                 const { body: createdFile } = await request(app)
@@ -793,37 +687,6 @@ describe('Api tests:', () => {
 
             it('should not delete a folder, folder does not exist', async () => {
                 await request(app).delete(`/api/fs/62655a5dd681ae7e5f9eafe0/folder`).expect(404);
-            });
-        });
-
-        describe('Delete shortcut', () => {
-            it('should delete a shortcut', async () => {
-                const { body: file } = await request(app)
-                    .post('/api/fs/file')
-                    .send({
-                        parent: null,
-                        name: 'file',
-                        key: '123',
-                        bucket: '123',
-                        size: 123,
-                        source: 'drive',
-                    })
-                    .expect(200);
-
-                const { body: shortcut } = await request(app)
-                    .post('/api/fs/shortcut')
-                    .send({
-                        parent: null,
-                        name: 'shortcut',
-                        ref: file._id,
-                    })
-                    .expect(200);
-
-                await request(app).delete(`/api/fs/${shortcut._id}/shortcut`).expect(200);
-            });
-
-            it('should fail deleting a shortcut', async () => {
-                await request(app).delete('/api/fs/5d7e4d4e4f7c8e8d4f72sd/shortcut').expect(400);
             });
         });
     });

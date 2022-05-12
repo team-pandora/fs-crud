@@ -1,17 +1,7 @@
 import * as mongoose from 'mongoose';
 import { makeTransaction } from '../../utils/mongoose';
 import { bfs } from '../../utils/object';
-import {
-    IFile,
-    IFolder,
-    INewFile,
-    INewFolder,
-    INewShortcut,
-    IShortcut,
-    IUpdateFile,
-    IUpdateFolder,
-    IUpdateShortcut,
-} from '../fs/interface';
+import { IFile, IFolder, INewFile, INewFolder, IShortcut, IUpdateFile, IUpdateFolder } from '../fs/interface';
 import * as fsRepository from '../fs/repository';
 import * as quotasRepository from '../quotas/repository';
 import { INewState, IState, IUpdateState, permission } from '../states/interface';
@@ -51,15 +41,6 @@ export const createFolder = async (folder: INewFolder): Promise<IFolder> => {
 
         return createdFolder;
     });
-};
-
-/**
- * Create a Shortcut document.
- * @param shortcut - The new Shortcut object.
- * @returns {Promise<IShortcut>} Promise object containing the Shortcut.
- */
-export const createShortcut = async (shortcut: INewShortcut): Promise<IShortcut> => {
-    return fsRepository.createShortcut(shortcut);
 };
 
 /**
@@ -165,19 +146,6 @@ export const updateFolderById = async (
 };
 
 /**
- * Update a Shortcut.
- * @param fsObjectId - The Shortcut id.
- * @param update - The update object.
- * @returns {Promise<IShortcut>} Promise object containing the updated Shortcut.
- */
-export const updateShortcutById = async (
-    fsObjectId: mongoose.Types.ObjectId,
-    update: IUpdateShortcut,
-): Promise<IShortcut> => {
-    return fsRepository.updateShortcutById(fsObjectId, update);
-};
-
-/**
  * Delete user's shared FsObject's state.
  * @param userId - The user that owns the FsObject.
  * @param fsObjectId - The FsObject id.
@@ -258,22 +226,6 @@ export const deleteFolderById = async (fsObjectId: mongoose.Types.ObjectId): Pro
         operations.push(statesRepository.deleteStates({ fsObjectId: { $in: fsObjectIds } }, session));
 
         operations.push(fsRepository.deleteFsObjects({ _id: { $in: fsObjectIds } }, session));
-
-        await Promise.all(operations);
-    });
-};
-
-/**
- * Delete a Shortcut.
- * @param fsObjectId - The Shortcut id.
- * @returns {Promise<void>} Empty Promise.
- */
-export const deleteShortcutById = async (fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
-    return makeTransaction(async (session) => {
-        const operations: Promise<any>[] = [
-            statesRepository.deleteStates({ fsObjectId }, session),
-            fsRepository.deleteShortcutById(fsObjectId, session),
-        ];
 
         await Promise.all(operations);
     });
