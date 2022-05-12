@@ -51,6 +51,10 @@ export const createFile = async (userId: string, file: INewFile): Promise<FsObje
             session,
         );
 
+        if (createdFile.parent) {
+            await apiRepository.inheritStates(createdFile.parent, createdFile._id, session);
+        }
+
         return new FsObjectAndState(createdFile, createdState);
     });
 };
@@ -76,6 +80,9 @@ export const createFolder = async (userId: string, folder: INewFolder): Promise<
             },
             session,
         );
+        if (createdFolder.parent) {
+            await apiRepository.inheritStates(createdFolder.parent, createdFolder._id, session);
+        }
 
         return new FsObjectAndState(createdFolder, createdState);
     });
@@ -230,10 +237,13 @@ export const updateFile = async (
 
     const sizeDiff = update.size && fileAndState.size ? update.size - fileAndState.size : 0;
 
+    const [ownerState] = await statesRepository.getStates({ fsObjectId, permission: 'owner' });
+
     return makeTransaction(async (session) => {
         const operations: Promise<any>[] = [];
 
-        if (sizeDiff) operations.push(quotasRepository.changeQuotaUsed(userId, sizeDiff, session));
+        if (sizeDiff && ownerState)
+            operations.push(quotasRepository.changeQuotaUsed(ownerState.userId, sizeDiff, session));
 
         operations.push(fsRepository.updateFileById(fsObjectId, update, session));
 

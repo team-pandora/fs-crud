@@ -24,8 +24,16 @@ import * as apiRepository from './repository';
  * @param file - The new file object.
  * @returns {Promise<IFile>} Promise object containing the file.
  */
-export const createFile = async (file: INewFile): Promise<IFile> => {
-    return fsRepository.createFile(file);
+export const createFile = async (file: INewFile): Promise<any> => {
+    return makeTransaction(async (session: mongoose.ClientSession) => {
+        const createdFile = await fsRepository.createFile(file, session);
+
+        if (createdFile.parent) {
+            await apiRepository.inheritStatesSystem(createdFile.parent, createdFile._id, session);
+        }
+
+        return createdFile;
+    });
 };
 
 /**
@@ -34,7 +42,15 @@ export const createFile = async (file: INewFile): Promise<IFile> => {
  * @returns {Promise<IFolder>} Promise object containing the Folder.
  */
 export const createFolder = async (folder: INewFolder): Promise<IFolder> => {
-    return fsRepository.createFolder(folder);
+    return makeTransaction(async (session: mongoose.ClientSession) => {
+        const createdFolder = await fsRepository.createFolder(folder);
+
+        if (createdFolder.parent) {
+            await apiRepository.inheritStates(createdFolder.parent, createdFolder._id, session);
+        }
+
+        return createdFolder;
+    });
 };
 
 /**
