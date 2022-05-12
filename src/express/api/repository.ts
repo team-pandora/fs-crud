@@ -377,6 +377,77 @@ const inheritStatesSystem = async (
     return statesRepository.createStates(statesToCreate, session);
 };
 
+// TODO: use it in users manager (moveFileToTrash/moveFolderToTrash)
+const getFsObjectShortcutIds = async (fsObjectId: mongoose.Types.ObjectId): Promise<mongoose.Types.ObjectId[]> => {
+    const [result] = await FsObjectModel.aggregate([
+        {
+            $match: {
+                _id: fsObjectId,
+            },
+        },
+        {
+            $lookup: {
+                from: 'fsobjects',
+                localField: '_id',
+                foreignField: 'ref',
+                as: 'shortcuts',
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                shortcutIds: {
+                    $map: {
+                        input: '$shortcuts',
+                        as: 'shortcut',
+                        in: '$$shortcut._id',
+                    },
+                },
+            },
+        },
+    ]).exec();
+
+    if (!result?.shortcutIds) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
+
+    return result.shortcutIds;
+};
+
+// TODO: make it better using (aggregateStatesFsObjects) & use it in users manager (moveFileToTrash/moveFolderToTrash)
+const getUserFsObjectShortcutIds = async (fsObjectId: mongoose.Types.ObjectId, userId: string): Promise<any[]> => {
+    const [result] = await FsObjectModel.aggregate([
+        {
+            $match: {
+                _id: fsObjectId,
+            },
+        },
+        {
+            $lookup: {
+                from: 'fsobjects',
+                localField: '_id',
+                foreignField: 'ref',
+                as: 'shortcuts',
+            },
+        },
+    ]).exec();
+
+    const userShortcutIds = await StateModel.aggregate([
+        {
+            $match: {
+                fsObjectId: { $in: result.shortcuts.map((s) => s._id) },
+                userId,
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                fsObjectId: 1,
+            },
+        },
+    ]).exec();
+
+    return userShortcutIds;
+};
+
 export {
     aggregateStatesFsObjects,
     aggregateFsObjectsStates,
@@ -386,4 +457,6 @@ export {
     shareWithAllFsObjectsInFolder,
     inheritStates,
     inheritStatesSystem,
+    getFsObjectShortcutIds,
+    getUserFsObjectShortcutIds,
 };
