@@ -32,7 +32,7 @@ describe('Api tests:', () => {
     describe('Create file', () => {
         it('should fail to create file', async () => {
             await request(app)
-                .post('/api/fs/file')
+                .post('/api/clients/fs/file')
                 .send({
                     parent: '62655a5dd681ae7e5f9eafe0',
                     name: 'file',
@@ -47,7 +47,7 @@ describe('Api tests:', () => {
 
         it('should fail to create file with same name', async () => {
             const { body: createdFolder } = await request(app)
-                .post('/api/fs/folder')
+                .post('/api/clients/fs/folder')
                 .send({
                     parent: null,
                     name: 'folder',
@@ -55,7 +55,7 @@ describe('Api tests:', () => {
                 .expect(200);
 
             await request(app)
-                .post('/api/fs/file')
+                .post('/api/clients/fs/file')
                 .send({
                     parent: createdFolder._id,
                     name: 'file1',
@@ -67,7 +67,7 @@ describe('Api tests:', () => {
                 .expect(200);
 
             await request(app)
-                .post('/api/fs/file')
+                .post('/api/clients/fs/file')
                 .send({
                     parent: createdFolder._id,
                     name: 'file1',
@@ -81,7 +81,7 @@ describe('Api tests:', () => {
 
         it('should create a file', async () => {
             await request(app)
-                .post('/api/fs/file')
+                .post('/api/clients/fs/file')
                 .send({
                     parent: null,
                     name: 'abc',
@@ -96,12 +96,12 @@ describe('Api tests:', () => {
 
     describe('Create folder', () => {
         it('should fail to create a folder', async () => {
-            await request(app).post('/api/fs/folder').send({}).expect(400);
+            await request(app).post('/api/clients/fs/folder').send({}).expect(400);
         });
 
         it('should create a folder', async () => {
             await request(app)
-                .post('/api/fs/folder')
+                .post('/api/clients/fs/folder')
                 .send({
                     parent: null,
                     name: 'abc',
@@ -113,7 +113,7 @@ describe('Api tests:', () => {
     describe('Share fsObject', () => {
         it('should fail to share a FsObject', async () => {
             await request(app)
-                .post('/api/fs/5d7e4d4e4f7c8e8d4f7c8e8d/share')
+                .post('/api/clients/fs/5d7e4d4e4f7c8e8d4f7c8e8d/share')
                 .send({
                     sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
                     sharedPermission: 'write',
@@ -123,7 +123,7 @@ describe('Api tests:', () => {
 
         it('should share a FsObject', async () => {
             const { body: createdFile } = await request(app)
-                .post('/api/fs/file')
+                .post('/api/clients/fs/file')
                 .send({
                     parent: null,
                     name: 'file',
@@ -135,38 +135,7 @@ describe('Api tests:', () => {
                 .expect(200);
 
             await request(app)
-                .post(`/api/fs/${createdFile._id}/share`)
-                .send({
-                    sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
-                    sharedPermission: 'read',
-                })
-                .expect(200);
-        });
-
-        it('should share a shortcut', async () => {
-            const { body: createdFile } = await request(app)
-                .post('/api/fs/file')
-                .send({
-                    parent: null,
-                    name: 'file',
-                    key: '123',
-                    bucket: '123',
-                    size: 123,
-                    source: 'drive',
-                })
-                .expect(200);
-
-            const { body: createdShortcut } = await request(app)
-                .post('/api/fs/shortcut')
-                .send({
-                    parent: null,
-                    name: 'file',
-                    ref: createdFile._id,
-                })
-                .expect(200);
-
-            await request(app)
-                .post(`/api/fs/${createdShortcut._id}/share`)
+                .post(`/api/clients/fs/${createdFile._id}/share`)
                 .send({
                     sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
                     sharedPermission: 'read',
@@ -190,7 +159,7 @@ describe('Api tests:', () => {
                 .expect(200);
 
             await request(app)
-                .get('/api/fsObjects/states')
+                .get('/api/clients/fsObjects/states')
                 .query({ permission: ['', ''] })
                 .expect(400);
         });
@@ -209,7 +178,7 @@ describe('Api tests:', () => {
                 .expect(200);
 
             await request(app)
-                .get('/api/fsObjects/states')
+                .get('/api/clients/fsObjects/states')
                 .query({
                     permission: '',
                 })
@@ -242,7 +211,7 @@ describe('Api tests:', () => {
                 .expect(200);
 
             const { body: result } = await request(app)
-                .get('/api/states/fsObjects')
+                .get('/api/clients/states/fsObjects')
                 .query({ sortBy: 'name', sortOrder: 'asc' })
                 .expect(200);
 
@@ -275,7 +244,7 @@ describe('Api tests:', () => {
                 .expect(200);
 
             const { body: result } = await request(app)
-                .get('/api/states/fsObjects')
+                .get('/api/clients/states/fsObjects')
                 .query({ sortBy: 'name', sortOrder: 'asc', page: 1, pageSize: 2 })
                 .expect(200);
 
@@ -298,7 +267,7 @@ describe('Api tests:', () => {
                 .expect(200);
 
             await request(app)
-                .get('/api/fsObjects/states')
+                .get('/api/clients/fsObjects/states')
                 .query({ permission: ['', ''] })
                 .expect(400);
         });
@@ -329,7 +298,7 @@ describe('Api tests:', () => {
                 .expect(200);
 
             const { body: result } = await request(app)
-                .get('/api/fsObjects/states')
+                .get('/api/clients/fsObjects/states')
                 .query({ sortBy: 'name', sortOrder: 'asc' })
                 .expect(200);
 
@@ -362,7 +331,7 @@ describe('Api tests:', () => {
                 .expect(200);
 
             const { body: result } = await request(app)
-                .get('/api/fsObjects/states')
+                .get('/api/clients/fsObjects/states')
                 .query({ sortBy: 'name', sortOrder: 'desc' })
                 .expect(200);
 
@@ -395,7 +364,7 @@ describe('Api tests:', () => {
                 .expect(200);
 
             const { body: result } = await request(app)
-                .get('/api/fsObjects/states')
+                .get('/api/clients/fsObjects/states')
                 .query({ sortBy: 'name', sortOrder: 'desc', page: 1, pageSize: 2 })
                 .expect(200);
 
@@ -405,7 +374,7 @@ describe('Api tests:', () => {
 
     describe('Get fsObject hierarchy', () => {
         it('should not get file hierarchy', async () => {
-            await request(app).get('/api/fs/626f8e514560b39744dcd2bb/hierarchy').expect(404);
+            await request(app).get('/api/clients/fs/626f8e514560b39744dcd2bb/hierarchy').expect(404);
         });
 
         it('should get file hierarchy', async () => {
@@ -437,7 +406,7 @@ describe('Api tests:', () => {
                 })
                 .expect(200);
 
-            const { body: result } = await request(app).get(`/api/fs/${file.fsObjectId}/hierarchy`).expect(200);
+            const { body: result } = await request(app).get(`/api/clients/fs/${file.fsObjectId}/hierarchy`).expect(200);
             expect(result.length).toBe(2);
         });
 
@@ -454,7 +423,9 @@ describe('Api tests:', () => {
                 })
                 .expect(200);
 
-            const { body: hierarchy } = await request(app).get(`/api/fs/${file.fsObjectId}/hierarchy`).expect(200);
+            const { body: hierarchy } = await request(app)
+                .get(`/api/clients/fs/${file.fsObjectId}/hierarchy`)
+                .expect(200);
             expect(hierarchy.length).toBe(0);
         });
     });
@@ -476,7 +447,7 @@ describe('Api tests:', () => {
             expect(createdFile.favorite).toBe(false);
 
             const { body: updatedState } = await request(app)
-                .patch(`/api/states/${createdFile.stateId}`)
+                .patch(`/api/clients/states/${createdFile.stateId}`)
                 .send({ favorite: true })
                 .expect(200);
 
@@ -500,7 +471,7 @@ describe('Api tests:', () => {
                 expect(createdFile.name).toBe('file1');
 
                 const { body: updatedFile } = await request(app)
-                    .patch(`/api/fs/file/${createdFile.fsObjectId}`)
+                    .patch(`/api/clients/fs/file/${createdFile.fsObjectId}`)
                     .send({ name: 'file1' })
                     .expect(200);
 
@@ -509,7 +480,7 @@ describe('Api tests:', () => {
 
             it('should update a file parent', async () => {
                 const { body: createdFile } = await request(app)
-                    .post('/api/fs/file')
+                    .post('/api/clients/fs/file')
                     .send({
                         parent: null,
                         name: 'file1',
@@ -523,7 +494,7 @@ describe('Api tests:', () => {
                 expect(createdFile.name).toBe('file1');
 
                 const { body: createdFolder } = await request(app)
-                    .post('/api/fs/folder')
+                    .post('/api/clients/fs/folder')
                     .send({
                         parent: null,
                         name: 'folder',
@@ -531,7 +502,7 @@ describe('Api tests:', () => {
                     .expect(200);
 
                 const { body: updatedFile } = await request(app)
-                    .patch(`/api/fs/file/${createdFile._id}`)
+                    .patch(`/api/clients/fs/file/${createdFile._id}`)
                     .send({ parent: createdFolder._id })
                     .expect(200);
 
@@ -552,7 +523,10 @@ describe('Api tests:', () => {
                     .expect(200);
                 expect(createdFile.name).toBe('file1');
 
-                await request(app).patch(`/api/fs/file/62655a5dd681ae7e5f9eafe0`).send({ name: 'file2' }).expect(404);
+                await request(app)
+                    .patch(`/api/clients/fs/file/62655a5dd681ae7e5f9eafe0`)
+                    .send({ name: 'file2' })
+                    .expect(404);
             });
 
             it('should not update a file, file does not exist', async () => {
@@ -569,7 +543,10 @@ describe('Api tests:', () => {
                     .expect(200);
                 expect(createdFile.name).toBe('file1');
 
-                await request(app).patch(`/api/fs/file/62655a5dd681ae7e5f9eafe0`).send({ name: 'file2' }).expect(404);
+                await request(app)
+                    .patch(`/api/clients/fs/file/62655a5dd681ae7e5f9eafe0`)
+                    .send({ name: 'file2' })
+                    .expect(404);
             });
         });
 
@@ -585,7 +562,7 @@ describe('Api tests:', () => {
                 expect(createdFolder.name).toBe('folder1');
 
                 const { body: updatedFolder } = await request(app)
-                    .patch(`/api/fs/folder/${createdFolder.fsObjectId}`)
+                    .patch(`/api/clients/fs/folder/${createdFolder.fsObjectId}`)
                     .send({ name: 'folder2' })
                     .expect(200);
 
@@ -596,7 +573,7 @@ describe('Api tests:', () => {
         describe('Unshare fsObject', () => {
             it('should unshare a file', async () => {
                 const { body: createdFile } = await request(app)
-                    .post('/api/fs/file')
+                    .post('/api/clients/fs/file')
                     .send({
                         parent: null,
                         name: 'file',
@@ -608,7 +585,7 @@ describe('Api tests:', () => {
                     .expect(200);
 
                 const { body: sharedFile } = await request(app)
-                    .post(`/api/fs/${createdFile._id}/share`)
+                    .post(`/api/clients/fs/${createdFile._id}/share`)
                     .send({
                         sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
                         sharedPermission: 'read',
@@ -617,7 +594,7 @@ describe('Api tests:', () => {
                 expect(sharedFile);
 
                 await request(app)
-                    .delete(`/api/fs/${createdFile._id}/share`)
+                    .delete(`/api/clients/fs/${createdFile._id}/share`)
                     .send({
                         userId: 'd7e4d4e4f7c8e8d4f7c8e58f',
                     })
@@ -626,7 +603,7 @@ describe('Api tests:', () => {
 
             it('should unshare a folder', async () => {
                 const { body: createdFolder } = await request(app)
-                    .post('/api/fs/folder')
+                    .post('/api/clients/fs/folder')
                     .send({
                         parent: null,
                         name: 'folder',
@@ -634,7 +611,7 @@ describe('Api tests:', () => {
                     .expect(200);
 
                 const { body: sharedFile } = await request(app)
-                    .post(`/api/fs/${createdFolder._id}/share`)
+                    .post(`/api/clients/fs/${createdFolder._id}/share`)
                     .send({
                         sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
                         sharedPermission: 'read',
@@ -643,7 +620,7 @@ describe('Api tests:', () => {
                 expect(sharedFile);
 
                 await request(app)
-                    .delete(`/api/fs/${createdFolder._id}/share`)
+                    .delete(`/api/clients/fs/${createdFolder._id}/share`)
                     .send({
                         userId: 'd7e4d4e4f7c8e8d4f7c8e58f',
                     })
@@ -654,7 +631,7 @@ describe('Api tests:', () => {
         describe('Delete file', () => {
             it('should delete a file', async () => {
                 const { body: createdFile } = await request(app)
-                    .post('/api/fs/file')
+                    .post('/api/clients/fs/file')
                     .send({
                         parent: null,
                         name: 'file',
@@ -665,28 +642,28 @@ describe('Api tests:', () => {
                     })
                     .expect(200);
 
-                await request(app).delete(`/api/fs/${createdFile._id}/file`).expect(200);
+                await request(app).delete(`/api/clients/fs/${createdFile._id}/file`).expect(200);
             });
 
             it('should fail deleting a file', async () => {
-                await request(app).delete('/api/fs/5d7e4d4e4f7c8e8d4f72sa/file').expect(400);
+                await request(app).delete('/api/clients/fs/5d7e4d4e4f7c8e8d4f72sa/file').expect(400);
             });
         });
 
         describe('Delete folder', () => {
             it('should delete a folder', async () => {
                 const { body: createdFolder } = await request(app)
-                    .post('/api/fs/folder')
+                    .post('/api/clients/fs/folder')
                     .send({
                         parent: null,
                         name: 'folder',
                     })
                     .expect(200);
-                await request(app).delete(`/api/fs/${createdFolder._id}/folder`).expect(200);
+                await request(app).delete(`/api/clients/fs/${createdFolder._id}/folder`).expect(200);
             });
 
             it('should not delete a folder, folder does not exist', async () => {
-                await request(app).delete(`/api/fs/62655a5dd681ae7e5f9eafe0/folder`).expect(404);
+                await request(app).delete(`/api/clients/fs/62655a5dd681ae7e5f9eafe0/folder`).expect(404);
             });
         });
     });

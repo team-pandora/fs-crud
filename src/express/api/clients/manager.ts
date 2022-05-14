@@ -1,13 +1,13 @@
 import * as mongoose from 'mongoose';
-import { makeTransaction } from '../../utils/mongoose';
-import { bfs } from '../../utils/object';
-import { IFile, IFolder, INewFile, INewFolder, IShortcut, IUpdateFile, IUpdateFolder } from '../fs/interface';
-import * as fsRepository from '../fs/repository';
-import * as quotasRepository from '../quotas/repository';
-import { INewState, IState, IUpdateState, permission } from '../states/interface';
-import * as statesRepository from '../states/repository';
-import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from './interface';
-import * as apiRepository from './repository';
+import { makeTransaction } from '../../../utils/mongoose';
+import { bfs } from '../../../utils/object';
+import { IFile, IFolder, INewFile, INewFolder, IShortcut, IUpdateFile, IUpdateFolder } from '../../fs/interface';
+import * as fsRepository from '../../fs/repository';
+import * as quotasRepository from '../../quotas/repository';
+import { INewState, IState, IUpdateState, permission } from '../../states/interface';
+import * as statesRepository from '../../states/repository';
+import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from '../interface';
+import * as apiRepository from '../repository';
 
 /**
  * Create a File document.
@@ -33,7 +33,7 @@ export const createFile = async (file: INewFile): Promise<any> => {
  */
 export const createFolder = async (folder: INewFolder): Promise<IFolder> => {
     return makeTransaction(async (session: mongoose.ClientSession) => {
-        const createdFolder = await fsRepository.createFolder(folder);
+        const createdFolder = await fsRepository.createFolder(folder, session);
 
         if (createdFolder.parent) {
             await apiRepository.inheritStates(createdFolder.parent, createdFolder._id, session);

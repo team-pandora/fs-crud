@@ -1213,14 +1213,14 @@ describe('Users tests:', () => {
 
             expect(sharedFolderState.permission).toBe('write');
 
-            const { body: deleteFolder } = await request(app)
+            await request(app)
                 .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/folder/${createdFolder.fsObjectId}`)
                 .expect(200);
 
             const { body: result } = await request(app)
                 .get('/api/users/62655a5dd681ae7e5f9eafe1/states/fsObjects')
                 .query({
-                    stateId: deleteFolder._id,
+                    fsObjectId: createdFolder.fsObjectId,
                 })
                 .expect(200);
 

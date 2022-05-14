@@ -2,16 +2,9 @@ import * as Joi from 'joi';
 import config from '../../config';
 import { JoiObjectId } from '../../utils/joi';
 
+const { clients } = config.constants;
 const { nameRegex, fileKeyRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
-const { apps, permissions, fsObjectTypes, fsObjectsSortFields, statesSortFields, sortOrders } = config.constants;
-
-export const apiFsActionParamsRequestSchema = Joi.object({
-    fsObjectId: JoiObjectId.required(),
-});
-
-export const apiStateActionParamsRequestSchema = Joi.object({
-    stateId: JoiObjectId.required(),
-});
+const { permissions, fsObjectTypes, fsObjectsSortFields, statesSortFields, sortOrders } = config.constants;
 
 export const createFileRequestSchema = Joi.object({
     query: {},
@@ -23,7 +16,7 @@ export const createFileRequestSchema = Joi.object({
         bucket: Joi.string().regex(fileBucketRegex).required(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
         source: Joi.string()
-            .valid(...apps)
+            .valid(...clients)
             .required(),
 
         public: Joi.boolean().optional(),
@@ -51,7 +44,7 @@ export const createShortcutRequestSchema = Joi.object({
 
 export const shareFsObjectRequestSchema = Joi.object({
     query: {},
-    params: apiFsActionParamsRequestSchema,
+    params: {},
     body: {
         sharedUserId: Joi.string().regex(config.users.idRegex).required(),
         sharedPermission: Joi.string()
@@ -112,13 +105,13 @@ export const aggregateFsObjectsStatesRequestSchema = aggregateStatesFsObjectsReq
 
 export const getFsObjectHierarchyRequestSchema = Joi.object({
     query: {},
-    params: apiFsActionParamsRequestSchema,
+    params: {},
     body: {},
 });
 
 export const updateStateRequestSchema = Joi.object({
     query: {},
-    params: apiStateActionParamsRequestSchema,
+    params: {},
     body: Joi.object({
         favorite: Joi.boolean().optional(),
         trash: Joi.boolean().optional(),
@@ -130,7 +123,7 @@ export const updateStateRequestSchema = Joi.object({
 
 export const updateFileRequestSchema = Joi.object({
     query: {},
-    params: apiFsActionParamsRequestSchema,
+    params: {},
     body: Joi.object({
         name: Joi.string().regex(nameRegex).optional(),
         parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).optional(),
@@ -143,7 +136,7 @@ export const updateFileRequestSchema = Joi.object({
 
 export const updateFolderRequestSchema = Joi.object({
     query: {},
-    params: apiFsActionParamsRequestSchema,
+    params: {},
     body: Joi.object({
         name: Joi.string().regex(nameRegex).optional(),
         parent: JoiObjectId.optional(),
@@ -152,7 +145,7 @@ export const updateFolderRequestSchema = Joi.object({
 
 export const updateShortcutRequestSchema = Joi.object({
     query: {},
-    params: apiFsActionParamsRequestSchema,
+    params: {},
     body: Joi.object({
         name: Joi.string().regex(nameRegex).optional(),
         parent: JoiObjectId.optional(),
@@ -161,7 +154,7 @@ export const updateShortcutRequestSchema = Joi.object({
 
 export const unshareFsObjectRequestSchema = Joi.object({
     query: {},
-    params: apiFsActionParamsRequestSchema,
+    params: {},
     body: {
         userId: Joi.string().regex(config.users.idRegex).required(),
     },
@@ -169,18 +162,18 @@ export const unshareFsObjectRequestSchema = Joi.object({
 
 export const deleteFileRequestSchema = Joi.object({
     query: {},
-    params: apiFsActionParamsRequestSchema,
+    params: {},
     body: {},
 });
 
 export const deleteFolderRequestSchema = Joi.object({
     query: {},
-    params: apiFsActionParamsRequestSchema,
+    params: {},
     body: {},
 });
 
 export const deleteShortcutRequestSchema = Joi.object({
     query: {},
-    params: apiFsActionParamsRequestSchema,
+    params: {},
     body: {},
 });

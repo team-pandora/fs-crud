@@ -3,7 +3,7 @@ import config from '../../config';
 
 export type fsObjectType = typeof config.constants.fsObjectTypes[number];
 
-export type source = typeof config.constants.apps[number];
+export type source = typeof config.constants.clients[number];
 
 export interface IRequestParams {
     fsObjectId: mongoose.Types.ObjectId;

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { IFsActionParams, IStateActionParams } from './interface';
+import { IFsActionParams, IStateActionParams } from '../interface';
 import * as apiManager from './manager';
 
 export const createFile = async (req: Request, res: Response) => {

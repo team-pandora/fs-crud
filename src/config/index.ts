@@ -31,7 +31,7 @@ const config = {
     },
     constants: {
         fsObjectTypes: ['file', 'folder', 'shortcut'] as const,
-        apps: ['dropbox', 'drive', 'falcon'] as const,
+        clients: ['dropbox', 'drive', 'falcon'] as const,
         permissions: ['read', 'write', 'owner'] as const,
         permissionPriority: {
             read: 0,

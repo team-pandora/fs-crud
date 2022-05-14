@@ -4,7 +4,7 @@ import { JoiObjectId } from '../../../utils/joi';
 import * as apiValidator from '../validator.schema';
 
 const { nameRegex, fileKeyRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
-const { apps } = config.constants;
+const { clients } = config.constants;
 
 const apiUserActionParamsRequestSchema = Joi.object({
     userId: Joi.string().regex(config.users.idRegex).required(),
@@ -45,7 +45,7 @@ export const createUploadRequestSchema = Joi.object({
         bucket: Joi.string().regex(fileBucketRegex).required(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
         source: Joi.string()
-            .valid(...apps)
+            .valid(...clients)
             .optional(),
     },
 });
@@ -107,7 +107,7 @@ export const getUploadsRequestSchema = Joi.object({
     query: {
         name: Joi.string().regex(nameRegex).optional(),
         source: Joi.string()
-            .valid(...apps)
+            .valid(...clients)
             .optional(),
     },
     params: apiUserActionParamsRequestSchema,
