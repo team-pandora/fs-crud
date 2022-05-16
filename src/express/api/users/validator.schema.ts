@@ -79,6 +79,10 @@ export const shareFsObjectRequestSchema = apiValidator.shareFsObjectRequestSchem
     },
 });
 
+export const addToFavoriteRequestSchema = apiValidator.addToFavoriteRequestSchema.keys({
+    params: apiUserFsActionParamsRequestSchema,
+});
+
 export const aggregateStatesFsObjectsRequestSchema = apiValidator.aggregateStatesFsObjectsRequestSchema.keys({
     params: apiUserActionParamsRequestSchema,
 });

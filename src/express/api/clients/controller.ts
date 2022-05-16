@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { IFsActionParams, IStateActionParams } from '../interface';
+import { IFsActionParams } from '../interface';
 import * as apiManager from './manager';
 
 export const createFile = async (req: Request, res: Response) => {
@@ -15,6 +15,10 @@ export const shareFsObject = async (req: Request<IFsActionParams>, res: Response
     res.json(await apiManager.shareFsObjectById(req.params.fsObjectId, sharedUserId, sharedPermission));
 };
 
+export const addToFavorite = async (req: Request<IFsActionParams>, res: Response) => {
+    res.json(await apiManager.addToFavorite(req.params.fsObjectId));
+};
+
 export const aggregateStatesFsObjects = async (req: Request, res: Response) => {
     res.json(await apiManager.aggregateStatesFsObjects(req.query));
 };
@@ -27,10 +31,6 @@ export const getFsObjectHierarchy = async (req: Request<IFsActionParams>, res: R
     res.json(await apiManager.getFsObjectHierarchyById(req.params.fsObjectId));
 };
 
-export const updateState = async (req: Request<IStateActionParams>, res: Response) => {
-    res.json(await apiManager.updateStateById(req.params.stateId, req.body));
-};
-
 export const updateFile = async (req: Request<IFsActionParams>, res: Response) => {
     res.json(await apiManager.updateFileById(req.params.fsObjectId, req.body));
 };
@@ -41,6 +41,10 @@ export const updateFolder = async (req: Request<IFsActionParams>, res: Response)
 
 export const unshareFsObject = async (req: Request<IFsActionParams>, res: Response) => {
     res.json(await apiManager.unshareFsObjectById(req.params.fsObjectId, req.body.userId));
+};
+
+export const removeFromFavorite = async (req: Request<IFsActionParams>, res: Response) => {
+    res.json(await apiManager.removeFavorite(req.params.fsObjectId));
 };
 
 export const deleteFile = async (req: Request<IFsActionParams>, res: Response) => {

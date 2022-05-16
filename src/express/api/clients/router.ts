@@ -24,6 +24,12 @@ clientsRouter.post(
     wrapMiddleware(apiController.shareFsObject),
 );
 
+clientsRouter.post(
+    '/fs/:fsObjectId/favorite',
+    ValidateRequest(apiValidator.addToFavoriteRequestSchema),
+    wrapMiddleware(apiController.addToFavorite),
+);
+
 clientsRouter.get(
     '/states/fsObjects',
     ValidateRequest(apiValidator.aggregateStatesFsObjectsRequestSchema),
@@ -43,12 +49,6 @@ clientsRouter.get(
 );
 
 clientsRouter.patch(
-    '/states/:stateId',
-    ValidateRequest(apiValidator.updateStateRequestSchema),
-    wrapMiddleware(apiController.updateState),
-);
-
-clientsRouter.patch(
     '/fs/file/:fsObjectId',
     ValidateRequest(apiValidator.updateFileRequestSchema),
     wrapMiddleware(apiController.updateFile),
@@ -64,6 +64,12 @@ clientsRouter.delete(
     '/fs/:fsObjectId/share',
     ValidateRequest(apiValidator.unshareFsObjectRequestSchema),
     wrapMiddleware(apiController.unshareFsObject),
+);
+
+clientsRouter.delete(
+    '/fs/:fsObjectId/favorite',
+    ValidateRequest(apiValidator.deleteFileRequestSchema),
+    wrapMiddleware(apiController.removeFromFavorite),
 );
 
 clientsRouter.delete(

@@ -4,7 +4,7 @@ import { bfs } from '../../../utils/object';
 import { IFile, IFolder, INewFile, INewFolder, IShortcut, IUpdateFile, IUpdateFolder } from '../../fs/interface';
 import * as fsRepository from '../../fs/repository';
 import * as quotasRepository from '../../quotas/repository';
-import { INewState, IState, IUpdateState, permission } from '../../states/interface';
+import { INewState, IState, permission } from '../../states/interface';
 import * as statesRepository from '../../states/repository';
 import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from '../interface';
 import * as apiRepository from '../repository';
@@ -80,6 +80,17 @@ export const shareFsObjectById = async (
 };
 
 /**
+ * Add FsObject to favorite.
+ * @param fsObjectId - The FsObject id.
+ * @returns {Promise<IFile>} Promise object containing the FsObject.
+ */
+export const addToFavorite = async (fsObjectId: mongoose.Types.ObjectId): Promise<IState> => {
+    await fsRepository.getFsObject({ _id: fsObjectId });
+
+    return statesRepository.updateState(fsObjectId, { favorite: true });
+};
+
+/**
  * Get State and FsObjects objects by filters.
  * @param query - states and fsObjects filters.
  * @returns {Promise<FsObjectAndState[]>} Promise object containing filtered objects.
@@ -111,15 +122,6 @@ export const getFsObjectHierarchyById = async (fsObjectId: mongoose.Types.Object
     const hierarchy = apiRepository.getFsObjectHierarchy(fsObject._id);
 
     return hierarchy;
-};
-
-/**
- * Delete State documents.
- * @param stateId - The State id.
- * @returns {Promise<IState>} Promise object containing the amount of deleted States.
- */
-export const updateStateById = async (stateId: mongoose.Types.ObjectId, update: IUpdateState): Promise<IState> => {
-    return statesRepository.updateState({ _id: stateId }, update);
 };
 
 /**
@@ -167,6 +169,17 @@ export const unshareFsObjectById = async (fsObjectId: mongoose.Types.ObjectId, u
     }
 
     return statesRepository.deleteState({ fsObjectId, userId });
+};
+
+/**
+ * Delete user's favorite FsObject's state.
+ * @param fsObjectId - The FsObject id.
+ * @returns {Promise<IState>} Promise object containing the State.
+ */
+export const removeFavorite = async (fsObjectId: mongoose.Types.ObjectId): Promise<IState> => {
+    await fsRepository.getFsObject({ _id: fsObjectId });
+
+    return statesRepository.updateState(fsObjectId, { favorite: false });
 };
 
 /**

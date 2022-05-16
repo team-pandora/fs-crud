@@ -144,6 +144,40 @@ describe('Api tests:', () => {
         });
     });
 
+    describe('Add fsObject to favorite', () => {
+        it('should fail to add fsObject to favorite, fs not found', async () => {
+            await request(app).post('/api/clients/fs/5d7e4d4e4f7c8e8d4f7c8e8d/favorite').expect(404);
+        });
+
+        it('should add fsObject to favorite', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/clients/fs/file')
+                .send({
+                    parent: null,
+                    name: 'file',
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: sharedFile } = await request(app)
+                .post(`/api/clients/fs/${createdFile._id}/share`)
+                .send({
+                    sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
+            await request(app).post(`/api/clients/fs/${sharedFile.fsObjectId}/favorite`).expect(200);
+
+            const { body: result } = await request(app).get('/api/clients/states/fsObjects').expect(200);
+
+            expect(result[0].favorite).toBe(true);
+        });
+    });
+
     describe('Aggregate fsObjects and states', () => {
         it('should get aggregated State and FsObject with undefined fields', async () => {
             await request(app)
@@ -430,8 +464,28 @@ describe('Api tests:', () => {
         });
     });
 
-    describe('Update state', () => {
-        it('should update a state', async () => {
+    describe('Update file', () => {
+        it('should not update a file, file does not exist', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/fs/file')
+                .send({
+                    parent: null,
+                    name: 'file1',
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+            expect(createdFile.name).toBe('file1');
+
+            await request(app)
+                .patch(`/api/clients/fs/file/62655a5dd681ae7e5f9eafe0`)
+                .send({ name: 'file2' })
+                .expect(404);
+        });
+
+        it('should update a file name', async () => {
             const { body: createdFile } = await request(app)
                 .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/fs/file')
                 .send({
@@ -444,227 +498,200 @@ describe('Api tests:', () => {
                 })
                 .expect(200);
 
-            expect(createdFile.favorite).toBe(false);
+            expect(createdFile.name).toBe('file1');
 
-            const { body: updatedState } = await request(app)
-                .patch(`/api/clients/states/${createdFile.stateId}`)
-                .send({ favorite: true })
+            const { body: updatedFile } = await request(app)
+                .patch(`/api/clients/fs/file/${createdFile.fsObjectId}`)
+                .send({ name: 'file2' })
                 .expect(200);
 
-            expect(updatedState.favorite).toBe(true);
+            expect(updatedFile.name).toBe('file2');
         });
 
-        describe('Update file', () => {
-            it('should update a file name', async () => {
-                const { body: createdFile } = await request(app)
-                    .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/fs/file')
-                    .send({
-                        parent: null,
-                        name: 'file1',
-                        key: '123',
-                        bucket: '123',
-                        size: 123,
-                        source: 'drive',
-                    })
-                    .expect(200);
+        it('should update a file parent', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/clients/fs/file')
+                .send({
+                    parent: null,
+                    name: 'file1',
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
 
-                expect(createdFile.name).toBe('file1');
+            expect(createdFile.name).toBe('file1');
 
-                const { body: updatedFile } = await request(app)
-                    .patch(`/api/clients/fs/file/${createdFile.fsObjectId}`)
-                    .send({ name: 'file1' })
-                    .expect(200);
+            const { body: createdFolder } = await request(app)
+                .post('/api/clients/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder',
+                })
+                .expect(200);
 
-                expect(updatedFile.name).toBe('file1');
-            });
+            const { body: updatedFile } = await request(app)
+                .patch(`/api/clients/fs/file/${createdFile._id}`)
+                .send({ parent: createdFolder._id })
+                .expect(200);
 
-            it('should update a file parent', async () => {
-                const { body: createdFile } = await request(app)
-                    .post('/api/clients/fs/file')
-                    .send({
-                        parent: null,
-                        name: 'file1',
-                        key: '123',
-                        bucket: '123',
-                        size: 123,
-                        source: 'drive',
-                    })
-                    .expect(200);
+            expect(updatedFile.parent).toBe(createdFolder._id);
+        });
+    });
 
-                expect(createdFile.name).toBe('file1');
+    describe('Update folder', () => {
+        it('should update a folder', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder1',
+                })
+                .expect(200);
+            expect(createdFolder.name).toBe('folder1');
 
-                const { body: createdFolder } = await request(app)
-                    .post('/api/clients/fs/folder')
-                    .send({
-                        parent: null,
-                        name: 'folder',
-                    })
-                    .expect(200);
+            const { body: updatedFolder } = await request(app)
+                .patch(`/api/clients/fs/folder/${createdFolder.fsObjectId}`)
+                .send({ name: 'folder2' })
+                .expect(200);
 
-                const { body: updatedFile } = await request(app)
-                    .patch(`/api/clients/fs/file/${createdFile._id}`)
-                    .send({ parent: createdFolder._id })
-                    .expect(200);
+            expect(updatedFolder.name).toBe('folder2');
+        });
+    });
 
-                expect(updatedFile.parent).toBe(createdFolder._id);
-            });
+    describe('Unshare fsObject', () => {
+        it('should unshare a file', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/clients/fs/file')
+                .send({
+                    parent: null,
+                    name: 'file',
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
 
-            it('should not update a file, file does not exist', async () => {
-                const { body: createdFile } = await request(app)
-                    .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/fs/file')
-                    .send({
-                        parent: null,
-                        name: 'file1',
-                        key: '123',
-                        bucket: '123',
-                        size: 123,
-                        source: 'drive',
-                    })
-                    .expect(200);
-                expect(createdFile.name).toBe('file1');
+            const { body: sharedFile } = await request(app)
+                .post(`/api/clients/fs/${createdFile._id}/share`)
+                .send({
+                    sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+            expect(sharedFile);
 
-                await request(app)
-                    .patch(`/api/clients/fs/file/62655a5dd681ae7e5f9eafe0`)
-                    .send({ name: 'file2' })
-                    .expect(404);
-            });
-
-            it('should not update a file, file does not exist', async () => {
-                const { body: createdFile } = await request(app)
-                    .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/fs/file')
-                    .send({
-                        parent: null,
-                        name: 'file1',
-                        key: '123',
-                        bucket: '123',
-                        size: 123,
-                        source: 'drive',
-                    })
-                    .expect(200);
-                expect(createdFile.name).toBe('file1');
-
-                await request(app)
-                    .patch(`/api/clients/fs/file/62655a5dd681ae7e5f9eafe0`)
-                    .send({ name: 'file2' })
-                    .expect(404);
-            });
+            await request(app)
+                .delete(`/api/clients/fs/${createdFile._id}/share`)
+                .send({
+                    userId: 'd7e4d4e4f7c8e8d4f7c8e58f',
+                })
+                .expect(200);
         });
 
-        describe('Update folder', () => {
-            it('should update a folder', async () => {
-                const { body: createdFolder } = await request(app)
-                    .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/fs/folder')
-                    .send({
-                        parent: null,
-                        name: 'folder1',
-                    })
-                    .expect(200);
-                expect(createdFolder.name).toBe('folder1');
+        it('should unshare a folder', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/clients/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder',
+                })
+                .expect(200);
 
-                const { body: updatedFolder } = await request(app)
-                    .patch(`/api/clients/fs/folder/${createdFolder.fsObjectId}`)
-                    .send({ name: 'folder2' })
-                    .expect(200);
+            const { body: sharedFile } = await request(app)
+                .post(`/api/clients/fs/${createdFolder._id}/share`)
+                .send({
+                    sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+            expect(sharedFile);
 
-                expect(updatedFolder.name).toBe('folder2');
-            });
+            await request(app)
+                .delete(`/api/clients/fs/${createdFolder._id}/share`)
+                .send({
+                    userId: 'd7e4d4e4f7c8e8d4f7c8e58f',
+                })
+                .expect(200);
+        });
+    });
+
+    describe('Remove fs from favorite', () => {
+        it('should fail to remove fs from favorite, fs not found', async () => {
+            await request(app).delete(`/api/clients/fs/d7e4d4e4f7c8e8d4f7c8e58f/favorite`).expect(404);
         });
 
-        describe('Unshare fsObject', () => {
-            it('should unshare a file', async () => {
-                const { body: createdFile } = await request(app)
-                    .post('/api/clients/fs/file')
-                    .send({
-                        parent: null,
-                        name: 'file',
-                        key: '123',
-                        bucket: '123',
-                        size: 123,
-                        source: 'drive',
-                    })
-                    .expect(200);
+        it('should remove fs from favorite', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/clients/fs/file')
+                .send({
+                    parent: null,
+                    name: 'file',
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
 
-                const { body: sharedFile } = await request(app)
-                    .post(`/api/clients/fs/${createdFile._id}/share`)
-                    .send({
-                        sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
-                        sharedPermission: 'read',
-                    })
-                    .expect(200);
-                expect(sharedFile);
+            const { body: sharedFile } = await request(app)
+                .post(`/api/clients/fs/${createdFile._id}/share`)
+                .send({
+                    sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
 
-                await request(app)
-                    .delete(`/api/clients/fs/${createdFile._id}/share`)
-                    .send({
-                        userId: 'd7e4d4e4f7c8e8d4f7c8e58f',
-                    })
-                    .expect(200);
-            });
+            await request(app).post(`/api/clients/fs/${sharedFile.fsObjectId}/favorite`).expect(200);
 
-            it('should unshare a folder', async () => {
-                const { body: createdFolder } = await request(app)
-                    .post('/api/clients/fs/folder')
-                    .send({
-                        parent: null,
-                        name: 'folder',
-                    })
-                    .expect(200);
+            const { body: result } = await request(app).get('/api/clients/states/fsObjects').expect(200);
+            expect(result[0].favorite).toBe(true);
 
-                const { body: sharedFile } = await request(app)
-                    .post(`/api/clients/fs/${createdFolder._id}/share`)
-                    .send({
-                        sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
-                        sharedPermission: 'read',
-                    })
-                    .expect(200);
-                expect(sharedFile);
+            await request(app).delete(`/api/clients/fs/${sharedFile.fsObjectId}/favorite`).expect(200);
 
-                await request(app)
-                    .delete(`/api/clients/fs/${createdFolder._id}/share`)
-                    .send({
-                        userId: 'd7e4d4e4f7c8e8d4f7c8e58f',
-                    })
-                    .expect(200);
-            });
+            const { body: res } = await request(app).get('/api/clients/states/fsObjects').expect(200);
+            expect(res[0].favorite).toBe(false);
+        });
+    });
+
+    describe('Delete file', () => {
+        it('should delete a file', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/clients/fs/file')
+                .send({
+                    parent: null,
+                    name: 'file',
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            await request(app).delete(`/api/clients/fs/${createdFile._id}/file`).expect(200);
         });
 
-        describe('Delete file', () => {
-            it('should delete a file', async () => {
-                const { body: createdFile } = await request(app)
-                    .post('/api/clients/fs/file')
-                    .send({
-                        parent: null,
-                        name: 'file',
-                        key: '123',
-                        bucket: '123',
-                        size: 123,
-                        source: 'drive',
-                    })
-                    .expect(200);
+        it('should fail deleting a file', async () => {
+            await request(app).delete('/api/clients/fs/5d7e4d4e4f7c8e8d4f72sa/file').expect(400);
+        });
+    });
 
-                await request(app).delete(`/api/clients/fs/${createdFile._id}/file`).expect(200);
-            });
-
-            it('should fail deleting a file', async () => {
-                await request(app).delete('/api/clients/fs/5d7e4d4e4f7c8e8d4f72sa/file').expect(400);
-            });
+    describe('Delete folder', () => {
+        it('should delete a folder', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/clients/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder',
+                })
+                .expect(200);
+            await request(app).delete(`/api/clients/fs/${createdFolder._id}/folder`).expect(200);
         });
 
-        describe('Delete folder', () => {
-            it('should delete a folder', async () => {
-                const { body: createdFolder } = await request(app)
-                    .post('/api/clients/fs/folder')
-                    .send({
-                        parent: null,
-                        name: 'folder',
-                    })
-                    .expect(200);
-                await request(app).delete(`/api/clients/fs/${createdFolder._id}/folder`).expect(200);
-            });
-
-            it('should not delete a folder, folder does not exist', async () => {
-                await request(app).delete(`/api/clients/fs/62655a5dd681ae7e5f9eafe0/folder`).expect(404);
-            });
+        it('should not delete a folder, folder does not exist', async () => {
+            await request(app).delete(`/api/clients/fs/62655a5dd681ae7e5f9eafe0/folder`).expect(404);
         });
     });
 });

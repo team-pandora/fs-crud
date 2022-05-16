@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { IUserActionParams, IUserFsActionParams, IUserStateActionParams, IUserUploadActionParams } from './interface';
+import { IUserActionParams, IUserFsActionParams, IUserUploadActionParams } from './interface';
 import * as usersManager from './manager';
 
 export const createFile = async (req: Request<IUserActionParams>, res: Response) => {
@@ -36,6 +36,10 @@ export const shareFsObject = async (req: Request<IUserFsActionParams>, res: Resp
     res.json(await usersManager.shareFsObject(userId, fsObjectId, sharedUserId, sharedPermission));
 };
 
+export const addToFavorite = async (req: Request<IUserFsActionParams>, res: Response) => {
+    res.json(await usersManager.addToFavorite(req.params.userId, req.params.fsObjectId));
+};
+
 export const aggregateStatesFsObjects = async (req: Request<IUserActionParams>, res: Response) => {
     res.json(await usersManager.aggregateStatesFsObjects(req.params.userId, req.query));
 };
@@ -56,10 +60,6 @@ export const getUploads = async (req: Request, res: Response) => {
     res.json(await usersManager.getUploads(req.params.userId, req.query));
 };
 
-export const updateState = async (req: Request<IUserStateActionParams>, res: Response) => {
-    res.json(await usersManager.updateState(req.params.userId, req.params.stateId, req.body));
-};
-
 export const updateFile = async (req: Request<IUserFsActionParams>, res: Response) => {
     res.json(await usersManager.updateFile(req.params.userId, req.params.fsObjectId, req.body));
 };
@@ -78,6 +78,10 @@ export const updateUpload = async (req: Request<IUserUploadActionParams>, res: R
 
 export const unshareFsObject = async (req: Request<IUserFsActionParams>, res: Response) => {
     res.json(await usersManager.unshareFsObject(req.params.userId, req.params.fsObjectId, req.body.userId));
+};
+
+export const removeFromFavorite = async (req: Request<IUserFsActionParams>, res: Response) => {
+    res.json(await usersManager.removeFromFavorite(req.params.userId, req.params.fsObjectId));
 };
 
 export const deleteFile = async (req: Request<IUserFsActionParams>, res: Response) => {

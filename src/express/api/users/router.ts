@@ -49,6 +49,12 @@ usersRouter.post(
 );
 
 usersRouter.post(
+    '/:userId/fs/:fsObjectId/favorite',
+    ValidateRequest(usersValidator.addToFavoriteRequestSchema),
+    wrapMiddleware(usersController.addToFavorite),
+);
+
+usersRouter.post(
     '/:userId/uploads',
     ValidateRequest(usersValidator.createUploadRequestSchema),
     wrapMiddleware(usersController.createUpload),
@@ -85,12 +91,6 @@ usersRouter.get(
 );
 
 usersRouter.patch(
-    '/:userId/states/:stateId',
-    ValidateRequest(usersValidator.updateStateRequestSchema),
-    wrapMiddleware(usersController.updateState),
-);
-
-usersRouter.patch(
     '/:userId/fs/file/:fsObjectId',
     ValidateRequest(usersValidator.updateFileRequestSchema),
     wrapMiddleware(usersController.updateFile),
@@ -118,6 +118,12 @@ usersRouter.delete(
     '/:userId/fs/:fsObjectId/share',
     ValidateRequest(usersValidator.unshareFsObjectRequestSchema),
     wrapMiddleware(usersController.unshareFsObject),
+);
+
+usersRouter.delete(
+    '/:userId/fs/:fsObjectId/favorite',
+    ValidateRequest(usersValidator.deleteFileRequestSchema),
+    wrapMiddleware(usersController.removeFromFavorite),
 );
 
 usersRouter.delete(

@@ -18,7 +18,7 @@ import {
 import * as fsRepository from '../../fs/repository';
 import { IQuota } from '../../quotas/interface';
 import * as quotasRepository from '../../quotas/repository';
-import { INewState, IState, IUpdateState, permission } from '../../states/interface';
+import { INewState, IState, permission } from '../../states/interface';
 import * as statesRepository from '../../states/repository';
 import { INewUpload, IUpdateUpload, IUpload, IUploadFilters } from '../../uploads/interface';
 import * as uploadRepository from '../../uploads/repository';
@@ -165,6 +165,13 @@ export const shareFsObject = async (
     });
 };
 
+export const addToFavorite = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<IState> => {
+    const [fsObjectAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
+    if (!fsObjectAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found.');
+
+    return statesRepository.updateState(fsObjectAndState.stateId, { favorite: true });
+};
+
 export const aggregateStatesFsObjects = async (
     userId: string,
     query: IAggregateStatesAndFsObjectsQuery,
@@ -199,20 +206,6 @@ export const getFsObjectHierarchy = async (userId: string, fsObjectId: mongoose.
  */
 export const getUploads = async (userId: string, filters: IUploadFilters): Promise<IUpload[]> => {
     return uploadRepository.getUploads({ ...filters, userId });
-};
-
-/**
- * Update user State.
- * @param userId - The user to create the shortcut.
- * @param stateId - The State id.
- * @returns {Promise<IState>} Promise object containing the updated State.
- */
-export const updateState = async (
-    userId: string,
-    stateId: mongoose.Types.ObjectId,
-    update: IUpdateState,
-): Promise<IState> => {
-    return statesRepository.updateState({ userId, _id: stateId }, update);
 };
 
 /**
@@ -365,6 +358,13 @@ export const unshareFsObject = async (
     }
 
     return statesRepository.deleteState({ userId: sharedUserId, fsObjectId });
+};
+
+export const removeFromFavorite = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<IState> => {
+    const [fsObjectAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
+    if (!fsObjectAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found.');
+
+    return statesRepository.updateState(fsObjectAndState.stateId, { favorite: false });
 };
 
 /**

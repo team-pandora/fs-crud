@@ -53,6 +53,12 @@ export const shareFsObjectRequestSchema = Joi.object({
     },
 });
 
+export const addToFavoriteRequestSchema = Joi.object({
+    query: {},
+    params: {},
+    body: {},
+});
+
 export const aggregateStatesFsObjectsRequestSchema = Joi.object({
     query: Joi.object({
         // State filters

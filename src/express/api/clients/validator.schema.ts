@@ -28,6 +28,10 @@ export const shareFsObjectRequestSchema = apiValidator.shareFsObjectRequestSchem
     },
 });
 
+export const addToFavoriteRequestSchema = apiValidator.addToFavoriteRequestSchema.keys({
+    params: apiClientFsActionParamsRequestSchema,
+});
+
 export const getFsObjectHierarchyRequestSchema = apiValidator.getFsObjectHierarchyRequestSchema.keys({
     params: apiClientFsActionParamsRequestSchema,
 });
