@@ -96,6 +96,8 @@ export const createFolder = async (userId: string, folder: INewFolder): Promise<
  */
 export const createShortcut = async (userId: string, shortcut: INewShortcut): Promise<FsObjectAndState> => {
     if (shortcut.parent) await apiRepository.parentStateCheck(userId, shortcut.parent);
+    const sharedState = await statesRepository.getState({ userId, fsObjectId: shortcut.ref });
+    if (!sharedState) throw new ServerError(StatusCodes.NOT_FOUND, 'FsObject was not found');
 
     return makeTransaction(async (session) => {
         const createdShortcut = await fsRepository.createShortcut(shortcut, session);
@@ -318,11 +320,16 @@ export const updateUploadById = async (
 };
 
 /**
- * Update user's shared file permission.
- *   1) validate the file and its state.
- *   2) validate the file and its shared state.
- *   3) validate the permission rank.
- *   4) update the shared state permission for user.
+ * Delete shared user state for FsObject.
+ *   1) check if fsObject exists.
+ *   2) check if file shared with provided user that do the unshare.
+ *   3) checks if permission of shared user is not equal or higher than own user that do the unshare.
+ *   * if fsObject is a folder:
+ *   1) delete shared user states for shared folder and folder's fsObjects under it.
+ *   2) delete all user shortcuts and their state/s, that was made from shared folder and all fsObjects under it.
+ *   * if fsObject is a file (after the if statement):
+ *   1) delete shared user state for file.
+ *   2) delete all user shortcuts and their state/s, that was made from shared file.
  * @param userId - The user that owns the shortcut.
  * @param fsObjectId - The shortcut id.
  * @param sharedUserId - The shared user id.
@@ -345,6 +352,8 @@ export const unshareFsObject = async (
             'Trying to unshare user with equal or higher permission than own.',
         );
 
+    let fsObjectShortcutIds = await apiRepository.getFsObjectShortcutIds(fsObjectId);
+
     if (fsObjectAndState.type === 'folder') {
         const childrenIds = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
         const children = await apiRepository.aggregateStatesFsObjects({
@@ -355,7 +364,15 @@ export const unshareFsObject = async (
         });
         const filteredChildrenIds = bfs(children, fsObjectId, 'fsObjectId', 'parent');
         await statesRepository.deleteStates({ userId: sharedUserId, fsObjectId: { $in: filteredChildrenIds } });
+
+        fsObjectShortcutIds = await apiRepository.getFsObjectsShortcutIds([fsObjectId, ...childrenIds]);
+        fsObjectShortcutIds = await statesRepository.getStateFsObjectIds({
+            fsObjectId: { $in: fsObjectShortcutIds },
+            userId,
+        });
     }
+    await statesRepository.deleteStates({ fsObjectId: { $in: fsObjectShortcutIds } });
+    await fsRepository.deleteFsObjects({ _id: { $in: fsObjectShortcutIds } });
 
     return statesRepository.deleteState({ userId: sharedUserId, fsObjectId });
 };
@@ -369,30 +386,39 @@ export const removeFromFavorite = async (userId: string, fsObjectId: mongoose.Ty
 
 /**
  * Move File to trash.
+ *   * If user is owner:
+ *   1) Update file state and move it to trash for all users.
+ *   2) Update all file states for all users.
+ *   3) Delete file shortcuts and their states for all users.
+ *  * If user is not owner:
+ *   1) Update file state and move it to trash only for user.
+ *   2) Update all file states for all users.
+ *   3) Delete file shortcuts and their states only for user.
  * @param fileAndState - The File and its state object.
  * @returns {Promise<void>} Empty Promise.
  */
 const moveFileToTrash = async (fileAndState: FsObjectAndState): Promise<void> => {
     const { userId, fsObjectId } = fileAndState;
 
+    let fileShortcutIds = await apiRepository.getFsObjectShortcutIds(fsObjectId);
+
     await makeTransaction(async (session) => {
-        const operations: Promise<any>[] = [];
-
         if (fileAndState.permission === 'owner') {
-            operations.push(
-                statesRepository.updateStates(
-                    { fsObjectId, userId: { $nin: [userId] } },
-                    { trash: true, trashRoot: false },
-                    session,
-                ),
+            await statesRepository.updateStates(
+                { fsObjectId, userId: { $nin: [userId] } },
+                { trash: true, trashRoot: false },
+                session,
             );
+        } else {
+            fileShortcutIds = await statesRepository.getStateFsObjectIds({
+                fsObjectId: { $in: fileShortcutIds },
+                userId,
+            });
         }
+        await statesRepository.updateState({ userId, fsObjectId }, { trash: true, trashRoot: true }, session);
 
-        operations.push(
-            statesRepository.updateState({ userId, fsObjectId }, { trash: true, trashRoot: true }, session),
-        );
-
-        await Promise.all(operations);
+        await statesRepository.deleteStates({ fsObjectId: { $in: fileShortcutIds } }, session);
+        await fsRepository.deleteFsObjects({ _id: { $in: fileShortcutIds } }, session);
     });
 };
 
@@ -477,39 +503,47 @@ export const restoreFileFromTrash = async (userId: string, fsObjectId: mongoose.
 
 /**
  * Move Folder to trash.
+ *   * If user is owner:
+ *   1) Update folder state and move it to trash for all users.
+ *   2) Update all folder fsObjects states for all users.
+ *   3) Delete folder shortcuts and all folder fsObjects(that's under folder) shortcuts and their states for all users.
+ *  * If user is not owner:
+ *   1) Update folder state and move it to trash only for user.
+ *   2) Update all folder fsObjects states.
+ *   3) Delete folder shortcuts and all folder fsObjects(that's under folder) shortcuts and their states only for user.
  * @param folderAndState - The Folder and its state object.
  * @returns {Promise<void>} Empty Promise.
  */
 const moveFolderToTrash = async (folderAndState: FsObjectAndState): Promise<void> => {
     const { userId, fsObjectId } = folderAndState;
-    const fsObjectIds = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
+    const fsObjectIdsUnderFolder = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
+    const fsObjectIdsWithFolder = [fsObjectId, ...fsObjectIdsUnderFolder];
+    let shortcutIds = await apiRepository.getFsObjectsShortcutIds(fsObjectIdsWithFolder);
 
     await makeTransaction(async (session) => {
-        const operations: Promise<any>[] = [];
-
-        operations.push(
-            statesRepository.updateState({ userId, fsObjectId }, { trash: true, trashRoot: true }, session),
-        );
-
         if (folderAndState.permission === 'owner') {
-            operations.push(
-                statesRepository.updateStates(
-                    { fsObjectId: { $in: fsObjectIds } },
-                    { trash: true, trashRoot: false },
-                    session,
-                ),
+            await statesRepository.updateStates(
+                { fsObjectId: { $in: fsObjectIdsWithFolder } },
+                { trash: true, trashRoot: false },
+                session,
             );
         } else {
-            operations.push(
-                statesRepository.updateStates(
-                    { fsObjectId: { $in: fsObjectIds }, userId },
-                    { trash: true, trashRoot: false },
-                    session,
-                ),
+            await statesRepository.updateStates(
+                { fsObjectId: { $in: fsObjectIdsUnderFolder }, userId },
+                { trash: true, trashRoot: false },
+                session,
             );
+
+            shortcutIds = await statesRepository.getStateFsObjectIds({
+                fsObjectId: { $in: shortcutIds },
+                userId,
+            });
         }
 
-        await Promise.all(operations);
+        await statesRepository.updateState({ userId, fsObjectId }, { trash: true, trashRoot: true }, session);
+
+        await statesRepository.deleteStates({ fsObjectId: { $in: shortcutIds } }, session);
+        await fsRepository.deleteFsObjects({ _id: { $in: shortcutIds } }, session);
     });
 };
 

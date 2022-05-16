@@ -377,7 +377,12 @@ const inheritStatesSystem = async (
     return statesRepository.createStates(statesToCreate, session);
 };
 
-// TODO: use it in users manager (moveFileToTrash/moveFolderToTrash)
+/**
+ * Get FsObject Shortcuts Ids.
+ *  * FsObjectModel aggregation.
+ * @param fsObjectId - fsObject id.
+ * @returns {Promise<mongoose.Types.ObjectId[]>} Promise object containing ObjectIds[].
+ */
 const getFsObjectShortcutIds = async (fsObjectId: mongoose.Types.ObjectId): Promise<mongoose.Types.ObjectId[]> => {
     const [result] = await FsObjectModel.aggregate([
         {
@@ -407,45 +412,34 @@ const getFsObjectShortcutIds = async (fsObjectId: mongoose.Types.ObjectId): Prom
         },
     ]).exec();
 
-    if (!result?.shortcutIds) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
+    if (!result?.shortcutIds) throw new ServerError(StatusCodes.NOT_FOUND, 'FsObject was not found');
 
     return result.shortcutIds;
 };
 
-// TODO: make it better using (aggregateStatesFsObjects) & use it in users manager (moveFileToTrash/moveFolderToTrash)
-const getUserFsObjectShortcutIds = async (fsObjectId: mongoose.Types.ObjectId, userId: string): Promise<any[]> => {
-    const [result] = await FsObjectModel.aggregate([
+/**
+ * Get FsObject Shortcuts Ids.
+ *  * FsObjectModel aggregation.
+ * @param fsObjectsIds - Array of fsObjects ids.
+ * @returns {Promise<mongoose.Types.ObjectId[]>} Promise object containing ObjectIds[].
+ */
+const getFsObjectsShortcutIds = async (fsObjectsIds: mongoose.Types.ObjectId[]): Promise<mongoose.Types.ObjectId[]> => {
+    const result = await FsObjectModel.aggregate([
         {
             $match: {
-                _id: fsObjectId,
-            },
-        },
-        {
-            $lookup: {
-                from: 'fsobjects',
-                localField: '_id',
-                foreignField: 'ref',
-                as: 'shortcuts',
-            },
-        },
-    ]).exec();
-
-    const userShortcutIds = await StateModel.aggregate([
-        {
-            $match: {
-                fsObjectId: { $in: result.shortcuts.map((s) => s._id) },
-                userId,
+                ref: { $in: fsObjectsIds },
             },
         },
         {
             $project: {
-                _id: 0,
-                fsObjectId: 1,
+                _id: 1,
             },
         },
     ]).exec();
 
-    return userShortcutIds;
+    if (!result) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder was not found');
+
+    return result;
 };
 
 export {
@@ -458,5 +452,5 @@ export {
     inheritStates,
     inheritStatesSystem,
     getFsObjectShortcutIds,
-    getUserFsObjectShortcutIds,
+    getFsObjectsShortcutIds,
 };
