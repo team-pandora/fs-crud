@@ -506,6 +506,45 @@ describe('Users tests:', () => {
             expect(result.body[0].fsObjectId).toBe(file.fsObjectId);
             expect(result.body[0].permission).toBe('read');
         });
+
+        it('should create a file from a shared folder and check if created a new state for the owner', async () => {
+            const { body: folder } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
+                .send({
+                    name: 'folder-test',
+                    parent: null,
+                })
+                .expect(200);
+
+            await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${folder.fsObjectId}/share`)
+                .send({
+                    sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
+                    sharedPermission: 'write',
+                })
+                .expect(200);
+
+            const { body: createdFile } = await request(app)
+                .post('/api/users/d7e4d4e4f7c8e8d4f7c8e58f/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: folder.fsObjectId,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: ownerState } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe0/states/fsObjects')
+                .query({ fsObjectId: createdFile.fsObjectId });
+
+            if (ownerState[0].permission !== 'write') {
+                throw new Error('owner of folder should have write permission when a user create a file');
+            }
+        });
     });
 
     describe('add fs to favorite', () => {

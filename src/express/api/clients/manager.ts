@@ -19,7 +19,7 @@ export const createFile = async (file: INewFile): Promise<any> => {
         const createdFile = await fsRepository.createFile(file, session);
 
         if (createdFile.parent) {
-            await apiRepository.inheritStatesSystem(createdFile.parent, createdFile._id, session);
+            await apiRepository.inheritStates({ fsObjectId: createdFile.parent }, createdFile._id, session);
         }
 
         return createdFile;
@@ -36,7 +36,7 @@ export const createFolder = async (folder: INewFolder): Promise<IFolder> => {
         const createdFolder = await fsRepository.createFolder(folder, session);
 
         if (createdFolder.parent) {
-            await apiRepository.inheritStates(createdFolder.parent, createdFolder._id, session);
+            await apiRepository.inheritStates({ fsObjectId: createdFolder.parent }, createdFolder._id, session);
         }
 
         return createdFolder;

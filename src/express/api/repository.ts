@@ -5,7 +5,7 @@ import { removeUndefinedFields, subtractObjectIdArrays } from '../../utils/objec
 import { ServerError } from '../error';
 import { IFolder } from '../fs/interface';
 import { FsObjectModel } from '../fs/model';
-import { INewState, IState, permission } from '../states/interface';
+import { INewState, IState, IStateFilters, permission } from '../states/interface';
 import StateModel from '../states/model';
 import * as statesRepository from '../states/repository';
 import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from './interface';
@@ -341,35 +341,14 @@ const shareWithAllFsObjectsInFolder = async (
 };
 
 const inheritStates = async (
-    sourceFsObjectId: mongoose.Types.ObjectId,
-    destFsObjectId: mongoose.Types.ObjectId,
+    filters: IStateFilters,
+    fsObjectId: mongoose.Types.ObjectId,
     session?: mongoose.ClientSession,
 ): Promise<IState[]> => {
-    const states = await statesRepository.getStates({
-        fsObjectId: sourceFsObjectId,
-        permission: { $nin: ['owner'] },
-    });
+    const states = await statesRepository.getStates(filters);
 
     const statesToCreate: INewState[] = states.map((state) => ({
-        fsObjectId: destFsObjectId,
-        userId: state.userId,
-        permission: state.permission,
-    }));
-
-    return statesRepository.createStates(statesToCreate, session);
-};
-
-const inheritStatesSystem = async (
-    sourceFsObjectId: mongoose.Types.ObjectId,
-    destFsObjectId: mongoose.Types.ObjectId,
-    session?: mongoose.ClientSession,
-): Promise<IState[]> => {
-    const states = await statesRepository.getStates({
-        fsObjectId: sourceFsObjectId,
-    });
-
-    const statesToCreate: INewState[] = states.map((state) => ({
-        fsObjectId: destFsObjectId,
+        fsObjectId,
         userId: state.userId,
         permission: state.permission,
     }));
@@ -446,7 +425,6 @@ export {
     parentStateCheck,
     shareWithAllFsObjectsInFolder,
     inheritStates,
-    inheritStatesSystem,
     getFsObjectShortcutIds,
     getFsObjectsShortcutIds,
 };

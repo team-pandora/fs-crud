@@ -21,18 +21,6 @@ const createStates = async (states: INewState[], session?: ClientSession): Promi
 };
 
 /**
- * Get a State document.
- * @param stateId - The id of the State.
- * @returns {Promise<IState>} Promise object containing the State.
- */
-const getStateById = async (stateId: mongoose.Types.ObjectId): Promise<IState> => {
-    const result = await StateModel.findById(stateId).exec();
-    if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'State not found.');
-
-    return result;
-};
-
-/**
  * Get State document.
  * @param filters - The State filters.
  * @returns {Promise<IState>} Promise object containing the State.
@@ -100,14 +88,13 @@ const deleteStates = async (filters: IStateFilters, session?: ClientSession): Pr
 };
 
 export {
+    createState,
+    createStates,
     getState,
     getStates,
     getStateFsObjectIds,
-    deleteStates,
-    createState,
-    createStates,
     updateState,
     updateStates,
     deleteState,
-    getStateById,
+    deleteStates,
 };

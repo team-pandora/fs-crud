@@ -560,6 +560,98 @@ describe('Api tests:', () => {
         });
     });
 
+    describe('create a file inside shared folder', () => {
+        it('should fail to create a new file inside shared folder because has a low permission', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/clients/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder',
+                })
+                .expect(200);
+
+            await request(app)
+                .post(`/api/clients/fs/${createdFolder._id}/share`)
+                .send({
+                    sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
+            await request(app)
+                .post('/api/users/d7e4d4e4f7c8e8d4f7c8e58f/fs/file')
+                .send({
+                    parent: createdFolder._id,
+                    name: 'file',
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(403);
+        });
+
+        it('should create a new file inside shared folder', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/clients/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder',
+                })
+                .expect(200);
+
+            await request(app)
+                .post(`/api/clients/fs/${createdFolder._id}/share`)
+                .send({
+                    sharedUserId: 'd7e4d4e4f7c8e8d4f7c8e58f',
+                    sharedPermission: 'write',
+                })
+                .expect(200);
+
+            const { body: createdFile } = await request(app)
+                .post('/api/clients/fs/file')
+                .send({
+                    parent: createdFolder._id,
+                    name: 'file',
+                    key: '123',
+                    bucket: '123',
+                    size: 123,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: userState } = await request(app)
+                .get(`/api/users/d7e4d4e4f7c8e8d4f7c8e58f/fs/state`)
+                .query({ fsObjectId: createdFile._id });
+            if (!userState) throw new Error('User state not found');
+        });
+    });
+
+    describe('create a folder inside a folder', () => {
+        it('should create a new folder inside a folder', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/clients/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder',
+                })
+                .expect(200);
+
+            const { body: createdFolder2 } = await request(app)
+                .post('/api/clients/fs/folder')
+                .send({
+                    parent: createdFolder._id,
+                    name: 'folder2',
+                })
+                .expect(200);
+
+            const { body: userState } = await request(app)
+                .get(`/api/users/d7e4d4e4f7c8e8d4f7c8e58f/fs/state`)
+                .query({ fsObjectId: createdFolder2._id });
+            if (!userState) throw new Error('User state not found');
+        });
+    });
+
     describe('Unshare fsObject', () => {
         it('should unshare a file', async () => {
             const { body: createdFile } = await request(app)

@@ -27,6 +27,39 @@ import * as apiRepository from '../repository';
 
 const { permissionPriority } = config.constants;
 
+const inheritUserStates = async (
+    userId: string,
+    sourceFsObjectId: mongoose.Types.ObjectId,
+    destFsObjectId: mongoose.Types.ObjectId,
+    session?: mongoose.ClientSession,
+): Promise<IState[]> => {
+    const result = await apiRepository.inheritStates(
+        { fsObjectId: sourceFsObjectId, userId: { $nin: [userId] }, permission: { $nin: ['owner'] } },
+        destFsObjectId,
+        session,
+    );
+
+    const ownerState = await statesRepository.getState({
+        fsObjectId: sourceFsObjectId,
+        permission: 'owner',
+    });
+
+    if (ownerState && ownerState.userId !== userId) {
+        result.push(
+            await statesRepository.createState(
+                {
+                    userId: ownerState.userId,
+                    fsObjectId: destFsObjectId,
+                    permission: 'write',
+                },
+                session,
+            ),
+        );
+    }
+
+    return result;
+};
+
 /**
  * Create user File.
  * @param userId - The user to create the file.
@@ -52,7 +85,7 @@ export const createFile = async (userId: string, file: INewFile): Promise<FsObje
         );
 
         if (createdFile.parent) {
-            await apiRepository.inheritStates(createdFile.parent, createdFile._id, session);
+            await inheritUserStates(userId, createdFile.parent, createdFile._id, session);
         }
 
         return new FsObjectAndState(createdFile, createdState);
@@ -80,8 +113,9 @@ export const createFolder = async (userId: string, folder: INewFolder): Promise<
             },
             session,
         );
+
         if (createdFolder.parent) {
-            await apiRepository.inheritStates(createdFolder.parent, createdFolder._id, session);
+            await inheritUserStates(userId, createdFolder.parent, createdFolder._id, session);
         }
 
         return new FsObjectAndState(createdFolder, createdState);
