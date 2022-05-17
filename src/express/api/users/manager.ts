@@ -96,8 +96,8 @@ export const createFolder = async (userId: string, folder: INewFolder): Promise<
  */
 export const createShortcut = async (userId: string, shortcut: INewShortcut): Promise<FsObjectAndState> => {
     if (shortcut.parent) await apiRepository.parentStateCheck(userId, shortcut.parent);
-    const sharedState = await statesRepository.getState({ userId, fsObjectId: shortcut.ref });
-    if (!sharedState) throw new ServerError(StatusCodes.NOT_FOUND, 'FsObject was not found');
+    const state = await statesRepository.getState({ userId, fsObjectId: shortcut.ref });
+    if (!state) throw new ServerError(StatusCodes.NOT_FOUND, 'FsObject was not found');
 
     return makeTransaction(async (session) => {
         const createdShortcut = await fsRepository.createShortcut(shortcut, session);
@@ -343,16 +343,16 @@ export const unshareFsObject = async (
     const [fsObjectAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
     if (!fsObjectAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
 
-    const sharedState = await statesRepository.getState({ userId: sharedUserId, fsObjectId });
-    if (!sharedState) throw new ServerError(StatusCodes.BAD_REQUEST, 'Object is not shared with provided user');
+    const sharedUserState = await statesRepository.getState({ userId: sharedUserId, fsObjectId });
+    if (!sharedUserState) throw new ServerError(StatusCodes.BAD_REQUEST, 'Object is not shared with provided user');
 
-    if (permissionPriority[fsObjectAndState.permission] <= permissionPriority[sharedState.permission])
+    if (permissionPriority[fsObjectAndState.permission] <= permissionPriority[sharedUserState.permission])
         throw new ServerError(
             StatusCodes.BAD_REQUEST,
             'Trying to unshare user with equal or higher permission than own.',
         );
 
-    let fsObjectShortcutIds = await apiRepository.getFsObjectShortcutIds(fsObjectId);
+    let shortcutIds: mongoose.Types.ObjectId[];
 
     if (fsObjectAndState.type === 'folder') {
         const childrenIds = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
@@ -360,19 +360,21 @@ export const unshareFsObject = async (
             userId: sharedUserId,
             fsObjectId: { $in: childrenIds },
             root: false,
-            permission: { $nin: ['owner'] },
         });
         const filteredChildrenIds = bfs(children, fsObjectId, 'fsObjectId', 'parent');
         await statesRepository.deleteStates({ userId: sharedUserId, fsObjectId: { $in: filteredChildrenIds } });
 
-        fsObjectShortcutIds = await apiRepository.getFsObjectsShortcutIds([fsObjectId, ...childrenIds]);
-        fsObjectShortcutIds = await statesRepository.getStateFsObjectIds({
-            fsObjectId: { $in: fsObjectShortcutIds },
-            userId,
+        shortcutIds = await apiRepository.getFsObjectsShortcutIds([fsObjectId, ...filteredChildrenIds]);
+        shortcutIds = await statesRepository.getStateFsObjectIds({
+            fsObjectId: { $in: shortcutIds },
+            userId: sharedUserId,
         });
+    } else {
+        shortcutIds = await apiRepository.getFsObjectShortcutIds(fsObjectId);
     }
-    await statesRepository.deleteStates({ fsObjectId: { $in: fsObjectShortcutIds } });
-    await fsRepository.deleteFsObjects({ _id: { $in: fsObjectShortcutIds } });
+
+    await statesRepository.deleteStates({ fsObjectId: { $in: shortcutIds } });
+    await fsRepository.deleteFsObjects({ _id: { $in: shortcutIds } });
 
     return statesRepository.deleteState({ userId: sharedUserId, fsObjectId });
 };
@@ -486,10 +488,11 @@ export const restoreFileFromTrash = async (userId: string, fsObjectId: mongoose.
 
         if (fileAndState.permission === 'owner') {
             operations.push(
-                statesRepository.updateStates({ fsObjectId, userId: { $nin: [userId] } }, { trash: false }, session),
-            );
-            operations.push(
-                statesRepository.updateState({ userId, fsObjectId }, { trash: false, trashRoot: false }, session),
+                statesRepository.updateStates(
+                    { fsObjectId, userId: { $nin: [userId] } },
+                    { trash: false, trashRoot: false },
+                    session,
+                ),
             );
         }
 
@@ -630,21 +633,26 @@ export const restoreFolderFromTrash = async (userId: string, fsObjectId: mongoos
     await makeTransaction(async (session) => {
         const operations: Promise<any>[] = [];
 
+        const fsObjectIdsUnderFolder = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
+        const fsObjectIds = [fsObjectId, ...fsObjectIdsUnderFolder];
+
         if (folderAndState.permission === 'owner') {
-            const fsObjectIds = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
-
             operations.push(
-                statesRepository.updateStates({ fsObjectId: { $in: fsObjectIds } }, { trash: false }, session),
-            );
-
-            operations.push(
-                statesRepository.updateState({ userId, fsObjectId }, { trash: false, trashRoot: false }, session),
-            );
-        } else {
-            operations.push(
-                statesRepository.updateState({ userId, fsObjectId }, { trashRoot: false, trash: false }, session),
+                statesRepository.updateStates(
+                    { fsObjectId: { $in: fsObjectIds }, userId: { $nin: [userId] } },
+                    { trash: false, trashRoot: false },
+                    session,
+                ),
             );
         }
+
+        operations.push(
+            statesRepository.updateState(
+                { userId, fsObjectId: { $in: fsObjectIds } },
+                { trashRoot: false, trash: false },
+                session,
+            ),
+        );
 
         await Promise.all(operations);
     });

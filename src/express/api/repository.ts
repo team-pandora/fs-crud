@@ -412,8 +412,6 @@ const getFsObjectShortcutIds = async (fsObjectId: mongoose.Types.ObjectId): Prom
         },
     ]).exec();
 
-    if (!result?.shortcutIds) throw new ServerError(StatusCodes.NOT_FOUND, 'FsObject was not found');
-
     return result.shortcutIds;
 };
 
@@ -437,9 +435,7 @@ const getFsObjectsShortcutIds = async (fsObjectsIds: mongoose.Types.ObjectId[]):
         },
     ]).exec();
 
-    if (!result) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder was not found');
-
-    return result;
+    return result.map((item) => item._id);
 };
 
 export {
