@@ -213,6 +213,17 @@ describe('Users tests:', () => {
                 .expect(400);
         });
 
+        it('should fail to create shortcut, ref file does not exist', async () => {
+            await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut')
+                .send({
+                    name: 'shortcut',
+                    parent: null,
+                    ref: '62655a5dd681ae7e5f9eafef',
+                })
+                .expect(404);
+        });
+
         it('should create shortcut successfully', async () => {
             const { body: folder } = await request(app)
                 .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/folder')
@@ -1311,6 +1322,126 @@ describe('Users tests:', () => {
 
             expect(result.length).toBe(1);
             expect(result[0].trash).toBe(true);
+        });
+
+        it('should delete shortcuts of file that is no longer shared with user', async () => {
+            const { body: createdFile } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: sharedFile } = await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
+            await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe1/states/fsObjects')
+                .query({ fsObjectId: createdFile.fsObjectId, permission: sharedFile.permission })
+                .expect(200);
+
+            const { body: createdShortcut } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut')
+                .send({
+                    parent: null,
+                    name: 'shortcut',
+                    ref: createdFile.fsObjectId,
+                })
+                .expect(200);
+            expect(createdShortcut).toBeDefined();
+
+            const { body: deletedState } = await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
+                .send({
+                    userId: '62655a5dd681ae7e5f9eafe1',
+                })
+                .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe1/states/fsObjects')
+                .query({
+                    stateId: deletedState._id,
+                })
+                .expect(200);
+            expect(result.length).toBe(0);
+
+            const { body: sharedUserFileShortcuts } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe1/fsObjects/states')
+                .query({ ref: createdFile.fsObjectId, userId: '62655a5dd681ae7e5f9eafe1' })
+                .expect(200);
+
+            expect(sharedUserFileShortcuts.length).toBe(0);
+        });
+
+        it('should delete shortcuts of folder that is no longer shared with user', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/file')
+                .send({
+                    name: 'file-test',
+                    parent: null,
+                    key: 'string',
+                    bucket: 'string',
+                    size: 50,
+                    public: false,
+                    source: 'drive',
+                })
+                .expect(200);
+
+            const { body: sharedFolder } = await request(app)
+                .post(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFolder.fsObjectId}/share`)
+                .send({
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
+                    sharedPermission: 'read',
+                })
+                .expect(200);
+
+            await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe1/states/fsObjects')
+                .query({ fsObjectId: createdFolder.fsObjectId, permission: sharedFolder.permission })
+                .expect(200);
+
+            const { body: createdShortcut } = await request(app)
+                .post('/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut')
+                .send({
+                    parent: null,
+                    name: 'shortcut',
+                    ref: createdFolder.fsObjectId,
+                })
+                .expect(200);
+            expect(createdShortcut).toBeDefined();
+
+            const { body: deletedState } = await request(app)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFolder.fsObjectId}/share`)
+                .send({
+                    userId: '62655a5dd681ae7e5f9eafe1',
+                })
+                .expect(200);
+
+            const { body: result } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe1/states/fsObjects')
+                .query({
+                    stateId: deletedState._id,
+                })
+                .expect(200);
+            expect(result.length).toBe(0);
+
+            const { body: sharedUserFolderShortcuts } = await request(app)
+                .get('/api/users/62655a5dd681ae7e5f9eafe1/fsObjects/states')
+                .query({ ref: createdFolder.fsObjectId, userId: '62655a5dd681ae7e5f9eafe1' })
+                .expect(200);
+
+            expect(sharedUserFolderShortcuts.length).toBe(0);
         });
     });
 
