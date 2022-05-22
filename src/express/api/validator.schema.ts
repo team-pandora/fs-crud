@@ -115,18 +115,6 @@ export const getFsObjectHierarchyRequestSchema = Joi.object({
     body: {},
 });
 
-export const updateStateRequestSchema = Joi.object({
-    query: {},
-    params: {},
-    body: Joi.object({
-        favorite: Joi.boolean().optional(),
-        trash: Joi.boolean().optional(),
-        permission: Joi.string()
-            .valid(...permissions)
-            .optional(),
-    }).min(1),
-});
-
 export const updateFileRequestSchema = Joi.object({
     query: {},
     params: {},
@@ -156,6 +144,17 @@ export const updateShortcutRequestSchema = Joi.object({
         name: Joi.string().regex(nameRegex).optional(),
         parent: JoiObjectId.optional(),
     }).min(1),
+});
+
+export const updatePermissionRequestSchema = Joi.object({
+    query: {},
+    params: {},
+    body: {
+        sharedUserId: Joi.string().regex(config.users.idRegex).required(),
+        updatePermission: Joi.string()
+            .valid(...permissions)
+            .required(),
+    },
 });
 
 export const unshareFsObjectRequestSchema = Joi.object({

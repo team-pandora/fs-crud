@@ -7,10 +7,6 @@ const apiClientFsActionParamsRequestSchema = Joi.object({
     fsObjectId: JoiObjectId.required(),
 });
 
-const apiClientStateActionParamsRequestSchema = Joi.object({
-    stateId: JoiObjectId.required(),
-});
-
 export const {
     createFileRequestSchema,
     createFolderRequestSchema,
@@ -28,16 +24,23 @@ export const shareFsObjectRequestSchema = apiValidator.shareFsObjectRequestSchem
     },
 });
 
+export const editFsObjectPermissionRequestSchema = apiValidator.shareFsObjectRequestSchema.keys({
+    params: apiClientFsActionParamsRequestSchema,
+    body: {
+        sharedUserId: Joi.string().regex(config.users.idRegex).required(),
+        updatePermission: Joi.string()
+            .valid(...config.constants.permissions)
+            .invalid('owner')
+            .required(),
+    },
+});
+
 export const addToFavoriteRequestSchema = apiValidator.addToFavoriteRequestSchema.keys({
     params: apiClientFsActionParamsRequestSchema,
 });
 
 export const getFsObjectHierarchyRequestSchema = apiValidator.getFsObjectHierarchyRequestSchema.keys({
     params: apiClientFsActionParamsRequestSchema,
-});
-
-export const updateStateRequestSchema = apiValidator.updateStateRequestSchema.keys({
-    params: apiClientStateActionParamsRequestSchema,
 });
 
 export const updateFileRequestSchema = apiValidator.updateFileRequestSchema.keys({

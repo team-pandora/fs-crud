@@ -114,6 +114,12 @@ usersRouter.patch(
     wrapMiddleware(usersController.updateUpload),
 );
 
+usersRouter.patch(
+    '/:userId/fs/:fsObjectId/permission',
+    ValidateRequest(usersValidator.updatePermissionRequestSchema),
+    wrapMiddleware(usersController.updateFsPermission),
+);
+
 usersRouter.delete(
     '/:userId/fs/:fsObjectId/share',
     ValidateRequest(usersValidator.unshareFsObjectRequestSchema),

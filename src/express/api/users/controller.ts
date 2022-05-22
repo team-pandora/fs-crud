@@ -76,6 +76,12 @@ export const updateUpload = async (req: Request<IUserUploadActionParams>, res: R
     res.json(await usersManager.updateUploadById(req.params.userId, req.params.uploadId, req.body));
 };
 
+export const updateFsPermission = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    const { sharedUserId, updatePermission } = req.body;
+    res.json(await usersManager.updateFsPermission(userId, fsObjectId, sharedUserId, updatePermission));
+};
+
 export const unshareFsObject = async (req: Request<IUserFsActionParams>, res: Response) => {
     res.json(await usersManager.unshareFsObject(req.params.userId, req.params.fsObjectId, req.body.userId));
 };

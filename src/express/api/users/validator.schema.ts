@@ -14,10 +14,6 @@ const apiUserFsActionParamsRequestSchema = apiUserActionParamsRequestSchema.keys
     fsObjectId: JoiObjectId.required(),
 });
 
-const apiUserStateActionParamsRequestSchema = apiUserActionParamsRequestSchema.keys({
-    stateId: JoiObjectId.required(),
-});
-
 const apiUserUploadActionParamsRequestSchema = apiUserActionParamsRequestSchema.keys({
     uploadId: JoiObjectId.required(),
 });
@@ -118,10 +114,6 @@ export const getUploadsRequestSchema = Joi.object({
     body: {},
 });
 
-export const updateStateRequestSchema = apiValidator.updateStateRequestSchema.keys({
-    params: apiUserStateActionParamsRequestSchema,
-});
-
 export const updateFileRequestSchema = apiValidator.updateFileRequestSchema.keys({
     params: apiUserFsActionParamsRequestSchema,
 });
@@ -139,6 +131,17 @@ export const updateUploadRequestSchema = Joi.object({
     params: apiUserUploadActionParamsRequestSchema,
     body: {
         uploadedBytes: Joi.number().required(),
+    },
+});
+
+export const updatePermissionRequestSchema = apiValidator.updatePermissionRequestSchema.keys({
+    params: apiUserFsActionParamsRequestSchema,
+    body: {
+        sharedUserId: Joi.string().regex(config.users.idRegex).required(),
+        updatePermission: Joi.string()
+            .valid(...config.constants.permissions)
+            .invalid('owner')
+            .required(),
     },
 });
 

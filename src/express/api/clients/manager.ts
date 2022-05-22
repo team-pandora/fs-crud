@@ -82,7 +82,7 @@ export const shareFsObjectById = async (
 /**
  * Add FsObject to favorite.
  * @param fsObjectId - The FsObject id.
- * @returns {Promise<IFile>} Promise object containing the FsObject.
+ * @returns {Promise<IState>} Promise object containing the FsObject.
  */
 export const addToFavorite = async (fsObjectId: mongoose.Types.ObjectId): Promise<IState> => {
     await fsRepository.getFsObject({ _id: fsObjectId });
@@ -145,6 +145,36 @@ export const updateFolderById = async (
     update: IUpdateFolder,
 ): Promise<IFolder> => {
     return fsRepository.updateFolderById(fsObjectId, update);
+};
+
+/**
+ * Update user File's permission
+ * @param fsObjectId
+ * @param sharedUserId
+ * @param permission
+ * @return {Promise<IState>}
+ */
+export const updateFsPermission = async (
+    fsObjectId: mongoose.Types.ObjectId,
+    sharedUserId: string,
+    updatePermission: permission,
+): Promise<IState> => {
+    const fsObject = await fsRepository.getFsObject({ _id: fsObjectId });
+
+    return makeTransaction(async (session) => {
+        const updatedState = await statesRepository.updateState(
+            { userId: sharedUserId },
+            {
+                permission: updatePermission,
+            },
+        );
+
+        if (fsObject.type === 'folder') {
+            await apiRepository.shareWithAllFsObjectsInFolder(fsObjectId, sharedUserId, updatePermission, session);
+        }
+
+        return updatedState;
+    });
 };
 
 /**

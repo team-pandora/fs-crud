@@ -560,6 +560,46 @@ describe('Api tests:', () => {
         });
     });
 
+    describe('Update fs permission', () => {
+        it('should fail to update fs permission, fs does not found', async () => {
+            await request(app)
+                .patch('/api/clients/fs/628a3c28aecdb93d13956823/permission')
+                .send({
+                    sharedUserId: '5d7e4d4e4f7c8e8d4f72sc8e8ss',
+                    updatePermission: 'read',
+                })
+                .expect(404);
+        });
+
+        it('should update fs permission', async () => {
+            const { body: createdFolder } = await request(app)
+                .post('/api/clients/fs/folder')
+                .send({
+                    parent: null,
+                    name: 'folder1',
+                })
+                .expect(200);
+
+            await request(app)
+                .post(`/api/clients/fs/${createdFolder._id}/share`)
+                .send({
+                    sharedUserId: '5d7e4d4e4f7c8e8d4f72sc8e8ss',
+                    sharedPermission: 'owner',
+                })
+                .expect(200);
+
+            const { body: updatedPermission } = await request(app)
+                .patch(`/api/clients/fs/${createdFolder._id}/permission`)
+                .send({
+                    sharedUserId: '5d7e4d4e4f7c8e8d4f72sc8e8ss',
+                    updatePermission: 'read',
+                })
+                .expect(200);
+
+            expect(updatedPermission.permission).toBe('read');
+        });
+    });
+
     describe('create a file inside shared folder', () => {
         it('should fail to create a new file inside shared folder because has a low permission', async () => {
             const { body: createdFolder } = await request(app)

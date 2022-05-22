@@ -60,6 +60,12 @@ clientsRouter.patch(
     wrapMiddleware(apiController.updateFolder),
 );
 
+clientsRouter.patch(
+    '/fs/:fsObjectId/permission',
+    ValidateRequest(apiValidator.editFsObjectPermissionRequestSchema),
+    wrapMiddleware(apiController.updateFsPermission),
+);
+
 clientsRouter.delete(
     '/fs/:fsObjectId/share',
     ValidateRequest(apiValidator.unshareFsObjectRequestSchema),

@@ -39,6 +39,11 @@ export const updateFolder = async (req: Request<IFsActionParams>, res: Response)
     res.json(await apiManager.updateFolderById(req.params.fsObjectId, req.body));
 };
 
+export const updateFsPermission = async (req: Request<IFsActionParams>, res: Response) => {
+    const { sharedUserId, updatePermission } = req.body;
+    res.json(await apiManager.updateFsPermission(req.params.fsObjectId, sharedUserId, updatePermission));
+};
+
 export const unshareFsObject = async (req: Request<IFsActionParams>, res: Response) => {
     res.json(await apiManager.unshareFsObjectById(req.params.fsObjectId, req.body.userId));
 };

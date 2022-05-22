@@ -201,6 +201,12 @@ export const shareFsObject = async (
     });
 };
 
+/**
+ * Add fs to favorites.
+ * @param userId - The user to add the fs to favorites.
+ * @param fsObjectId - The fs to add to favorites.
+ * @returns {Promise<IState>} Promise object containing the state.
+ */
 export const addToFavorite = async (userId: string, fsObjectId: mongoose.Types.ObjectId): Promise<IState> => {
     const [fsObjectAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
     if (!fsObjectAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found.');
@@ -350,6 +356,47 @@ export const updateUploadById = async (
         const result = await Promise.all(operations);
 
         return result[1];
+    });
+};
+
+/**
+ * Update user File's permission.
+ * @param userId
+ * @param fsObjectId
+ * @param sharedUserId
+ * @param permission
+ * @returns {Promise<IState>}
+ */
+export const updateFsPermission = async (
+    userId: string,
+    fsObjectId: mongoose.Types.ObjectId,
+    sharedUserId: string,
+    updatePermission: permission,
+): Promise<IState> => {
+    if (userId === sharedUserId)
+        throw new ServerError(StatusCodes.FORBIDDEN, 'You cannot change your own permissions.');
+
+    const [sharerFsObjectAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
+    const [sharedFsObjectAndState] = await apiRepository.aggregateStatesFsObjects({ userId: sharedUserId, fsObjectId });
+
+    if (!sharerFsObjectAndState || !sharedFsObjectAndState)
+        throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found.');
+    if (permissionPriority[updatePermission] > permissionPriority[sharerFsObjectAndState.permission])
+        throw new ServerError(StatusCodes.BAD_REQUEST, 'Trying to share with higher permission than own.');
+
+    return makeTransaction(async (session) => {
+        const updateState = await statesRepository.updateState(
+            { userId: sharedUserId },
+            {
+                permission: updatePermission,
+            },
+        );
+
+        if (sharedFsObjectAndState.type === 'folder') {
+            await apiRepository.shareWithAllFsObjectsInFolder(fsObjectId, sharedUserId, updatePermission, session);
+        }
+
+        return updateState;
     });
 };
 
