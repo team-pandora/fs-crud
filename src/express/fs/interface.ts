@@ -1,18 +1,14 @@
-import * as mongoose from 'mongoose';
 import config from '../../config';
+import { ObjectId } from '../../utils/mongoose';
 
 export type fsObjectType = typeof config.constants.fsObjectTypes[number];
 
-export type source = typeof config.constants.clients[number];
-
-export interface IRequestParams {
-    fsObjectId: mongoose.Types.ObjectId;
-}
+export type client = typeof config.constants.clients[number];
 
 export interface IFsObject {
-    _id: mongoose.Types.ObjectId;
+    _id: ObjectId;
     name: string;
-    parent: mongoose.Types.ObjectId | null;
+    parent: ObjectId | null;
     createdAt: Date;
     updatedAt: Date;
     type: fsObjectType;
@@ -23,70 +19,60 @@ export interface IFile extends IFsObject {
     bucket: string;
     size: number;
     public: boolean;
-    source: source;
+    client: client;
 }
 
 export interface IFolder extends IFsObject {}
 
 export interface IShortcut extends IFsObject {
-    ref: mongoose.Types.ObjectId;
+    ref: ObjectId;
 }
 
 export interface IFsObjectFilters {
-    _id?: mongoose.Types.ObjectId | { $in: mongoose.Types.ObjectId[] } | { $nin: mongoose.Types.ObjectId[] };
+    _id?: ObjectId | { $in: ObjectId[] } | { $nin: ObjectId[] };
     name?: string;
-    parent?: mongoose.Types.ObjectId | null;
+    parent?: ObjectId | null;
 }
 
-export interface IFileFilters {
-    _id?: mongoose.Types.ObjectId;
-    name?: string;
-    parent?: mongoose.Types.ObjectId | null;
+export interface IFileFilters extends IFsObjectFilters {
     key?: string;
     bucket?: string;
     size?: number;
     public?: boolean;
-    source?: source;
+    client?: client;
 }
 
-export interface IFolderFilters {
-    _id?: mongoose.Types.ObjectId;
-    name?: string;
-    parent?: mongoose.Types.ObjectId | null;
-}
+export interface IFolderFilters extends IFsObjectFilters {}
 
-export interface IShortcutFilters {
-    _id?: mongoose.Types.ObjectId;
-    name?: string;
-    parent?: mongoose.Types.ObjectId | null;
-    ref?: mongoose.Types.ObjectId;
+export interface IShortcutFilters extends IFsObjectFilters {
+    ref?: ObjectId;
 }
 
 export interface INewFile {
     name: string;
-    parent: mongoose.Types.ObjectId | null;
+    parent: ObjectId | null;
     key: string;
     bucket: string;
     size: number;
-    source: source;
+    client: client;
 
     public?: boolean;
 }
 
 export interface INewFolder {
     name: string;
-    parent: mongoose.Types.ObjectId | null;
+    parent: ObjectId | null;
 }
 
 export interface INewShortcut {
     name: string;
-    parent: mongoose.Types.ObjectId | null;
-    ref: mongoose.Types.ObjectId;
+    parent: ObjectId | null;
+    ref: ObjectId;
 }
 
 export interface IUpdateFile {
     name?: string;
-    parent?: mongoose.Types.ObjectId | null;
+    parent?: ObjectId | null;
     key?: string;
     bucket?: string;
     size?: number;
@@ -95,10 +81,10 @@ export interface IUpdateFile {
 
 export interface IUpdateFolder {
     name?: string;
-    parent?: mongoose.Types.ObjectId | null;
+    parent?: ObjectId | null;
 }
 
 export interface IUpdateShortcut {
     name?: string;
-    parent?: mongoose.Types.ObjectId | null;
+    parent?: ObjectId | null;
 }

@@ -15,7 +15,7 @@ export const createFileRequestSchema = Joi.object({
         key: Joi.string().regex(fileKeyRegex).required(),
         bucket: Joi.string().regex(fileBucketRegex).required(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
-        source: Joi.string()
+        client: Joi.string()
             .valid(...clients)
             .required(),
 
@@ -46,7 +46,7 @@ export const shareFsObjectRequestSchema = Joi.object({
     query: {},
     params: {},
     body: {
-        sharedUserId: Joi.string().regex(config.users.idRegex).required(),
+        sharedUserId: Joi.string().regex(config.user.idRegex).required(),
         sharedPermission: Joi.string()
             .valid(...permissions)
             .required(),
@@ -63,7 +63,7 @@ export const aggregateStatesFsObjectsRequestSchema = Joi.object({
     query: Joi.object({
         // State filters
         stateId: JoiObjectId.optional(),
-        userId: Joi.string().regex(config.users.idRegex).optional(),
+        userId: Joi.string().regex(config.user.idRegex).optional(),
         fsObjectId: JoiObjectId.optional(),
         favorite: Joi.boolean().optional(),
         trash: Joi.boolean().optional(),
@@ -77,7 +77,7 @@ export const aggregateStatesFsObjectsRequestSchema = Joi.object({
         // FsObject filters
         key: Joi.string().optional(),
         bucket: Joi.string().optional(),
-        source: Joi.string().optional(),
+        client: Joi.string().optional(),
         size: Joi.number().optional(),
         public: Joi.boolean().optional(),
         name: Joi.string().optional(),
@@ -150,7 +150,7 @@ export const updatePermissionRequestSchema = Joi.object({
     query: {},
     params: {},
     body: {
-        sharedUserId: Joi.string().regex(config.users.idRegex).required(),
+        sharedUserId: Joi.string().regex(config.user.idRegex).required(),
         updatePermission: Joi.string()
             .valid(...permissions)
             .required(),
@@ -161,7 +161,7 @@ export const unshareFsObjectRequestSchema = Joi.object({
     query: {},
     params: {},
     body: {
-        userId: Joi.string().regex(config.users.idRegex).required(),
+        userId: Joi.string().regex(config.user.idRegex).required(),
     },
 });
 

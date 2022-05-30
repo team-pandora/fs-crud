@@ -17,7 +17,7 @@ export const {
 export const shareFsObjectRequestSchema = apiValidator.shareFsObjectRequestSchema.keys({
     params: apiClientFsActionParamsRequestSchema,
     body: {
-        sharedUserId: Joi.string().regex(config.users.idRegex).required(),
+        sharedUserId: Joi.string().regex(config.user.idRegex).required(),
         sharedPermission: Joi.string()
             .valid(...config.constants.permissions)
             .required(),
@@ -27,7 +27,7 @@ export const shareFsObjectRequestSchema = apiValidator.shareFsObjectRequestSchem
 export const editFsObjectPermissionRequestSchema = apiValidator.shareFsObjectRequestSchema.keys({
     params: apiClientFsActionParamsRequestSchema,
     body: {
-        sharedUserId: Joi.string().regex(config.users.idRegex).required(),
+        sharedUserId: Joi.string().regex(config.user.idRegex).required(),
         updatePermission: Joi.string()
             .valid(...config.constants.permissions)
             .invalid('owner')

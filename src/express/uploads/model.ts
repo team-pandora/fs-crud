@@ -34,7 +34,7 @@ const UploadSchema = new mongoose.Schema<IUpload & mongoose.Document>(
             type: Number,
             required: true,
         },
-        source: {
+        client: {
             type: String,
             required: true,
         },

@@ -40,7 +40,7 @@ describe('Api tests:', () => {
                     bucket: '123',
                     size: 123,
                     public: true,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(400);
         });
@@ -62,7 +62,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -74,7 +74,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(409);
         });
@@ -88,7 +88,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
         });
@@ -130,7 +130,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -158,7 +158,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -188,7 +188,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -207,7 +207,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -228,7 +228,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -240,7 +240,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -261,7 +261,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -273,7 +273,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -296,7 +296,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -315,7 +315,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -327,7 +327,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -348,7 +348,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -360,7 +360,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -381,7 +381,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -393,7 +393,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -436,7 +436,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -453,7 +453,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -474,7 +474,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
             expect(createdFile.name).toBe('file1');
@@ -494,7 +494,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -517,7 +517,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -626,7 +626,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(403);
         });
@@ -656,7 +656,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -702,7 +702,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -764,7 +764,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -798,7 +798,7 @@ describe('Api tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 

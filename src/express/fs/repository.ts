@@ -1,7 +1,7 @@
 import { StatusCodes } from 'http-status-codes';
-import * as mongoose from 'mongoose';
 import { ClientSession } from 'mongoose';
 import { defaultNewFile } from '../../config/defaults';
+import { ObjectId } from '../../utils/mongoose';
 import { ServerError } from '../error';
 import {
     IFile,
@@ -18,44 +18,42 @@ import {
 import { FileModel, FolderModel, FsObjectModel, ShortcutModel } from './model';
 
 /**
- * Get a fsObject.
+ * Get fsObject. Throws error if not found.
  * @param filters - The fsObject filters.
- * @returns {Promise<IFile|IFolder|IShortcut>} Promise object containing the fsObject.
+ * @returns {Promise<IFile | IFolder | IShortcut>} Promise object containing the fsObject.
  */
 const getFsObject = async (filters: IFsObjectFilters): Promise<IFile | IFolder | IShortcut> => {
     const result = await FsObjectModel.findOne(filters).exec();
     if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
-
     return result;
 };
 
 /**
- * Check fsObject parent.
+ * Check if fsObject parent exists.
  * @param parent - The fsObject parent id.
  * @returns {Promise<void>} Empty Promise.
  */
-const fsObjectParentCheck = async (parent: mongoose.Types.ObjectId | null): Promise<void> => {
+const fsObjectParentCheck = async (parent: ObjectId | null): Promise<void> => {
     if (parent && !(await FolderModel.exists({ _id: parent })))
         throw new ServerError(StatusCodes.BAD_REQUEST, 'Provided parent does not exist');
 };
 
 /**
- * Check fsObject name.
+ * Check if fsObject name does not conflict with other fsObjects.
  * @param parent - The folder id.
  * @param name - The fsObject name.
  * @returns {Promise<void>} Empty Promise.
  */
-const fsObjectNameCheck = async (parent: mongoose.Types.ObjectId | null, name: string): Promise<void> => {
+const fsObjectNameCheck = async (parent: ObjectId | null, name: string): Promise<void> => {
     if (parent && (await FsObjectModel.exists({ parent, name })))
         throw new ServerError(StatusCodes.CONFLICT, 'Object with this name already exists in folder');
 };
 
 /**
- * Create a File document.
- *   1) validations for file's parent and name fields.
- *   2) create new file.
+ * Create File. Throws if file fails parent or name validations.
  * @param file - The new file object.
- * @returns {Promise<IFile>} Promise object containing the file.
+ * @param session - Optional mongoose session.
+ * @returns {Promise<IFile>} Promise object containing the created file.
  */
 const createFile = async (file: INewFile, session?: ClientSession): Promise<IFile> => {
     await fsObjectParentCheck(file.parent);
@@ -65,11 +63,10 @@ const createFile = async (file: INewFile, session?: ClientSession): Promise<IFil
 };
 
 /**
- * Create a Folder document.
- *   1) validations for folder's parent and name fields.
- *   2) create new folder.
+ * Create Folder. Throws if folder fails parent or name validations.
  * @param folder - The new folder object.
- * @returns {Promise<IFolder>} Promise object containing the folder.
+ * @param session - Optional mongoose session.
+ * @returns {Promise<IFolder>} Promise object containing the created folder.
  */
 const createFolder = async (folder: INewFolder, session?: ClientSession): Promise<IFolder> => {
     await fsObjectParentCheck(folder.parent);
@@ -79,12 +76,10 @@ const createFolder = async (folder: INewFolder, session?: ClientSession): Promis
 };
 
 /**
- * Create a Shortcut document.
- *   1) validations for parent and name fields.
- *   2) validations for the original file of shortcut.
- *   3) create new shortcut.
+ * Create Shortcut. Throws if shortcut fails parent or name validations. If parent is shortcut it's ref is used.
  * @param shortcut - The new shortcut object.
- * @returns {Promise<IShortcut>} Promise object containing the shortcut.
+ * @param session - Optional mongoose session.
+ * @returns {Promise<IShortcut>} Promise object containing the created shortcut.
  */
 const createShortcut = async (shortcut: INewShortcut, session?: ClientSession): Promise<IShortcut> => {
     await fsObjectParentCheck(shortcut.parent);
@@ -101,13 +96,13 @@ const createShortcut = async (shortcut: INewShortcut, session?: ClientSession): 
 };
 
 /**
- * Check fsObject update.
+ * Check fsObject update. Throws if validations fail.
  * @param fsObjectId - The fsObject id.
  * @param update - The update object.
  * @returns {Promise<void>} Empty Promise.
  */
 const fsObjectUpdateCheck = async (
-    fsObjectId: mongoose.Types.ObjectId,
+    fsObjectId: ObjectId,
     update: IUpdateFile | IUpdateFolder | IUpdateShortcut,
 ): Promise<void> => {
     const originalFsObject = await FsObjectModel.findOne({ _id: fsObjectId }).exec();
@@ -121,16 +116,13 @@ const fsObjectUpdateCheck = async (
 };
 
 /**
- * Update a File.
+ * Update File. Throws if validations fail.
  * @param fileId - The File id.
  * @param update - The update object.
+ * @param session - Optional mongoose session.
  * @returns {Promise<IFile>} Promise object containing the updated File.
  */
-const updateFileById = async (
-    fileId: mongoose.Types.ObjectId,
-    update: IUpdateFile,
-    session?: ClientSession,
-): Promise<IFile> => {
+const updateFileById = async (fileId: ObjectId, update: IUpdateFile, session?: ClientSession): Promise<IFile> => {
     await fsObjectUpdateCheck(fileId, update);
 
     const result = await FileModel.findOneAndUpdate({ _id: fileId }, { $set: update }, { new: true, session }).exec();
@@ -140,13 +132,13 @@ const updateFileById = async (
 };
 
 /**
- * Update a Folder.
+ * Update Folder.
  * @param folderId - The Folder id.
  * @param update - The update object.
  * @returns {Promise<IFolder>} Promise object containing the updated Folder.
  */
 const updateFolderById = async (
-    folderId: mongoose.Types.ObjectId,
+    folderId: ObjectId,
     update: IUpdateFolder,
     session?: ClientSession,
 ): Promise<IFolder> => {
@@ -163,13 +155,14 @@ const updateFolderById = async (
 };
 
 /**
- * Update a Shortcut.
+ * Update Shortcut.
  * @param shortcutId - The Shortcut id.
  * @param update - The update object.
+ * @param session - Optional mongoose session.
  * @returns {Promise<IShortcut>} Promise object containing the updated Shortcut.
  */
 const updateShortcutById = async (
-    shortcutId: mongoose.Types.ObjectId,
+    shortcutId: ObjectId,
     update: IUpdateShortcut,
     session?: ClientSession,
 ): Promise<IShortcut> => {
@@ -186,38 +179,38 @@ const updateShortcutById = async (
 };
 
 /**
- * Delete a FsObjects.
+ * Delete FsObjects.
  * @param filters - The FsObjects filters.
+ * @param session - Optional mongoose session.
  * @returns {Promise<number>} Promise object containing the amount of FsObjects deleted.
  */
 const deleteFsObjects = async (filters: IFsObjectFilters, session?: ClientSession): Promise<number> => {
     const result = await FsObjectModel.deleteMany(filters, { session }).exec();
     if (!result.acknowledged) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to delete fsObjects');
-
     return result.deletedCount;
 };
 
 /**
- * Delete a File.
+ * Delete File.
  * @param fileId - The File id.
- * @returns {Promise<IFile>} Promise object containing the File.
+ * @param session - Optional mongoose session.
+ * @returns {Promise<IFile>} Promise object containing the deleted File.
  */
-const deleteFileById = async (fileId: mongoose.Types.ObjectId, session?: ClientSession): Promise<IFile> => {
+const deleteFileById = async (fileId: ObjectId, session?: ClientSession): Promise<IFile> => {
     const result = await FileModel.findByIdAndDelete(fileId, { session }).exec();
     if (!result) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to delete file');
-
     return result;
 };
 
 /**
- * Delete a Shortcut.
+ * Delete Shortcut.
  * @param shortcutId - The Shortcut id.
- * @returns {Promise<IShortcut>} Promise object containing the Shortcut.
+ * @param session - Optional mongoose session.
+ * @returns {Promise<IShortcut>} Promise object containing the deleted Shortcut.
  */
-const deleteShortcutById = async (shortcutId: mongoose.Types.ObjectId, session?: ClientSession): Promise<IShortcut> => {
+const deleteShortcutById = async (shortcutId: ObjectId, session?: ClientSession): Promise<IShortcut> => {
     const result = await ShortcutModel.findByIdAndDelete(shortcutId, { session }).exec();
     if (!result) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to delete shortcut');
-
     return result;
 };
 

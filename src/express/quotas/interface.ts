@@ -1,7 +1,7 @@
-import * as mongoose from 'mongoose';
+import { ObjectId } from '../../utils/mongoose';
 
 export interface IQuota {
-    _id: mongoose.Types.ObjectId;
+    _id: ObjectId;
     userId: string;
     used: number;
     limit: number;

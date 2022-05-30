@@ -15,8 +15,9 @@ services:
     environment:
       LOAD_DOTENV: "false"
       PORT: 8000
-      MONGO_URI: mongodb://mongo1:27017,mongo2:27017,mongo3:27017/file-service?replicaSet=rs0
+      MONGO_URI: mongodb://localhost:27017/file-service?replicaSet=rs0
       MONGO_QUOTAS_COLLECTION_NAME: quotas
       MONGO_STATES_COLLECTION_NAME: states
       MONGO_FS_OBJECTS_COLLECTION_NAME: fsobjects
+      MONGO_UPLOADS_COLLECTION_NAME: uploads
     network_mode: "host"

@@ -72,7 +72,7 @@ export const shareFsObjectById = async (
         const createdState = await statesRepository.createState(state, session);
 
         if (fsObject.type === 'folder') {
-            await apiRepository.shareWithAllFsObjectsInFolder(fsObjectId, sharedUserId, sharedPermission, session);
+            await apiRepository.shareAllFsObjectsInFolder(fsObjectId, sharedUserId, sharedPermission, session);
         }
 
         return createdState;
@@ -170,7 +170,7 @@ export const updateFsPermission = async (
         );
 
         if (fsObject.type === 'folder') {
-            await apiRepository.shareWithAllFsObjectsInFolder(fsObjectId, sharedUserId, updatePermission, session);
+            await apiRepository.shareAllFsObjectsInFolder(fsObjectId, sharedUserId, updatePermission, session);
         }
 
         return updatedState;

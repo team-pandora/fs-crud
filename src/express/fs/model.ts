@@ -33,7 +33,7 @@ const FileSchema = new mongoose.Schema<IFile & mongoose.Document>(
             type: String,
             required: true,
         },
-        source: {
+        client: {
             type: String,
             required: true,
         },

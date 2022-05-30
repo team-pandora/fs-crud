@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import config from '../../config';
-import { fsObjectType, IFile, IFolder, IShortcut, source } from '../fs/interface';
+import { client, fsObjectType, IFile, IFolder, IShortcut } from '../fs/interface';
 import { IState, permission } from '../states/interface';
 
 export type AggregateStatesAndFsObjectsSortField =
@@ -35,7 +35,7 @@ export interface IAggregateStatesAndFsObjectsQuery {
     // FsObject filters
     key?: string;
     bucket?: string;
-    source?: string;
+    client?: string;
     size?: number;
     public?: boolean;
     name?: string;
@@ -77,7 +77,7 @@ export class FsObjectAndState {
 
     public bucket?: string;
 
-    public source?: source;
+    public client?: client;
 
     public size?: number;
 
@@ -119,7 +119,7 @@ export class FsObjectAndState {
             this.bucket = file.bucket;
             this.size = file.size;
             this.public = file.public;
-            this.source = file.source;
+            this.client = file.client;
         }
 
         if (fsObject.type === 'shortcut') {

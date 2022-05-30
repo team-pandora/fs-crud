@@ -6,8 +6,9 @@ import { IQuota } from './interface';
 import QuotaModel from './model';
 
 /**
- * Get a Quota document by userId.
+ * Get Quota by userId. Create a new one if not found.
  * @param userId - The userId to get the Quota.
+ * @param session - Optional mongoose session.
  * @returns {Promise<IQuota>} Promise object containing the Quota.
  */
 const getQuotaByUserId = (userId: string, session?: ClientSession): Promise<IQuota> => {
@@ -19,15 +20,17 @@ const getQuotaByUserId = (userId: string, session?: ClientSession): Promise<IQuo
 };
 
 /**
- * Update a Quota used.
- *  1) validations for the used and limit fields.
- *  2) update used quota (raise or lower it accordingly).
+ * Update Quota used field. Throws if new used value is greater than limit.
  * @param userId - The userId to update the Quota.
- * @param difference - The amount to update the Quota used.
+ * @param difference - The difference to add to the used field.
+ * @param session - Optional mongoose session.
  * @returns {Promise<IQuota>} Promise object containing the updated Quota.
  */
 const changeQuotaUsed = async (userId: string, difference: number, session?: ClientSession): Promise<IQuota> => {
-    const { used, limit } = await getQuotaByUserId(userId, session);
+    const quota = await getQuotaByUserId(userId, session);
+    if (!difference) return quota;
+
+    const { used, limit } = quota;
     if (used + difference > limit) {
         throw new ServerError(StatusCodes.BAD_REQUEST, 'Quota limit exceeded');
     }

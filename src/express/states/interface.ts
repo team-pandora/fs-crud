@@ -1,15 +1,15 @@
-import * as mongoose from 'mongoose';
 import config from '../../config';
+import { ObjectId } from '../../utils/mongoose';
 
 export type permission = typeof config.constants.permissions[number];
 export interface IRequestParams {
-    stateId: mongoose.Types.ObjectId;
+    stateId: ObjectId;
 }
 
 export interface IState {
-    _id: mongoose.Types.ObjectId;
+    _id: ObjectId;
     userId: string;
-    fsObjectId: mongoose.Types.ObjectId;
+    fsObjectId: ObjectId;
     favorite: boolean;
     trash: boolean;
     trashRoot: boolean;
@@ -20,9 +20,9 @@ export interface IState {
 }
 
 export type IStateFilters = {
-    _id?: mongoose.Types.ObjectId;
+    _id?: ObjectId;
     userId?: string | { $in: string[] } | { $nin: string[] };
-    fsObjectId?: mongoose.Types.ObjectId | { $in: mongoose.Types.ObjectId[] } | { $nin: mongoose.Types.ObjectId[] };
+    fsObjectId?: ObjectId | { $in: ObjectId[] } | { $nin: ObjectId[] };
     favorite?: boolean;
     trash?: boolean;
     trashRoot?: boolean;
@@ -32,7 +32,7 @@ export type IStateFilters = {
 
 export interface INewState {
     userId: string;
-    fsObjectId: mongoose.Types.ObjectId;
+    fsObjectId: ObjectId;
     permission: permission;
     favorite?: boolean;
     trash?: boolean;

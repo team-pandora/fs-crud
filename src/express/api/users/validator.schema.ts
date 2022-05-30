@@ -7,7 +7,7 @@ const { nameRegex, fileKeyRegex, fileBucketRegex, minFileSizeInBytes, maxFileSiz
 const { clients } = config.constants;
 
 const apiUserActionParamsRequestSchema = Joi.object({
-    userId: Joi.string().regex(config.users.idRegex).required(),
+    userId: Joi.string().regex(config.user.idRegex).required(),
 });
 
 const apiUserFsActionParamsRequestSchema = apiUserActionParamsRequestSchema.keys({
@@ -40,7 +40,7 @@ export const createUploadRequestSchema = Joi.object({
         key: Joi.string().regex(fileKeyRegex).required(),
         bucket: Joi.string().regex(fileBucketRegex).required(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
-        source: Joi.string()
+        client: Joi.string()
             .valid(...clients)
             .optional(),
     },
@@ -67,7 +67,7 @@ export const restoreShortcutFromTrashRequestSchema = Joi.object({
 export const shareFsObjectRequestSchema = apiValidator.shareFsObjectRequestSchema.keys({
     params: apiUserFsActionParamsRequestSchema,
     body: {
-        sharedUserId: Joi.string().regex(config.users.idRegex).required(),
+        sharedUserId: Joi.string().regex(config.user.idRegex).required(),
         sharedPermission: Joi.string()
             .valid(...config.constants.permissions)
             .invalid('owner')
@@ -106,7 +106,7 @@ export const getUploadRequestSchema = Joi.object({
 export const getUploadsRequestSchema = Joi.object({
     query: {
         name: Joi.string().regex(nameRegex).optional(),
-        source: Joi.string()
+        client: Joi.string()
             .valid(...clients)
             .optional(),
     },
@@ -137,7 +137,7 @@ export const updateUploadRequestSchema = Joi.object({
 export const updatePermissionRequestSchema = apiValidator.updatePermissionRequestSchema.keys({
     params: apiUserFsActionParamsRequestSchema,
     body: {
-        sharedUserId: Joi.string().regex(config.users.idRegex).required(),
+        sharedUserId: Joi.string().regex(config.user.idRegex).required(),
         updatePermission: Joi.string()
             .valid(...config.constants.permissions)
             .invalid('owner')

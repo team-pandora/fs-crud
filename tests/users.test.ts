@@ -44,7 +44,7 @@ describe('Users tests:', () => {
                     bucket: 123,
                     size: 107374182401,
                     public: null,
-                    source: 'abc',
+                    client: 'abc',
                 })
                 .expect(400);
         });
@@ -58,7 +58,7 @@ describe('Users tests:', () => {
                     bucket: '123',
                     size: 20000,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -71,7 +71,7 @@ describe('Users tests:', () => {
                     bucket: '123',
                     size: 10737418240,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(400);
         });
@@ -86,7 +86,7 @@ describe('Users tests:', () => {
                     bucket: '123',
                     size: 500,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(400);
         });
@@ -113,7 +113,7 @@ describe('Users tests:', () => {
                     bucket: '123',
                     size: 500,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(403);
         });
@@ -144,7 +144,7 @@ describe('Users tests:', () => {
                     bucket: '123',
                     size: 500,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(403);
         });
@@ -158,7 +158,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
         });
@@ -175,7 +175,7 @@ describe('Users tests:', () => {
                             bucket: 'string',
                             size: 50,
                             public: false,
-                            source: 'drive',
+                            client: 'drive',
                         })
                         .expect(200),
                 );
@@ -242,7 +242,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -268,7 +268,7 @@ describe('Users tests:', () => {
                     key: 123,
                     bucket: 123,
                     size: 107374182401,
-                    source: 'abc',
+                    client: 'abc',
                 })
                 .expect(400);
         });
@@ -283,7 +283,7 @@ describe('Users tests:', () => {
                     key: 'abc',
                     bucket: 'abc',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
         });
@@ -305,7 +305,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -446,7 +446,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -486,7 +486,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -533,7 +533,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -564,7 +564,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -591,7 +591,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -614,7 +614,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -642,7 +642,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -674,7 +674,7 @@ describe('Users tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -687,7 +687,7 @@ describe('Users tests:', () => {
                     key: '123',
                     bucket: '123',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -707,7 +707,7 @@ describe('Users tests:', () => {
                     key: 'abc',
                     bucket: 'abc',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -720,17 +720,17 @@ describe('Users tests:', () => {
                     key: 'abc',
                     bucket: 'abc',
                     size: 123,
-                    source: 'dropbox',
+                    client: 'dropbox',
                 })
                 .expect(200);
 
             const { body: result } = await request(app)
                 .get(`/api/users/62655a5dd681ae7e5f9eafe0/uploads`)
-                .query({ source: 'dropbox' })
+                .query({ client: 'dropbox' })
                 .expect(200);
 
             expect(result.length).toBe(1);
-            expect(result[0].source).toBe('dropbox');
+            expect(result[0].client).toBe('dropbox');
         });
     });
 
@@ -767,7 +767,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -804,7 +804,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -834,7 +834,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -933,7 +933,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -968,7 +968,7 @@ describe('Users tests:', () => {
                     key: 'abc',
                     bucket: 'abc',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -988,7 +988,7 @@ describe('Users tests:', () => {
                     key: 'abc',
                     bucket: 'abc',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1021,7 +1021,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1043,7 +1043,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1088,7 +1088,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1162,7 +1162,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1181,7 +1181,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1250,7 +1250,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1297,7 +1297,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1325,7 +1325,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1373,7 +1373,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1433,7 +1433,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1503,7 +1503,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1546,7 +1546,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1605,7 +1605,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1708,7 +1708,7 @@ describe('Users tests:', () => {
                     bucket: 'string',
                     size: 50,
                     public: false,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 
@@ -1767,7 +1767,7 @@ describe('Users tests:', () => {
                     key: 'abc',
                     bucket: 'abc',
                     size: 123,
-                    source: 'drive',
+                    client: 'drive',
                 })
                 .expect(200);
 

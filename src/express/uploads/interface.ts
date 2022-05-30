@@ -1,16 +1,16 @@
-import * as mongoose from 'mongoose';
-import { source } from '../fs/interface';
+import { ObjectId } from '../../utils/mongoose';
+import { client } from '../fs/interface';
 
 export interface IUpload {
-    _id: mongoose.Types.ObjectId;
+    _id: ObjectId;
     userId: string;
     name: string;
-    parent: mongoose.Types.ObjectId | null;
+    parent: ObjectId | null;
     key: string;
     bucket: string;
     size: number;
     uploadedBytes: number;
-    source: source;
+    client: client;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -18,12 +18,12 @@ export interface IUpload {
 export interface INewUpload {
     userId: string;
     name: string;
-    parent: mongoose.Types.ObjectId | null;
+    parent: ObjectId | null;
     key: string;
     bucket: string;
     size: number;
     uploadedBytes: number;
-    source: source;
+    client: client;
 }
 
 export interface IUpdateUpload {
@@ -31,8 +31,8 @@ export interface IUpdateUpload {
 }
 
 export type IUploadFilters = {
-    _id?: mongoose.Types.ObjectId;
+    _id?: ObjectId;
     userId?: string;
     name?: string;
-    source?: source;
+    client?: client;
 };

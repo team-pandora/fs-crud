@@ -1,6 +1,8 @@
 import * as mongoose from 'mongoose';
 import { mongoDuplicateKeyError } from './express/errors';
 
+type ObjectId = mongoose.Types.ObjectId;
+
 function setDefaultSettings(schema: mongoose.Schema) {
     // eslint-disable-next-line func-names
     schema.pre('*', function () {
@@ -36,4 +38,4 @@ const makeTransaction = async <Type>(
     }
 };
 
-export { setDefaultSettings, setErrorHandler, makeTransaction };
+export { ObjectId, setDefaultSettings, setErrorHandler, makeTransaction };
