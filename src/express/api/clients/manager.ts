@@ -1,275 +1,181 @@
-import * as mongoose from 'mongoose';
-import { makeTransaction } from '../../../utils/mongoose';
-import { bfs } from '../../../utils/object';
-import { IFile, IFolder, INewFile, INewFolder, IShortcut, IUpdateFile, IUpdateFolder } from '../../fs/interface';
+import { StatusCodes } from 'http-status-codes';
+import { makeTransaction, ObjectId } from '../../../utils/mongoose';
+import { ServerError } from '../../error';
+import { client, IFile, INewFile, IUpdateFile } from '../../fs/interface';
 import * as fsRepository from '../../fs/repository';
 import * as quotasRepository from '../../quotas/repository';
-import { INewState, IState, permission } from '../../states/interface';
+import { IState, permission } from '../../states/interface';
 import * as statesRepository from '../../states/repository';
 import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from '../interface';
 import * as apiRepository from '../repository';
 
 /**
- * Create a File document.
- * @param file - The new file object.
- * @returns {Promise<IFile>} Promise object containing the file.
+ * Create File.
+ * @param clientId - The client id.
+ * @param file - The new File object.
+ * @returns {Promise<IFile>} Promise object containing the created File.
  */
-export const createFile = async (file: INewFile): Promise<any> => {
-    return makeTransaction(async (session: mongoose.ClientSession) => {
-        const createdFile = await fsRepository.createFile(file, session);
-
-        if (createdFile.parent) {
-            await apiRepository.inheritStates({ fsObjectId: createdFile.parent }, createdFile._id, session);
-        }
-
-        return createdFile;
-    });
+export const createFile = async (clientId: client, file: INewFile): Promise<IFile> => {
+    return fsRepository.createFile({ ...file, client: clientId, parent: null });
 };
 
 /**
- * Create a Folder document.
- * @param folder - The new Folder object.
- * @returns {Promise<IFolder>} Promise object containing the Folder.
+ * Share File.
+ *  1) Check if File exists.
+ *  2) If shared permission is owner: Throw if owner already exists. Otherwise raise user's quota.
+ *  3) Create new State.
+ * @param clientId - The client id.
+ * @param fileId - The File id.
+ * @param sharedUserId - The user to share with.
+ * @param sharedPermission - The shared permission.
+ * @returns {Promise<IState>} Promise object containing the created state.
  */
-export const createFolder = async (folder: INewFolder): Promise<IFolder> => {
-    return makeTransaction(async (session: mongoose.ClientSession) => {
-        const createdFolder = await fsRepository.createFolder(folder, session);
-
-        if (createdFolder.parent) {
-            await apiRepository.inheritStates({ fsObjectId: createdFolder.parent }, createdFolder._id, session);
-        }
-
-        return createdFolder;
-    });
-};
-
-/**
- * Share a FsObject.
- * @param fsObjectId - The FsObject id.
- * @param sharedUserId - The user to be shared.
- * @param sharedPermission - The share permission.
- * @returns {Promise<IFile>} Promise object containing the FsObject.
- */
-export const shareFsObjectById = async (
-    fsObjectId: mongoose.Types.ObjectId,
+export const shareFile = async (
+    clientId: client,
+    fileId: ObjectId,
     sharedUserId: string,
     sharedPermission: permission,
 ): Promise<IState> => {
-    const state: INewState = {
-        userId: sharedUserId,
-        permission: sharedPermission,
-        fsObjectId,
-        root: true,
-    };
-
-    const fsObject = await fsRepository.getFsObject({ _id: fsObjectId });
-
-    if (fsObject.type === 'shortcut') {
-        state.fsObjectId = (fsObject as IShortcut).ref;
-    }
+    const file = await fsRepository.getFile({ _id: fileId, client: clientId });
 
     return makeTransaction(async (session) => {
-        const createdState = await statesRepository.createState(state, session);
+        if (sharedPermission === 'owner') {
+            const ownerState = await statesRepository.getState({
+                fsObjectId: fileId,
+                userId: sharedUserId,
+                permission: 'owner',
+            });
 
-        if (fsObject.type === 'folder') {
-            await apiRepository.shareAllFsObjectsInFolder(fsObjectId, sharedUserId, sharedPermission, session);
+            if (ownerState) throw new ServerError(StatusCodes.CONFLICT, 'File already has owner');
+
+            await quotasRepository.changeQuotaUsed(sharedUserId, file.size, session);
         }
 
-        return createdState;
+        return statesRepository.createState(
+            {
+                userId: sharedUserId,
+                permission: sharedPermission,
+                fsObjectId: fileId,
+                root: true,
+            },
+            session,
+        );
     });
-};
-
-/**
- * Add FsObject to favorite.
- * @param fsObjectId - The FsObject id.
- * @returns {Promise<IState>} Promise object containing the FsObject.
- */
-export const addToFavorite = async (fsObjectId: mongoose.Types.ObjectId): Promise<IState> => {
-    await fsRepository.getFsObject({ _id: fsObjectId });
-
-    return statesRepository.updateState(fsObjectId, { favorite: true });
 };
 
 /**
  * Get State and FsObjects objects by filters.
- * @param query - states and fsObjects filters.
+ * @param clientId - The client id.
+ * @param query - State and FsObject filters.
  * @returns {Promise<FsObjectAndState[]>} Promise object containing filtered objects.
  */
 export const aggregateStatesFsObjects = async (
+    clientId: client,
     query: IAggregateStatesAndFsObjectsQuery,
 ): Promise<FsObjectAndState[]> => {
-    return apiRepository.aggregateStatesFsObjects(query);
+    return apiRepository.aggregateStatesFsObjects({ ...query, client: clientId });
 };
 
 /**
  * Get FsObject and State objects by filters.
- * @param query - fsObjects and states filters.
+ * @param clientId - The client id.
+ * @param query - FsObjects and states filters.
  * @returns {Promise<FsObjectAndState[]>} Promise object containing filtered objects.
  */
 export const aggregateFsObjectsStates = async (
+    clientId: client,
     query: IAggregateStatesAndFsObjectsQuery,
 ): Promise<FsObjectAndState[]> => {
-    return apiRepository.aggregateFsObjectsStates(query);
-};
-
-/**
- * Get FsObject Hierarchy.
- * @param fsObjectId - The FsObject id.
- * @returns {Promise<FsObjectAndState[]>} Promise object containing the Hierarchy of FsObjects.
- */
-export const getFsObjectHierarchyById = async (fsObjectId: mongoose.Types.ObjectId): Promise<IFolder[]> => {
-    const fsObject = await fsRepository.getFsObject({ _id: fsObjectId });
-    const hierarchy = apiRepository.getFsObjectHierarchy(fsObject._id);
-
-    return hierarchy;
+    return apiRepository.aggregateFsObjectsStates({ ...query, client: clientId });
 };
 
 /**
  * Update a File.
- * @param fsObjectId - The File id.
+ * @param clientId - The client id.
+ * @param fileId - The File id.
  * @param update - The update object.
  * @returns {Promise<IFile>} Promise object containing the updated File.
  */
-export const updateFileById = async (fsObjectId: mongoose.Types.ObjectId, update: IUpdateFile): Promise<IFile> => {
-    return fsRepository.updateFileById(fsObjectId, update);
-};
-
-/**
- * Update a Folder.
- * @param fsObjectId - The Folder id.
- * @param update - The update object.
- * @returns {Promise<IFolder>} Promise object containing the updated Folder.
- */
-export const updateFolderById = async (
-    fsObjectId: mongoose.Types.ObjectId,
-    update: IUpdateFolder,
-): Promise<IFolder> => {
-    return fsRepository.updateFolderById(fsObjectId, update);
+export const updateFileById = async (clientId: client, fileId: ObjectId, update: IUpdateFile): Promise<IFile> => {
+    await fsRepository.getFile({ _id: fileId, client: clientId });
+    return fsRepository.updateFileById(fileId, update);
 };
 
 /**
  * Update user File's permission
- * @param fsObjectId
- * @param sharedUserId
- * @param permission
+ *  1) Check if File exists.
+ *  2) If shared permission is owner: Throw if owner already exists. Otherwise raise user's quota.
+ *  3) If shared permission is not owner: If user is owner, lower user's quota.
+ *  4) Update State.
+ * @param clientId - The client id.
+ * @param fileId - The File id.
+ * @param sharedUserId - The shared user.
+ * @param updatePermission - The new permission.
  * @return {Promise<IState>}
  */
-export const updateFsPermission = async (
-    fsObjectId: mongoose.Types.ObjectId,
+export const updateFilePermission = async (
+    clientId: client,
+    fileId: ObjectId,
     sharedUserId: string,
     updatePermission: permission,
 ): Promise<IState> => {
-    const fsObject = await fsRepository.getFsObject({ _id: fsObjectId });
+    const file = await fsRepository.getFile({ _id: fileId, client: clientId });
+    const ownerState = await statesRepository.getState({ fsObjectId: fileId, permission: 'owner' });
+
+    if (ownerState && updatePermission === 'owner')
+        throw new ServerError(StatusCodes.CONFLICT, 'File already has owner');
 
     return makeTransaction(async (session) => {
-        const updatedState = await statesRepository.updateState(
-            { userId: sharedUserId },
-            {
-                permission: updatePermission,
-            },
-        );
-
-        if (fsObject.type === 'folder') {
-            await apiRepository.shareAllFsObjectsInFolder(fsObjectId, sharedUserId, updatePermission, session);
+        if (updatePermission === 'owner') {
+            await quotasRepository.changeQuotaUsed(sharedUserId, file.size, session);
+        } else if (ownerState && ownerState.userId === sharedUserId) {
+            await quotasRepository.changeQuotaUsed(sharedUserId, -file.size, session);
         }
-
-        return updatedState;
+        return statesRepository.updateState({ userId: sharedUserId }, { permission: updatePermission }, session);
     });
 };
 
 /**
- * Delete user's shared FsObject's state.
- * @param userId - The user that owns the FsObject.
- * @param fsObjectId - The FsObject id.
- * @returns {Promise<IState>} Promise object containing the State.
+ * Delete user state on File.
+ *  1) Check if File exists.
+ *  2) If user is owner then lower user's quota.
+ *  3) Delete State.
+ * @param clientId - The client id.
+ * @param fileId - The File id.
+ * @param userId - The shared user.
+ * @returns {Promise<IState>} Promise object containing the deleted State.
  */
-export const unshareFsObjectById = async (fsObjectId: mongoose.Types.ObjectId, userId: string): Promise<IState> => {
-    const fsObject = await fsRepository.getFsObject({ _id: fsObjectId });
+export const unshareFileById = async (clientId: client, fileId: ObjectId, userId: string): Promise<IState> => {
+    const file = await fsRepository.getFile({ _id: fileId, client: clientId });
+    const ownerState = await statesRepository.getState({ fsObjectId: fileId, permission: 'owner' });
 
-    if (fsObject.type === 'folder') {
-        const childrenIds = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
-        const children = await apiRepository.aggregateStatesFsObjects({
-            userId,
-            fsObjectId: { $in: childrenIds },
-            root: false,
-            permission: { $nin: ['owner'] },
-        });
-        const filteredChildrenIds = bfs(children, fsObjectId, 'fsObjectId', 'parent');
-        await statesRepository.deleteStates({ userId, fsObjectId: { $in: filteredChildrenIds } });
-    }
-
-    return statesRepository.deleteState({ fsObjectId, userId });
-};
-
-/**
- * Delete user's favorite FsObject's state.
- * @param fsObjectId - The FsObject id.
- * @returns {Promise<IState>} Promise object containing the State.
- */
-export const removeFavorite = async (fsObjectId: mongoose.Types.ObjectId): Promise<IState> => {
-    await fsRepository.getFsObject({ _id: fsObjectId });
-
-    return statesRepository.updateState(fsObjectId, { favorite: false });
+    return makeTransaction(async (session) => {
+        if (ownerState && ownerState.userId === userId) {
+            await quotasRepository.changeQuotaUsed(userId, -file.size, session);
+        }
+        return statesRepository.deleteState({ fsObjectId: fileId, userId }, session);
+    });
 };
 
 /**
  * Delete a File.
- * @param fsObjectId - The File id.
- * @returns {Promise<void>} Empty Promise.
+ *  1) Check if File exists.
+ *  2) If File has owner then lower owners's quota.
+ *  3) Delete File's States.
+ *  4) Delete File.
+ * @param clientId - The client id.
+ * @param fileId - The File id.
+ * @returns {Promise<IFile>} Promise object containing the deleted File.
  */
-export const deleteFileById = async (fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
-    const [ownerFsObjectAndState] = await apiRepository.aggregateStatesFsObjects({
-        fsObjectId,
-        permission: 'owner',
-        type: 'file',
-    });
+export const deleteFileById = async (clientId: client, fileId: ObjectId): Promise<void> => {
+    const file = await fsRepository.getFile({ _id: fileId, client: clientId });
+    const ownerState = await statesRepository.getState({ fsObjectId: fileId, permission: 'owner' });
 
     await makeTransaction(async (session) => {
-        const operations: Promise<any>[] = [];
-
-        if (ownerFsObjectAndState?.size) {
-            operations.push(
-                quotasRepository.changeQuotaUsed(ownerFsObjectAndState.userId, ownerFsObjectAndState.size, session),
-            );
+        if (file?.size && ownerState) {
+            await quotasRepository.changeQuotaUsed(ownerState.userId, file.size, session);
         }
-        operations.push(statesRepository.deleteStates({ fsObjectId }, session));
-        operations.push(fsRepository.deleteFileById(fsObjectId, session));
-
-        await Promise.all(operations);
-    });
-};
-
-/**
- * Delete a Folder.
- * @param fsObjectId - The Folder id.
- * @returns {Promise<void>} Empty Promise.
- */
-export const deleteFolderById = async (fsObjectId: mongoose.Types.ObjectId): Promise<void> => {
-    const fsObjectIds = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
-    const ownerFilesAndStates = await apiRepository.aggregateStatesFsObjects({
-        fsObjectId: { $in: fsObjectIds },
-        permission: 'owner',
-        type: 'file',
-    });
-
-    await makeTransaction(async (session) => {
-        const operations: Promise<any>[] = [];
-
-        for (let i = 0; i < ownerFilesAndStates.length; i++) {
-            const ownerFileAndState = ownerFilesAndStates[i];
-            if (ownerFileAndState.size) {
-                operations.push(
-                    quotasRepository.changeQuotaUsed(ownerFileAndState.userId, -ownerFileAndState.size, session),
-                );
-            }
-        }
-
-        fsObjectIds.push(fsObjectId);
-
-        operations.push(statesRepository.deleteStates({ fsObjectId: { $in: fsObjectIds } }, session));
-
-        operations.push(fsRepository.deleteFsObjects({ _id: { $in: fsObjectIds } }, session));
-
-        await Promise.all(operations);
+        await statesRepository.deleteStates({ fsObjectId: fileId }, session);
+        await fsRepository.deleteFileById(fileId, session);
     });
 };

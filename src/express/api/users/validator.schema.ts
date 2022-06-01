@@ -3,19 +3,12 @@ import config from '../../../config';
 import { JoiObjectId } from '../../../utils/joi';
 import * as apiValidator from '../validator.schema';
 
-const { nameRegex, fileKeyRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
-const { clients } = config.constants;
-
 const apiUserActionParamsRequestSchema = Joi.object({
     userId: Joi.string().regex(config.user.idRegex).required(),
 });
 
 const apiUserFsActionParamsRequestSchema = apiUserActionParamsRequestSchema.keys({
     fsObjectId: JoiObjectId.required(),
-});
-
-const apiUserUploadActionParamsRequestSchema = apiUserActionParamsRequestSchema.keys({
-    uploadId: JoiObjectId.required(),
 });
 
 export const createFileRequestSchema = apiValidator.createFileRequestSchema.keys({
@@ -28,22 +21,6 @@ export const createFolderRequestSchema = apiValidator.createFolderRequestSchema.
 
 export const createShortcutRequestSchema = apiValidator.createShortcutRequestSchema.keys({
     params: apiUserActionParamsRequestSchema,
-});
-
-export const createUploadRequestSchema = Joi.object({
-    query: {},
-    params: apiUserActionParamsRequestSchema,
-    body: {
-        name: Joi.string().regex(nameRegex).required(),
-        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
-        uploadedBytes: Joi.number().required(),
-        key: Joi.string().regex(fileKeyRegex).required(),
-        bucket: Joi.string().regex(fileBucketRegex).required(),
-        size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
-        client: Joi.string()
-            .valid(...clients)
-            .optional(),
-    },
 });
 
 export const restoreFileFromTrashRequestSchema = Joi.object({
@@ -97,23 +74,6 @@ export const getFsObjectHierarchyRequestSchema = apiValidator.getFsObjectHierarc
     params: apiUserFsActionParamsRequestSchema,
 });
 
-export const getUploadRequestSchema = Joi.object({
-    query: {},
-    params: apiUserUploadActionParamsRequestSchema,
-    body: {},
-});
-
-export const getUploadsRequestSchema = Joi.object({
-    query: {
-        name: Joi.string().regex(nameRegex).optional(),
-        client: Joi.string()
-            .valid(...clients)
-            .optional(),
-    },
-    params: apiUserActionParamsRequestSchema,
-    body: {},
-});
-
 export const updateFileRequestSchema = apiValidator.updateFileRequestSchema.keys({
     params: apiUserFsActionParamsRequestSchema,
 });
@@ -124,14 +84,6 @@ export const updateFolderRequestSchema = apiValidator.updateFolderRequestSchema.
 
 export const updateShortcutRequestSchema = apiValidator.updateShortcutRequestSchema.keys({
     params: apiUserFsActionParamsRequestSchema,
-});
-
-export const updateUploadRequestSchema = Joi.object({
-    query: {},
-    params: apiUserUploadActionParamsRequestSchema,
-    body: {
-        uploadedBytes: Joi.number().required(),
-    },
 });
 
 export const updatePermissionRequestSchema = apiValidator.updatePermissionRequestSchema.keys({
@@ -159,10 +111,4 @@ export const deleteFolderRequestSchema = apiValidator.deleteFolderRequestSchema.
 
 export const deleteShortcutRequestSchema = apiValidator.deleteShortcutRequestSchema.keys({
     params: apiUserFsActionParamsRequestSchema,
-});
-
-export const deleteUploadRequestSchema = Joi.object({
-    query: {},
-    params: apiUserUploadActionParamsRequestSchema,
-    body: {},
 });

@@ -1,61 +1,42 @@
 import { Request, Response } from 'express';
-import { IFsActionParams } from '../interface';
+import { IClientActionParams, IClientFsActionParams } from './interface';
 import * as apiManager from './manager';
 
-export const createFile = async (req: Request, res: Response) => {
-    res.json(await apiManager.createFile(req.body));
+export const createFile = async (req: Request<IClientActionParams>, res: Response) => {
+    res.json(await apiManager.createFile(req.params.clientId, req.body));
 };
 
-export const createFolder = async (req: Request, res: Response) => {
-    res.json(await apiManager.createFolder(req.body));
-};
-
-export const shareFsObject = async (req: Request<IFsActionParams>, res: Response) => {
+export const shareFile = async (req: Request<IClientFsActionParams>, res: Response) => {
+    const { clientId, fsObjectId } = req.params;
     const { sharedUserId, sharedPermission } = req.body;
-    res.json(await apiManager.shareFsObjectById(req.params.fsObjectId, sharedUserId, sharedPermission));
+    res.json(await apiManager.shareFile(clientId, fsObjectId, sharedUserId, sharedPermission));
 };
 
-export const addToFavorite = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.addToFavorite(req.params.fsObjectId));
+export const aggregateStatesFsObjects = async (req: Request<IClientActionParams>, res: Response) => {
+    res.json(await apiManager.aggregateStatesFsObjects(req.params.clientId, req.query));
 };
 
-export const aggregateStatesFsObjects = async (req: Request, res: Response) => {
-    res.json(await apiManager.aggregateStatesFsObjects(req.query));
+export const aggregateFsObjectsStates = async (req: Request<IClientActionParams>, res: Response) => {
+    res.json(await apiManager.aggregateFsObjectsStates(req.params.clientId, req.query));
 };
 
-export const aggregateFsObjectsStates = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.aggregateFsObjectsStates(req.query));
+export const updateFile = async (req: Request<IClientFsActionParams>, res: Response) => {
+    const { clientId, fsObjectId } = req.params;
+    res.json(await apiManager.updateFileById(clientId, fsObjectId, req.body));
 };
 
-export const getFsObjectHierarchy = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.getFsObjectHierarchyById(req.params.fsObjectId));
-};
-
-export const updateFile = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.updateFileById(req.params.fsObjectId, req.body));
-};
-
-export const updateFolder = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.updateFolderById(req.params.fsObjectId, req.body));
-};
-
-export const updateFsPermission = async (req: Request<IFsActionParams>, res: Response) => {
+export const updateFilePermission = async (req: Request<IClientFsActionParams>, res: Response) => {
+    const { clientId, fsObjectId } = req.params;
     const { sharedUserId, updatePermission } = req.body;
-    res.json(await apiManager.updateFsPermission(req.params.fsObjectId, sharedUserId, updatePermission));
+    res.json(await apiManager.updateFilePermission(clientId, fsObjectId, sharedUserId, updatePermission));
 };
 
-export const unshareFsObject = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.unshareFsObjectById(req.params.fsObjectId, req.body.userId));
+export const unshareFile = async (req: Request<IClientFsActionParams>, res: Response) => {
+    const { clientId, fsObjectId } = req.params;
+    res.json(await apiManager.unshareFileById(clientId, fsObjectId, req.body.sharedUserId));
 };
 
-export const removeFromFavorite = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.removeFavorite(req.params.fsObjectId));
-};
-
-export const deleteFile = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.deleteFileById(req.params.fsObjectId));
-};
-
-export const deleteFolder = async (req: Request<IFsActionParams>, res: Response) => {
-    res.json(await apiManager.deleteFolderById(req.params.fsObjectId));
+export const deleteFile = async (req: Request<IClientFsActionParams>, res: Response) => {
+    const { clientId, fsObjectId } = req.params;
+    res.json(await apiManager.deleteFileById(clientId, fsObjectId));
 };

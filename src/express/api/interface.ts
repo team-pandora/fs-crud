@@ -1,5 +1,5 @@
-import * as mongoose from 'mongoose';
 import config from '../../config';
+import { ObjectId } from '../../utils/mongoose';
 import { client, fsObjectType, IFile, IFolder, IShortcut } from '../fs/interface';
 import { IState, permission } from '../states/interface';
 
@@ -10,22 +10,14 @@ export type AggregateStatesAndFsObjectsSortField =
 export type AggregateStatesFsObjectsSortOrder = typeof config.constants.sortOrders[number];
 
 export interface IFsActionParams {
-    fsObjectId: mongoose.Types.ObjectId;
-}
-
-export interface IStateActionParams {
-    stateId: mongoose.Types.ObjectId;
-}
-
-export interface IUploadActionParams {
-    uploadId: mongoose.Types.ObjectId;
+    fsObjectId: ObjectId;
 }
 
 export interface IAggregateStatesAndFsObjectsQuery {
     // State filters
-    stateId?: mongoose.Types.ObjectId;
+    stateId?: ObjectId;
     userId?: string;
-    fsObjectId?: mongoose.Types.ObjectId | { $in: mongoose.Types.ObjectId[] };
+    fsObjectId?: ObjectId | { $in: ObjectId[] };
     favorite?: boolean;
     trash?: boolean;
     trashRoot?: boolean;
@@ -36,12 +28,12 @@ export interface IAggregateStatesAndFsObjectsQuery {
     key?: string;
     bucket?: string;
     client?: string;
-    size?: number;
+    size?: number | { $gt: number };
     public?: boolean;
     name?: string;
-    parent?: mongoose.Types.ObjectId;
+    parent?: ObjectId;
     type?: fsObjectType;
-    ref?: mongoose.Types.ObjectId;
+    ref?: ObjectId;
 
     // Sort
     sortBy?: AggregateStatesAndFsObjectsSortField;
@@ -53,11 +45,11 @@ export interface IAggregateStatesAndFsObjectsQuery {
 }
 
 export class FsObjectAndState {
-    public stateId: mongoose.Types.ObjectId;
+    public stateId: ObjectId;
 
     public userId: string;
 
-    public fsObjectId: mongoose.Types.ObjectId;
+    public fsObjectId: ObjectId;
 
     public favorite: boolean;
 
@@ -85,7 +77,7 @@ export class FsObjectAndState {
 
     public name: string;
 
-    public parent: mongoose.Types.ObjectId | null;
+    public parent: ObjectId | null;
 
     public type: fsObjectType;
 
@@ -93,7 +85,7 @@ export class FsObjectAndState {
 
     public fsObjectUpdatedAt: Date;
 
-    public ref?: mongoose.Types.ObjectId;
+    public ref?: ObjectId;
 
     constructor(fsObject: IFile | IFolder | IShortcut, state: IState) {
         this.stateId = state._id;

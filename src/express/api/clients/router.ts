@@ -7,87 +7,51 @@ import * as apiValidator from './validator.schema';
 const clientsRouter: Router = Router();
 
 clientsRouter.post(
-    '/fs/file',
+    '/:clientId/fs/file',
     ValidateRequest(apiValidator.createFileRequestSchema),
     wrapMiddleware(apiController.createFile),
 );
 
 clientsRouter.post(
-    '/fs/folder',
-    ValidateRequest(apiValidator.createFolderRequestSchema),
-    wrapMiddleware(apiController.createFolder),
-);
-
-clientsRouter.post(
-    '/fs/:fsObjectId/share',
-    ValidateRequest(apiValidator.shareFsObjectRequestSchema),
-    wrapMiddleware(apiController.shareFsObject),
-);
-
-clientsRouter.post(
-    '/fs/:fsObjectId/favorite',
-    ValidateRequest(apiValidator.addToFavoriteRequestSchema),
-    wrapMiddleware(apiController.addToFavorite),
+    '/:clientId/fs/file/:fsObjectId/share',
+    ValidateRequest(apiValidator.shareFileRequestSchema),
+    wrapMiddleware(apiController.shareFile),
 );
 
 clientsRouter.get(
-    '/states/fsObjects',
+    '/:clientId/states/fsObjects',
     ValidateRequest(apiValidator.aggregateStatesFsObjectsRequestSchema),
     wrapMiddleware(apiController.aggregateStatesFsObjects),
 );
 
 clientsRouter.get(
-    '/fsObjects/states',
+    '/:clientId/fsObjects/states',
     ValidateRequest(apiValidator.aggregateFsObjectsStatesRequestSchema),
     wrapMiddleware(apiController.aggregateFsObjectsStates),
 );
 
-clientsRouter.get(
-    '/fs/:fsObjectId/hierarchy',
-    ValidateRequest(apiValidator.getFsObjectHierarchyRequestSchema),
-    wrapMiddleware(apiController.getFsObjectHierarchy),
-);
-
 clientsRouter.patch(
-    '/fs/file/:fsObjectId',
+    '/:clientId/fs/file/:fsObjectId',
     ValidateRequest(apiValidator.updateFileRequestSchema),
     wrapMiddleware(apiController.updateFile),
 );
 
 clientsRouter.patch(
-    '/fs/folder/:fsObjectId',
-    ValidateRequest(apiValidator.updateFolderRequestSchema),
-    wrapMiddleware(apiController.updateFolder),
-);
-
-clientsRouter.patch(
-    '/fs/:fsObjectId/permission',
-    ValidateRequest(apiValidator.editFsObjectPermissionRequestSchema),
-    wrapMiddleware(apiController.updateFsPermission),
+    '/:clientId/fs/file/:fsObjectId/permission',
+    ValidateRequest(apiValidator.updateFilePermissionRequestSchema),
+    wrapMiddleware(apiController.updateFilePermission),
 );
 
 clientsRouter.delete(
-    '/fs/:fsObjectId/share',
-    ValidateRequest(apiValidator.unshareFsObjectRequestSchema),
-    wrapMiddleware(apiController.unshareFsObject),
+    '/:clientId/fs/file/:fsObjectId/share',
+    ValidateRequest(apiValidator.unshareFileRequestSchema),
+    wrapMiddleware(apiController.unshareFile),
 );
 
 clientsRouter.delete(
-    '/fs/:fsObjectId/favorite',
-    ValidateRequest(apiValidator.deleteFileRequestSchema),
-    wrapMiddleware(apiController.removeFromFavorite),
-);
-
-clientsRouter.delete(
-    '/fs/:fsObjectId/file',
+    '/:clientId/fs/file/:fsObjectId',
     ValidateRequest(apiValidator.deleteFileRequestSchema),
     wrapMiddleware(apiController.deleteFile),
-);
-
-clientsRouter.delete(
-    '/fs/:fsObjectId/folder',
-    ValidateRequest(apiValidator.deleteFolderRequestSchema),
-    wrapMiddleware(apiController.deleteFolder),
 );
 
 export default clientsRouter;

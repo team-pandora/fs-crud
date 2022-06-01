@@ -5,6 +5,7 @@ import { ObjectId } from '../../utils/mongoose';
 import { ServerError } from '../error';
 import {
     IFile,
+    IFileFilters,
     IFolder,
     IFsObjectFilters,
     INewFile,
@@ -18,9 +19,9 @@ import {
 import { FileModel, FolderModel, FsObjectModel, ShortcutModel } from './model';
 
 /**
- * Get fsObject. Throws error if not found.
- * @param filters - The fsObject filters.
- * @returns {Promise<IFile | IFolder | IShortcut>} Promise object containing the fsObject.
+ * Get FsObject. Throws error if not found.
+ * @param filters - The FsObject filters.
+ * @returns {Promise<IFile | IFolder | IShortcut>} Promise object containing the FsObject.
  */
 const getFsObject = async (filters: IFsObjectFilters): Promise<IFile | IFolder | IShortcut> => {
     const result = await FsObjectModel.findOne(filters).exec();
@@ -29,8 +30,19 @@ const getFsObject = async (filters: IFsObjectFilters): Promise<IFile | IFolder |
 };
 
 /**
- * Check if fsObject parent exists.
- * @param parent - The fsObject parent id.
+ * Get File. Throws error if not found.
+ * @param filters - The File filters.
+ * @returns {Promise<IFile>} Promise object containing the File.
+ */
+const getFile = async (filters: IFileFilters): Promise<IFile> => {
+    const result = await FileModel.findOne(filters).exec();
+    if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
+    return result;
+};
+
+/**
+ * Check if FsObject parent exists.
+ * @param parent - The FsObject parent id.
  * @returns {Promise<void>} Empty Promise.
  */
 const fsObjectParentCheck = async (parent: ObjectId | null): Promise<void> => {
@@ -39,9 +51,9 @@ const fsObjectParentCheck = async (parent: ObjectId | null): Promise<void> => {
 };
 
 /**
- * Check if fsObject name does not conflict with other fsObjects.
- * @param parent - The folder id.
- * @param name - The fsObject name.
+ * Check if FsObject name does not conflict with other FsObjects.
+ * @param parent - The Folder id.
+ * @param name - The FsObject name.
  * @returns {Promise<void>} Empty Promise.
  */
 const fsObjectNameCheck = async (parent: ObjectId | null, name: string): Promise<void> => {
@@ -50,10 +62,10 @@ const fsObjectNameCheck = async (parent: ObjectId | null, name: string): Promise
 };
 
 /**
- * Create File. Throws if file fails parent or name validations.
- * @param file - The new file object.
+ * Create File. Throws if File fails parent or name validations.
+ * @param file - The new File object.
  * @param session - Optional mongoose session.
- * @returns {Promise<IFile>} Promise object containing the created file.
+ * @returns {Promise<IFile>} Promise object containing the created File.
  */
 const createFile = async (file: INewFile, session?: ClientSession): Promise<IFile> => {
     await fsObjectParentCheck(file.parent);
@@ -63,10 +75,10 @@ const createFile = async (file: INewFile, session?: ClientSession): Promise<IFil
 };
 
 /**
- * Create Folder. Throws if folder fails parent or name validations.
- * @param folder - The new folder object.
+ * Create Folder. Throws if Folder fails parent or name validations.
+ * @param folder - The new Folder object.
  * @param session - Optional mongoose session.
- * @returns {Promise<IFolder>} Promise object containing the created folder.
+ * @returns {Promise<IFolder>} Promise object containing the created Folder.
  */
 const createFolder = async (folder: INewFolder, session?: ClientSession): Promise<IFolder> => {
     await fsObjectParentCheck(folder.parent);
@@ -76,10 +88,10 @@ const createFolder = async (folder: INewFolder, session?: ClientSession): Promis
 };
 
 /**
- * Create Shortcut. Throws if shortcut fails parent or name validations. If parent is shortcut it's ref is used.
- * @param shortcut - The new shortcut object.
+ * Create Shortcut. Throws if Shortcut fails parent or name validations. If parent is Shortcut it's ref is used.
+ * @param shortcut - The new Shortcut object.
  * @param session - Optional mongoose session.
- * @returns {Promise<IShortcut>} Promise object containing the created shortcut.
+ * @returns {Promise<IShortcut>} Promise object containing the created Shortcut.
  */
 const createShortcut = async (shortcut: INewShortcut, session?: ClientSession): Promise<IShortcut> => {
     await fsObjectParentCheck(shortcut.parent);
@@ -96,8 +108,8 @@ const createShortcut = async (shortcut: INewShortcut, session?: ClientSession): 
 };
 
 /**
- * Check fsObject update. Throws if validations fail.
- * @param fsObjectId - The fsObject id.
+ * Check FsObject update. Throws if validations fail.
+ * @param fsObjectId - The FsObject id.
  * @param update - The update object.
  * @returns {Promise<void>} Empty Promise.
  */
@@ -219,6 +231,7 @@ export {
     createFolder,
     createShortcut,
     getFsObject,
+    getFile,
     updateFileById,
     updateFolderById,
     updateShortcutById,

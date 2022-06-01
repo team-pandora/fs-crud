@@ -1,9 +1,10 @@
 import { StatusCodes } from 'http-status-codes';
 import * as mongoose from 'mongoose';
 import config from '../../config';
+import { ObjectId } from '../../utils/mongoose';
 import { removeUndefinedFields, subtractObjectIdArrays } from '../../utils/object';
 import { ServerError } from '../error';
-import { IFolder } from '../fs/interface';
+import { fsObjectType, IFolder } from '../fs/interface';
 import { FsObjectModel, ShortcutModel } from '../fs/model';
 import { INewState, IState, IStateFilters, permission } from '../states/interface';
 import StateModel from '../states/model';
@@ -13,28 +14,8 @@ import { FsObjectAndState, IAggregateStatesAndFsObjectsQuery } from './interface
 const { permissionPriority } = config.constants;
 
 /**
- * Check if user is allowed to create a new fsObject under a parent. Throws if validation fails.
- *  1) Check if parent exists.
- *  2) Check if parent is not in trash.
- *  3) Check if user has permission to create a new fsObject under the parent.
- * @param userId - The user id.
- * @param parentFsObjectId - The parent fsObject id.
- * @returns {Promise<void>} Empty Promise.
- */
-const parentStateCheck = async (userId: string, parentFsObjectId: mongoose.Types.ObjectId): Promise<void> => {
-    const parent = await statesRepository.getState({ userId, fsObjectId: parentFsObjectId });
-
-    if (!parent) throw new ServerError(StatusCodes.BAD_REQUEST, 'Parent does not exist');
-
-    if (parent.trash) throw new ServerError(StatusCodes.FORBIDDEN, `Cannot create object under a folder in trash`);
-
-    if (permissionPriority[parent.permission] < permissionPriority.write)
-        throw new ServerError(StatusCodes.FORBIDDEN, `User doesn't have permission to create fsObject`);
-};
-
-/**
  * Get Objects containing FsObject and State data by filters.
- * Starts aggregation from states collection and joins with fsObjects collection.
+ * Starts aggregation from states collection and joins with FsObjects collection.
  * @param query - FsObject and State filters.
  * @returns {Promise<FsObjectAndState[]>} Promise object containing filtered objects.
  */
@@ -130,7 +111,7 @@ const aggregateStatesFsObjects = async (query: IAggregateStatesAndFsObjectsQuery
 
 /**
  * Get Objects containing FsObject and State data by filters.
- * Starts aggregation from fsObjects collection and joins with states collection.
+ * Starts aggregation from FsObjects collection and joins with states collection.
  * @param query - FsObject and State filters.
  * @returns {Promise<FsObjectAndState[]>} Promise object containing filtered objects.
  */
@@ -225,20 +206,21 @@ const aggregateFsObjectsStates = async (query: IAggregateStatesAndFsObjectsQuery
 };
 
 /**
- * Get ids of all fsObjects under folder.
+ * Get ids of all FsObjects under Folder.
  *  1) Match specific fsObjectId.
- *  2) Graph lookup all fsObjects under a folder.
- *  3) Map all fsObjects to an array of fsObjectIds.
- * @param fsObjectId - The Folder id.
- * @returns {Promise<mongoose.Types.ObjectId[]>} Promise object containing filtered objects ids.
+ *  2) Graph lookup all FsObjects under a Folder.
+ *  3) Map all FsObjects to an array of fsObjectIds.
+ * @param folderId - The Folder id.
+ * @returns {Promise<ObjectId[]>} Promise object containing filtered objects ids.
  */
 const getAllFsObjectIdsUnderFolder = async (
-    fsObjectId: mongoose.Types.ObjectId,
-): Promise<mongoose.Types.ObjectId[]> => {
+    folderId: ObjectId,
+    filters?: { type?: { $in: fsObjectType[] } | { $nin: fsObjectType[] } },
+): Promise<ObjectId[]> => {
     const [result] = await FsObjectModel.aggregate([
         {
             $match: {
-                _id: fsObjectId,
+                _id: folderId,
             },
         },
         {
@@ -248,6 +230,7 @@ const getAllFsObjectIdsUnderFolder = async (
                 connectFromField: '_id',
                 connectToField: 'parent',
                 as: 'fsObjects',
+                ...(filters ? { restrictSearchWithMatch: filters } : {}),
             },
         },
         {
@@ -270,14 +253,14 @@ const getAllFsObjectIdsUnderFolder = async (
 };
 
 /**
- * Get array of Folders representing an fsObjects hierarchy (all ancestors).
+ * Get array of Folders representing an FsObjects hierarchy (all ancestors).
  *  1) Match specific fsObjectId.
  *  2) Graph lookup all ancestors.
  *  3) Sort by depth.
  * @param fsObjectId - The FsObject id.
- * @returns {Promise<IFolder[]>} Promise object containing hierarchy of folders.
+ * @returns {Promise<IFolder[]>} Promise object containing hierarchy of Folders.
  */
-const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId): Promise<IFolder[]> => {
+const getFsObjectHierarchy = async (fsObjectId: ObjectId): Promise<IFolder[]> => {
     return FsObjectModel.aggregate([
         {
             $match: {
@@ -310,9 +293,9 @@ const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId): Promis
 };
 
 /**
- * Share all fsObjects under a folder with a given user and permission.
- *  1) Update permission of all fsObjects that already have lower permission.
- *  2) Create new states with sharedPermission for all fsObjects that don't have a state yet.
+ * Share all FsObjects under a Folder with a given user and permission.
+ *  1) Update permission of all FsObjects that already have lower permission.
+ *  2) Create new states with sharedPermission for all FsObjects that don't have a state yet.
  * @param fsObjectId - The FsObject id.
  * @param sharedUserId - The User id to share with.
  * @param sharedPermission - The shared permission.
@@ -320,14 +303,14 @@ const getFsObjectHierarchy = async (fsObjectId: mongoose.Types.ObjectId): Promis
  * @returns {Promise<void>} Void Promise.
  */
 const shareAllFsObjectsInFolder = async (
-    fsObjectId: mongoose.Types.ObjectId,
+    fsObjectId: ObjectId,
     sharedUserId: string,
     sharedPermission: permission,
     session?: mongoose.ClientSession,
 ): Promise<void> => {
-    const fsObjectIds = await getAllFsObjectIdsUnderFolder(fsObjectId);
+    const fsObjectIds = await getAllFsObjectIdsUnderFolder(fsObjectId, { type: { $nin: ['shortcut'] } });
 
-    // Ids of all fsObjects that are already shared with the user.
+    // Ids of all FsObjects that are already shared with the user.
     const alreadySharedFsObjectIds = await statesRepository.getStateFsObjectIds({
         fsObjectId: { $in: fsObjectIds },
         userId: sharedUserId,
@@ -338,7 +321,7 @@ const shareAllFsObjectsInFolder = async (
         .filter(([_, value]) => value < permissionPriority[sharedPermission])
         .map(([key]) => key) as permission[];
 
-    // Update permissions of all fsObjects that are already shared but with lower permissions.
+    // Update permissions of all FsObjects that are already shared but with lower permissions.
     if (permissionsToUpdate.length) {
         await statesRepository.updateStates(
             {
@@ -351,7 +334,7 @@ const shareAllFsObjectsInFolder = async (
         );
     }
 
-    // Create new states for all fsObjects that don't have a state yet.
+    // Create new states for all FsObjects that don't have a state yet.
     const statesToCreate = subtractObjectIdArrays(fsObjectIds, alreadySharedFsObjectIds).map((id) => ({
         fsObjectId: id,
         permission: sharedPermission,
@@ -362,7 +345,7 @@ const shareAllFsObjectsInFolder = async (
 };
 
 /**
- * Inherit (Find and Copy) states for fsObject from filtered existing states.
+ * Inherit (Find and Copy) states for FsObject from filtered existing states.
  * @param filters - The state filters object.
  * @param fsObjectId - The FsObject id.
  * @param session - Optional mongoose session.
@@ -370,7 +353,7 @@ const shareAllFsObjectsInFolder = async (
  */
 const inheritStates = async (
     filters: IStateFilters,
-    fsObjectId: mongoose.Types.ObjectId,
+    fsObjectId: ObjectId,
     session?: mongoose.ClientSession,
 ): Promise<IState[]> => {
     const states = await statesRepository.getStates(filters);
@@ -379,17 +362,18 @@ const inheritStates = async (
         fsObjectId,
         userId: state.userId,
         permission: state.permission,
+        trash: state.trash,
     }));
 
     return statesRepository.createStates(statesToCreate, session);
 };
 
 /**
- * Get all shortcut ids to a given fsObject.
- * @param fsObjectId - The fsObject id.
- * @returns {Promise<mongoose.Types.ObjectId[]>} Promise object containing shortcut ids.
+ * Get all Shortcut ids to a given FsObject.
+ * @param fsObjectId - The FsObject id.
+ * @returns {Promise<ObjectId[]>} Promise object containing Shortcut ids.
  */
-const getFsObjectShortcutIds = async (fsObjectId: mongoose.Types.ObjectId): Promise<mongoose.Types.ObjectId[]> => {
+const getFsObjectShortcutIds = async (fsObjectId: ObjectId): Promise<ObjectId[]> => {
     const [result] = await FsObjectModel.aggregate([
         {
             $match: {
@@ -422,11 +406,11 @@ const getFsObjectShortcutIds = async (fsObjectId: mongoose.Types.ObjectId): Prom
 };
 
 /**
- * Get all shortcut ids to a all fsObjects in array.
- * @param fsObjectsIds - Array of fsObjects ids.
- * @returns {Promise<mongoose.Types.ObjectId[]>} Promise object containing shortcut ids.
+ * Get all Shortcut ids to a all FsObjects in array.
+ * @param fsObjectsIds - Array of FsObjects ids.
+ * @returns {Promise<ObjectId[]>} Promise object containing Shortcut ids.
  */
-const getFsObjectsShortcutIds = async (fsObjectsIds: mongoose.Types.ObjectId[]): Promise<mongoose.Types.ObjectId[]> => {
+const getFsObjectsShortcutIds = async (fsObjectsIds: ObjectId[]): Promise<ObjectId[]> => {
     const result = await ShortcutModel.find({ ref: { $in: fsObjectsIds } }).exec();
     return result.map((item) => item._id);
 };
@@ -436,7 +420,6 @@ export {
     aggregateFsObjectsStates,
     getAllFsObjectIdsUnderFolder,
     getFsObjectHierarchy,
-    parentStateCheck,
     shareAllFsObjectsInFolder,
     inheritStates,
     getFsObjectShortcutIds,

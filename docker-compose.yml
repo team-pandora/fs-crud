@@ -19,5 +19,4 @@ services:
       MONGO_QUOTAS_COLLECTION_NAME: quotas
       MONGO_STATES_COLLECTION_NAME: states
       MONGO_FS_OBJECTS_COLLECTION_NAME: fsobjects
-      MONGO_UPLOADS_COLLECTION_NAME: uploads
     network_mode: "host"

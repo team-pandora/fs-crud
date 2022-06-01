@@ -1,4 +1,4 @@
-import * as mongoose from 'mongoose';
+import { ObjectId } from './mongoose';
 
 /**
  * Get a new object containing the fields that exist in the first object but not in the second.
@@ -27,20 +27,15 @@ export const removeUndefinedFields = (obj: object): object => {
     return newObject;
 };
 
-export const bfs = <fieldType>(
-    array: any[],
-    startValue: fieldType,
-    fromField: string,
-    toField: string,
-): fieldType[] => {
+export const objectIdBfs = (array: any[], startValue: ObjectId, fromField: string, toField: string): ObjectId[] => {
     const queue = [startValue];
-    const visited: Set<fieldType> = new Set();
+    const visited: Set<ObjectId> = new Set();
 
     while (queue.length) {
         const current = queue.shift()!;
         visited.add(current);
         for (let i = 0; i < array.length; i++) {
-            if (array[i][toField] === current && !visited.has(array[i][fromField])) {
+            if (array[i][toField].equals(current) && !visited.has(array[i][fromField])) {
                 queue.push(array[i][fromField]);
             }
         }
@@ -51,7 +46,7 @@ export const bfs = <fieldType>(
     return Array.from(visited);
 };
 
-const objectIdsArrayIncludes = (array: mongoose.Types.ObjectId[], value: mongoose.Types.ObjectId): boolean => {
+const objectIdsArrayIncludes = (array: ObjectId[], value: ObjectId): boolean => {
     for (let i = 0; i < array.length; i++) {
         if (array[i].equals(value)) {
             return true;
@@ -60,11 +55,8 @@ const objectIdsArrayIncludes = (array: mongoose.Types.ObjectId[], value: mongoos
     return false;
 };
 
-export const subtractObjectIdArrays = (
-    array1: mongoose.Types.ObjectId[],
-    array2: mongoose.Types.ObjectId[],
-): mongoose.Types.ObjectId[] => {
-    const newArray: mongoose.Types.ObjectId[] = [];
+export const subtractObjectIdArrays = (array1: ObjectId[], array2: ObjectId[]): ObjectId[] => {
+    const newArray: ObjectId[] = [];
     for (let i = 0; i < array1.length; i++) {
         if (!objectIdsArrayIncludes(array2, array1[i])) {
             newArray.push(array1[i]);

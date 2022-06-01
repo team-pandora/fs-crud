@@ -7,10 +7,10 @@ jest.setTimeout(60000);
 
 const removeFsObjectsCollection = async () =>
     mongoose.connection.collections[config.mongo.fsObjectsCollectionName].deleteMany({});
-const removeStateCollection = async () =>
+const removeStatesCollection = async () =>
     mongoose.connection.collections[config.mongo.statesCollectionName].deleteMany({});
-const removeUploadCollection = async () =>
-    mongoose.connection.collections[config.mongo.uploadsCollectionName].deleteMany({});
+const removeQuotasCollection = async () =>
+    mongoose.connection.collections[config.mongo.quotasCollectionName].deleteMany({});
 
 describe('Users tests:', () => {
     let app: Express.Application;
@@ -18,15 +18,15 @@ describe('Users tests:', () => {
     beforeAll(async () => {
         await mongoose.connect(config.mongo.uri);
         await removeFsObjectsCollection();
-        await removeStateCollection();
-        await removeUploadCollection();
+        await removeStatesCollection();
+        await removeQuotasCollection();
         app = Server.createExpressApp();
     });
 
     afterEach(async () => {
         await removeFsObjectsCollection();
-        await removeStateCollection();
-        await removeUploadCollection();
+        await removeStatesCollection();
+        await removeQuotasCollection();
     });
 
     afterAll(async () => {
@@ -252,38 +252,6 @@ describe('Users tests:', () => {
                     parent: folder.fsObjectId,
                     name: 'shortcut-test',
                     ref: createdFile.fsObjectId,
-                })
-                .expect(200);
-        });
-    });
-
-    describe('Create upload', () => {
-        it('should fail to create an upload, all the parameters are incorrect', async () => {
-            await request(app)
-                .post('/api/users/d7e4d4e4f7c8e8d4f7c8e58f/uploads')
-                .send({
-                    name: 123,
-                    parent: 'abc',
-                    uploadedBytes: 123,
-                    key: 123,
-                    bucket: 123,
-                    size: 107374182401,
-                    client: 'abc',
-                })
-                .expect(400);
-        });
-
-        it('should create an upload successfully', async () => {
-            await request(app)
-                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
-                .send({
-                    name: 'abc',
-                    parent: null,
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    client: 'drive',
                 })
                 .expect(200);
         });
@@ -663,77 +631,6 @@ describe('Users tests:', () => {
         });
     });
 
-    describe('Get upload', () => {
-        it('should get all uploads of user', async () => {
-            await request(app)
-                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .send({
-                    name: 'file-test',
-                    parent: null,
-                    uploadedBytes: 123,
-                    key: '123',
-                    bucket: '123',
-                    size: 123,
-                    client: 'drive',
-                })
-                .expect(200);
-
-            await request(app)
-                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .send({
-                    name: 'file-test-1',
-                    parent: null,
-                    uploadedBytes: 123,
-                    key: '123',
-                    bucket: '123',
-                    size: 123,
-                    client: 'drive',
-                })
-                .expect(200);
-
-            const { body: result } = await request(app)
-                .get('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .expect(200);
-            expect(result.length).toBe(2);
-        });
-
-        it('should get uploads by filters', async () => {
-            await request(app)
-                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
-                .send({
-                    parent: null,
-                    name: 'upload1',
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    client: 'drive',
-                })
-                .expect(200);
-
-            await request(app)
-                .post('/api/users/62655a5dd681ae7e5f9eafe0/uploads')
-                .send({
-                    parent: null,
-                    name: 'upload1',
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    client: 'dropbox',
-                })
-                .expect(200);
-
-            const { body: result } = await request(app)
-                .get(`/api/users/62655a5dd681ae7e5f9eafe0/uploads`)
-                .query({ client: 'dropbox' })
-                .expect(200);
-
-            expect(result.length).toBe(1);
-            expect(result[0].client).toBe('dropbox');
-        });
-    });
-
     describe('Get the hierarchy of fsObject ', () => {
         it('should fail to get the hierarchy of fsObject, fs not found', async () => {
             await request(app)
@@ -957,56 +854,12 @@ describe('Users tests:', () => {
         });
     });
 
-    describe('Update upload', () => {
-        it('should not update upload', async () => {
-            const { body: createdUpload } = await request(app)
-                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .send({
-                    parent: null,
-                    name: 'upload1',
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    client: 'drive',
-                })
-                .expect(200);
-
-            await request(app)
-                .patch(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload.uploadId}`)
-                .send({ name: 'upload2' })
-                .expect(400);
-        });
-
-        it('should update upload', async () => {
-            const { body: createdUpload } = await request(app)
-                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .send({
-                    parent: null,
-                    name: 'upload1',
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    client: 'drive',
-                })
-                .expect(200);
-
-            const { body: updatedUpload } = await request(app)
-                .patch(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload._id}`)
-                .send({ uploadedBytes: 12 })
-                .expect(200);
-
-            expect(updatedUpload.uploadedBytes).toBe(12);
-        });
-    });
-
     describe('Delete shared fsObject', () => {
         it('should fail delete shared fsObject, fsObject not found', async () => {
             await request(app)
                 .delete('/api/users/62655a5dd681ae7e5f9eafe0/fs/626e6c3c4560b39744dcd248/share')
                 .send({
-                    userId: '62655a5dd681ae7e5f9eafe1',
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
                 })
                 .expect(404);
         });
@@ -1105,7 +958,7 @@ describe('Users tests:', () => {
             const { body: deletedState } = await request(app)
                 .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFolder.fsObjectId}/share`)
                 .send({
-                    userId: '62655a5dd681ae7e5f9eafe1',
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
                 })
                 .expect(200);
 
@@ -1403,7 +1256,7 @@ describe('Users tests:', () => {
             const { body: deletedState } = await request(app)
                 .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFile.fsObjectId}/share`)
                 .send({
-                    userId: '62655a5dd681ae7e5f9eafe1',
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
                 })
                 .expect(200);
 
@@ -1463,7 +1316,7 @@ describe('Users tests:', () => {
             const { body: deletedState } = await request(app)
                 .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/${createdFolder.fsObjectId}/share`)
                 .send({
-                    userId: '62655a5dd681ae7e5f9eafe1',
+                    sharedUserId: '62655a5dd681ae7e5f9eafe1',
                 })
                 .expect(200);
 
@@ -1749,31 +1602,6 @@ describe('Users tests:', () => {
                 .expect(200);
 
             expect(result2.length).toBe(0);
-        });
-    });
-
-    describe('Delete upload', () => {
-        it('should not delete upload', async () => {
-            await request(app).delete('/api/users/5d7e4d4e4f7c8e8d4f72sd/uploads/5d7e4d4e4f7c8e8d4f72sd').expect(400);
-        });
-
-        it('should delete upload', async () => {
-            const { body: createdUpload } = await request(app)
-                .post('/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads')
-                .send({
-                    parent: null,
-                    name: 'upload1',
-                    uploadedBytes: 123,
-                    key: 'abc',
-                    bucket: 'abc',
-                    size: 123,
-                    client: 'drive',
-                })
-                .expect(200);
-
-            await request(app)
-                .delete(`/api/users/5d7e4d4e4f7c8e8d4f72sc8e8ss/uploads/${createdUpload._id}`)
-                .expect(200);
         });
     });
 });

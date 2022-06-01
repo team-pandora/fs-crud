@@ -51,13 +51,7 @@ usersRouter.post(
 usersRouter.post(
     '/:userId/fs/:fsObjectId/favorite',
     ValidateRequest(usersValidator.addToFavoriteRequestSchema),
-    wrapMiddleware(usersController.addToFavorite),
-);
-
-usersRouter.post(
-    '/:userId/uploads',
-    ValidateRequest(usersValidator.createUploadRequestSchema),
-    wrapMiddleware(usersController.createUpload),
+    wrapMiddleware(usersController.favoriteFsObject),
 );
 
 usersRouter.get(
@@ -84,12 +78,6 @@ usersRouter.get(
     wrapMiddleware(usersController.getFsObjectHierarchy),
 );
 
-usersRouter.get(
-    '/:userId/uploads',
-    ValidateRequest(usersValidator.getUploadsRequestSchema),
-    wrapMiddleware(usersController.getUploads),
-);
-
 usersRouter.patch(
     '/:userId/fs/file/:fsObjectId',
     ValidateRequest(usersValidator.updateFileRequestSchema),
@@ -109,12 +97,6 @@ usersRouter.patch(
 );
 
 usersRouter.patch(
-    '/:userId/uploads/:uploadId',
-    ValidateRequest(usersValidator.updateUploadRequestSchema),
-    wrapMiddleware(usersController.updateUpload),
-);
-
-usersRouter.patch(
     '/:userId/fs/:fsObjectId/permission',
     ValidateRequest(usersValidator.updatePermissionRequestSchema),
     wrapMiddleware(usersController.updateFsPermission),
@@ -129,7 +111,7 @@ usersRouter.delete(
 usersRouter.delete(
     '/:userId/fs/:fsObjectId/favorite',
     ValidateRequest(usersValidator.deleteFileRequestSchema),
-    wrapMiddleware(usersController.removeFromFavorite),
+    wrapMiddleware(usersController.unfavoriteFsObject),
 );
 
 usersRouter.delete(
@@ -148,12 +130,6 @@ usersRouter.delete(
     '/:userId/fs/shortcut/:fsObjectId',
     ValidateRequest(usersValidator.deleteShortcutRequestSchema),
     wrapMiddleware(usersController.deleteShortcut),
-);
-
-usersRouter.delete(
-    '/:userId/uploads/:uploadId',
-    ValidateRequest(usersValidator.deleteUploadRequestSchema),
-    wrapMiddleware(usersController.deleteUpload),
 );
 
 export default usersRouter;

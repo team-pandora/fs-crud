@@ -161,7 +161,7 @@ export const unshareFsObjectRequestSchema = Joi.object({
     query: {},
     params: {},
     body: {
-        userId: Joi.string().regex(config.user.idRegex).required(),
+        sharedUserId: Joi.string().regex(config.user.idRegex).required(),
     },
 });
 

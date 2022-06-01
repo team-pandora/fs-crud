@@ -48,7 +48,7 @@ const getStates = async (filters: IStateFilters): Promise<IState[]> => {
 /**
  * Get fsObject ids of States.
  * @param filters - The State filters.
- * @returns {Promise<ObjectId[]>} Promise object containing the fsObject ids.
+ * @returns {Promise<ObjectId[]>} Promise object containing the FsObject ids.
  */
 const getStateFsObjectIds = async (filters: IStateFilters): Promise<ObjectId[]> => {
     return (await StateModel.find(filters).exec()).map((state) => state.fsObjectId);
