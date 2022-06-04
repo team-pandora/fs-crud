@@ -57,6 +57,11 @@ export const getFsObjectHierarchy = async (req: Request<IUserFsActionParams>, re
     res.json(await usersManager.getFsObjectHierarchy(userId, fsObjectId));
 };
 
+export const getFolderChildren = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.getFolderChildren(userId, fsObjectId));
+};
+
 export const updateFile = async (req: Request<IUserFsActionParams>, res: Response) => {
     const { userId, fsObjectId } = req.params;
     res.json(await usersManager.updateFile(userId, fsObjectId, req.body));

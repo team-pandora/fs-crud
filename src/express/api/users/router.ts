@@ -78,6 +78,13 @@ usersRouter.get(
     wrapMiddleware(usersController.getFsObjectHierarchy),
 );
 
+// TODO: complete this
+usersRouter.get(
+    '/:userId/fs/folder/:fsObjectId/children',
+    ValidateRequest(usersValidator.getFolderChildrenRequestSchema),
+    wrapMiddleware(usersController.getFolderChildren),
+);
+
 usersRouter.patch(
     '/:userId/fs/file/:fsObjectId',
     ValidateRequest(usersValidator.updateFileRequestSchema),

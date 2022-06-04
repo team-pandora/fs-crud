@@ -109,6 +109,12 @@ export const aggregateStatesFsObjectsRequestSchema = Joi.object({
 
 export const aggregateFsObjectsStatesRequestSchema = aggregateStatesFsObjectsRequestSchema;
 
+export const getFolderChildrenRequestSchema = Joi.object({
+    query: {},
+    params: {},
+    body: {},
+});
+
 export const getFsObjectHierarchyRequestSchema = Joi.object({
     query: {},
     params: {},

@@ -46,6 +46,29 @@ export const objectIdBfs = (array: any[], startValue: ObjectId, fromField: strin
     return Array.from(visited);
 };
 
+export const docBfs = <Type>(array: Type[], startValue: ObjectId, fromField: string, toField: string): Type[] => {
+    const queue: Type[] = [];
+    const visited: Set<Type> = new Set();
+
+    for (let i = 0; i < array.length; i++) {
+        if (array[i][toField].equals(startValue) && !visited.has(array[i][fromField])) {
+            queue.push(array[i]);
+        }
+    }
+
+    while (queue.length) {
+        const current = queue.shift()!;
+        visited.add(current);
+        for (let i = 0; i < array.length; i++) {
+            if (array[i][toField].equals(current[fromField]) && !visited.has(array[i][fromField])) {
+                queue.push(array[i]);
+            }
+        }
+    }
+
+    return Array.from(visited);
+};
+
 const objectIdsArrayIncludes = (array: ObjectId[], value: ObjectId): boolean => {
     for (let i = 0; i < array.length; i++) {
         if (array[i].equals(value)) {

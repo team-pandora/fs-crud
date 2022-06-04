@@ -4,7 +4,7 @@ import config from '../../config';
 import { ObjectId } from '../../utils/mongoose';
 import { removeUndefinedFields, subtractObjectIdArrays } from '../../utils/object';
 import { ServerError } from '../error';
-import { fsObjectType, IFolder } from '../fs/interface';
+import { fsObjectType, IFile, IFolder, IShortcut } from '../fs/interface';
 import { FsObjectModel, ShortcutModel } from '../fs/model';
 import { INewState, IState, IStateFilters, permission } from '../states/interface';
 import StateModel from '../states/model';
@@ -206,11 +206,48 @@ const aggregateFsObjectsStates = async (query: IAggregateStatesAndFsObjectsQuery
 };
 
 /**
+ * Get all FsObjects under Folder.
+ *  1) Match specific fsObjectId.
+ *  2) Graph lookup all FsObjects under a Folder.
+ * @param folderId - The Folder id.
+ * @param filters - Restrict search with match filters.
+ * @returns {Promise<ObjectId[]>} Promise object containing filtered objects.
+ */
+const getAllFsObjectsUnderFolder = async (
+    folderId: ObjectId,
+    filters?: { type?: { $in: fsObjectType[] } | { $nin: fsObjectType[] } },
+): Promise<((IFile | IFolder | IShortcut) & { depth: number })[]> => {
+    const [result] = await FsObjectModel.aggregate([
+        {
+            $match: {
+                _id: folderId,
+            },
+        },
+        {
+            $graphLookup: {
+                from: 'fsobjects',
+                startWith: '$_id',
+                connectFromField: '_id',
+                connectToField: 'parent',
+                as: 'fsObjects',
+                depthField: 'depth',
+                ...(filters ? { restrictSearchWithMatch: filters } : {}),
+            },
+        },
+    ]).exec();
+
+    if (!result?.fsObjects) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
+
+    return result.fsObjects;
+};
+
+/**
  * Get ids of all FsObjects under Folder.
  *  1) Match specific fsObjectId.
  *  2) Graph lookup all FsObjects under a Folder.
  *  3) Map all FsObjects to an array of fsObjectIds.
  * @param folderId - The Folder id.
+ * @param filters - Restrict search with match filters.
  * @returns {Promise<ObjectId[]>} Promise object containing filtered objects ids.
  */
 const getAllFsObjectIdsUnderFolder = async (
@@ -418,6 +455,7 @@ const getFsObjectsShortcutIds = async (fsObjectsIds: ObjectId[]): Promise<Object
 export {
     aggregateStatesFsObjects,
     aggregateFsObjectsStates,
+    getAllFsObjectsUnderFolder,
     getAllFsObjectIdsUnderFolder,
     getFsObjectHierarchy,
     shareAllFsObjectsInFolder,

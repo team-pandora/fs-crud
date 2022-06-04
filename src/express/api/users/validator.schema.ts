@@ -74,6 +74,10 @@ export const getFsObjectHierarchyRequestSchema = apiValidator.getFsObjectHierarc
     params: apiUserFsActionParamsRequestSchema,
 });
 
+export const getFolderChildrenRequestSchema = apiValidator.getFolderChildrenRequestSchema.keys({
+    params: apiUserFsActionParamsRequestSchema,
+});
+
 export const updateFileRequestSchema = apiValidator.updateFileRequestSchema.keys({
     params: apiUserFsActionParamsRequestSchema,
 });
