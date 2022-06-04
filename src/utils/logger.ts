@@ -24,7 +24,6 @@ const logger = winston.createLogger({
         winston.format.timestamp({ format: 'DD/MM/YYYY HH:mm:ss.SSS' }),
         winston.format.printf(formatter),
     ),
-    defaultMeta: { service: 'ts-template' },
     exitOnError: false,
     levels: { error: 0, warn: 1, info: 2 },
 });
