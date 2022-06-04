@@ -3,6 +3,9 @@ import config from '../../../config';
 import { JoiObjectId } from '../../../utils/joi';
 import * as apiValidator from '../validator.schema';
 
+const { clients } = config.constants;
+const { nameRegex, fileKeyRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
+
 const apiUserActionParamsRequestSchema = Joi.object({
     userId: Joi.string().regex(config.user.idRegex).required(),
 });
@@ -11,37 +14,62 @@ const apiUserFsActionParamsRequestSchema = apiUserActionParamsRequestSchema.keys
     fsObjectId: JoiObjectId.required(),
 });
 
-export const createFileRequestSchema = apiValidator.createFileRequestSchema.keys({
+export const createFileRequestSchema = Joi.object({
+    query: {},
     params: apiUserActionParamsRequestSchema,
+    body: {
+        name: Joi.string().regex(nameRegex).required(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
+        key: Joi.string().regex(fileKeyRegex).required(),
+        bucket: Joi.string().regex(fileBucketRegex).required(),
+        size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
+        client: Joi.string()
+            .valid(...clients)
+            .required(),
+
+        public: Joi.boolean().optional(),
+    },
 });
 
-export const createFolderRequestSchema = apiValidator.createFolderRequestSchema.keys({
+export const createFolderRequestSchema = Joi.object({
+    query: {},
     params: apiUserActionParamsRequestSchema,
+    body: {
+        name: Joi.string().regex(nameRegex).required(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
+    },
 });
 
-export const createShortcutRequestSchema = apiValidator.createShortcutRequestSchema.keys({
+export const createShortcutRequestSchema = Joi.object({
+    query: {},
     params: apiUserActionParamsRequestSchema,
+    body: {
+        name: Joi.string().regex(nameRegex).required(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
+        ref: JoiObjectId.required(),
+    },
 });
 
 export const restoreFileFromTrashRequestSchema = Joi.object({
-    params: apiUserFsActionParamsRequestSchema,
     query: {},
+    params: apiUserFsActionParamsRequestSchema,
     body: {},
 });
 
 export const restoreFolderFromTrashRequestSchema = Joi.object({
-    params: apiUserFsActionParamsRequestSchema,
     query: {},
+    params: apiUserFsActionParamsRequestSchema,
     body: {},
 });
 
 export const restoreShortcutFromTrashRequestSchema = Joi.object({
-    params: apiUserFsActionParamsRequestSchema,
     query: {},
+    params: apiUserFsActionParamsRequestSchema,
     body: {},
 });
 
-export const shareFsObjectRequestSchema = apiValidator.shareFsObjectRequestSchema.keys({
+export const shareFsObjectRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
     body: {
         sharedUserId: Joi.string().regex(config.user.idRegex).required(),
@@ -52,8 +80,10 @@ export const shareFsObjectRequestSchema = apiValidator.shareFsObjectRequestSchem
     },
 });
 
-export const addToFavoriteRequestSchema = apiValidator.addToFavoriteRequestSchema.keys({
+export const addToFavoriteRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
+    body: {},
 });
 
 export const aggregateStatesFsObjectsRequestSchema = apiValidator.aggregateStatesFsObjectsRequestSchema.keys({
@@ -65,32 +95,56 @@ export const aggregateFsObjectsStatesRequestSchema = apiValidator.aggregateFsObj
 });
 
 export const getQuotaByUserIdRequestSchema = Joi.object({
-    params: apiUserActionParamsRequestSchema,
     query: {},
+    params: apiUserActionParamsRequestSchema,
     body: {},
 });
 
-export const getFsObjectHierarchyRequestSchema = apiValidator.getFsObjectHierarchyRequestSchema.keys({
+export const getFsObjectHierarchyRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
+    body: {},
 });
 
-export const getFolderChildrenRequestSchema = apiValidator.getFolderChildrenRequestSchema.keys({
+export const getFolderChildrenRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
+    body: {},
 });
 
-export const updateFileRequestSchema = apiValidator.updateFileRequestSchema.keys({
+export const updateFileRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
+    body: Joi.object({
+        name: Joi.string().regex(nameRegex).optional(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).optional(),
+        key: Joi.string().regex(fileKeyRegex).optional(),
+        bucket: Joi.string().regex(fileBucketRegex).optional(),
+        size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).optional(),
+        public: Joi.boolean().optional(),
+    }).min(1),
 });
 
-export const updateFolderRequestSchema = apiValidator.updateFolderRequestSchema.keys({
+export const updateFolderRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
+    body: Joi.object({
+        name: Joi.string().regex(nameRegex).optional(),
+        parent: JoiObjectId.optional(),
+    }).min(1),
 });
 
-export const updateShortcutRequestSchema = apiValidator.updateShortcutRequestSchema.keys({
+export const updateShortcutRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
+    body: Joi.object({
+        name: Joi.string().regex(nameRegex).optional(),
+        parent: JoiObjectId.optional(),
+    }).min(1),
 });
 
-export const updatePermissionRequestSchema = apiValidator.updatePermissionRequestSchema.keys({
+export const updatePermissionRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
     body: {
         sharedUserId: Joi.string().regex(config.user.idRegex).required(),
@@ -101,18 +155,28 @@ export const updatePermissionRequestSchema = apiValidator.updatePermissionReques
     },
 });
 
-export const unshareFsObjectRequestSchema = apiValidator.unshareFsObjectRequestSchema.keys({
+export const unshareFsObjectRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
+    body: {
+        sharedUserId: Joi.string().regex(config.user.idRegex).required(),
+    },
 });
 
-export const deleteFileRequestSchema = apiValidator.deleteFileRequestSchema.keys({
+export const deleteFileRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
+    body: {},
 });
 
-export const deleteFolderRequestSchema = apiValidator.deleteFolderRequestSchema.keys({
+export const deleteFolderRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
+    body: {},
 });
 
-export const deleteShortcutRequestSchema = apiValidator.deleteShortcutRequestSchema.keys({
+export const deleteShortcutRequestSchema = Joi.object({
+    query: {},
     params: apiUserFsActionParamsRequestSchema,
+    body: {},
 });

@@ -17,7 +17,8 @@ const apiClientFsActionParamsRequestSchema = apiClientActionParamsRequestSchema.
     fsObjectId: JoiObjectId.required(),
 });
 
-export const createFileRequestSchema = apiValidator.createFileRequestSchema.keys({
+export const createFileRequestSchema = Joi.object({
+    query: {},
     params: apiClientActionParamsRequestSchema,
     body: {
         name: Joi.string().regex(nameRegex).required(),
@@ -37,7 +38,8 @@ export const aggregateFsObjectsStatesRequestSchema = apiValidator.aggregateFsObj
     params: apiClientActionParamsRequestSchema,
 });
 
-export const shareFileRequestSchema = apiValidator.shareFsObjectRequestSchema.keys({
+export const shareFileRequestSchema = Joi.object({
+    query: {},
     params: apiClientFsActionParamsRequestSchema,
     body: {
         sharedUserId: Joi.string().regex(idRegex).required(),
@@ -47,7 +49,8 @@ export const shareFileRequestSchema = apiValidator.shareFsObjectRequestSchema.ke
     },
 });
 
-export const updateFilePermissionRequestSchema = apiValidator.shareFsObjectRequestSchema.keys({
+export const updateFilePermissionRequestSchema = Joi.object({
+    query: {},
     params: apiClientFsActionParamsRequestSchema,
     body: {
         sharedUserId: Joi.string().regex(idRegex).required(),
@@ -57,7 +60,8 @@ export const updateFilePermissionRequestSchema = apiValidator.shareFsObjectReque
     },
 });
 
-export const updateFileRequestSchema = apiValidator.updateFileRequestSchema.keys({
+export const updateFileRequestSchema = Joi.object({
+    query: {},
     params: apiClientFsActionParamsRequestSchema,
     body: Joi.object({
         name: Joi.string().regex(nameRegex).optional(),
@@ -68,10 +72,16 @@ export const updateFileRequestSchema = apiValidator.updateFileRequestSchema.keys
     }).min(1),
 });
 
-export const unshareFileRequestSchema = apiValidator.unshareFsObjectRequestSchema.keys({
+export const unshareFileRequestSchema = Joi.object({
+    query: {},
     params: apiClientFsActionParamsRequestSchema,
+    body: {
+        sharedUserId: Joi.string().regex(config.user.idRegex).required(),
+    },
 });
 
-export const deleteFileRequestSchema = apiValidator.deleteFileRequestSchema.keys({
+export const deleteFileRequestSchema = Joi.object({
+    query: {},
     params: apiClientFsActionParamsRequestSchema,
+    body: {},
 });
