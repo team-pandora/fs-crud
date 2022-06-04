@@ -19,9 +19,10 @@ import {
 import { FileModel, FolderModel, FsObjectModel, ShortcutModel } from './model';
 
 /**
- * Get FsObject. Throws error if not found.
+ * Get FsObject.
  * @param filters - The FsObject filters.
  * @returns {Promise<IFile | IFolder | IShortcut>} Promise object containing the FsObject.
+ * @throws {ServerError} If FsObject not found.
  */
 const getFsObject = async (filters: IFsObjectFilters): Promise<IFile | IFolder | IShortcut> => {
     const result = await FsObjectModel.findOne(filters).exec();
@@ -30,9 +31,10 @@ const getFsObject = async (filters: IFsObjectFilters): Promise<IFile | IFolder |
 };
 
 /**
- * Get File. Throws error if not found.
+ * Get File.
  * @param filters - The File filters.
  * @returns {Promise<IFile>} Promise object containing the File.
+ * @throws {ServerError} If File not found.
  */
 const getFile = async (filters: IFileFilters): Promise<IFile> => {
     const result = await FileModel.findOne(filters).exec();
@@ -62,10 +64,11 @@ const fsObjectNameCheck = async (parent: ObjectId | null, name: string): Promise
 };
 
 /**
- * Create File. Throws if File fails parent or name validations.
+ * Create File.
  * @param file - The new File object.
  * @param session - Optional mongoose session.
  * @returns {Promise<IFile>} Promise object containing the created File.
+ * @throws {ServerError} If File fails parent or name validations.
  */
 const createFile = async (file: INewFile, session?: ClientSession): Promise<IFile> => {
     await fsObjectParentCheck(file.parent);
@@ -75,10 +78,11 @@ const createFile = async (file: INewFile, session?: ClientSession): Promise<IFil
 };
 
 /**
- * Create Folder. Throws if Folder fails parent or name validations.
+ * Create Folder.
  * @param folder - The new Folder object.
  * @param session - Optional mongoose session.
  * @returns {Promise<IFolder>} Promise object containing the created Folder.
+ * @throws {ServerError} If Folder fails parent or name validations.
  */
 const createFolder = async (folder: INewFolder, session?: ClientSession): Promise<IFolder> => {
     await fsObjectParentCheck(folder.parent);
@@ -88,10 +92,11 @@ const createFolder = async (folder: INewFolder, session?: ClientSession): Promis
 };
 
 /**
- * Create Shortcut. Throws if Shortcut fails parent or name validations. If parent is Shortcut it's ref is used.
+ * Create Shortcut. If parent is Shortcut it's ref is used.
  * @param shortcut - The new Shortcut object.
  * @param session - Optional mongoose session.
  * @returns {Promise<IShortcut>} Promise object containing the created Shortcut.
+ * @throws {ServerError} If Shortcut fails parent or name validations.
  */
 const createShortcut = async (shortcut: INewShortcut, session?: ClientSession): Promise<IShortcut> => {
     await fsObjectParentCheck(shortcut.parent);
@@ -108,10 +113,13 @@ const createShortcut = async (shortcut: INewShortcut, session?: ClientSession): 
 };
 
 /**
- * Check FsObject update. Throws if validations fail.
+ * Check FsObject update.
  * @param fsObjectId - The FsObject id.
  * @param update - The update object.
  * @returns {Promise<void>} Empty Promise.
+ * @throws {ServerError} If FsObject not found.
+ * @throws {ServerError} If FsObject update fails parent validations.
+ * @throws {ServerError} If FsObject update fails name validations.
  */
 const fsObjectUpdateCheck = async (
     fsObjectId: ObjectId,
@@ -128,11 +136,12 @@ const fsObjectUpdateCheck = async (
 };
 
 /**
- * Update File. Throws if validations fail.
+ * Update File.
  * @param fileId - The File id.
  * @param update - The update object.
  * @param session - Optional mongoose session.
  * @returns {Promise<IFile>} Promise object containing the updated File.
+ * @throws {ServerError} If validations fail.
  */
 const updateFileById = async (fileId: ObjectId, update: IUpdateFile, session?: ClientSession): Promise<IFile> => {
     await fsObjectUpdateCheck(fileId, update);
@@ -148,6 +157,7 @@ const updateFileById = async (fileId: ObjectId, update: IUpdateFile, session?: C
  * @param folderId - The Folder id.
  * @param update - The update object.
  * @returns {Promise<IFolder>} Promise object containing the updated Folder.
+ * @throws {ServerError} If validations fail.
  */
 const updateFolderById = async (
     folderId: ObjectId,
@@ -172,6 +182,7 @@ const updateFolderById = async (
  * @param update - The update object.
  * @param session - Optional mongoose session.
  * @returns {Promise<IShortcut>} Promise object containing the updated Shortcut.
+ * @throws {ServerError} If validations fail.
  */
 const updateShortcutById = async (
     shortcutId: ObjectId,

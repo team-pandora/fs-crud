@@ -20,11 +20,12 @@ const getQuotaByUserId = (userId: string, session?: ClientSession): Promise<IQuo
 };
 
 /**
- * Update Quota used field. Throws if new used value is greater than limit.
+ * Update Quota used field.
  * @param userId - The userId to update the Quota.
  * @param difference - The difference to add to the used field.
  * @param session - Optional mongoose session.
  * @returns {Promise<IQuota>} Promise object containing the updated Quota.
+ * @throws {ServerError} If new used value is greater than limit.
  */
 const changeQuotaUsed = async (userId: string, difference: number, session?: ClientSession): Promise<IQuota> => {
     const quota = await getQuotaByUserId(userId, session);

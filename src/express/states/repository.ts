@@ -55,11 +55,12 @@ const getStateFsObjectIds = async (filters: IStateFilters): Promise<ObjectId[]> 
 };
 
 /**
- * Update State. Throws if no State is found.
+ * Update State.
  * @param filters - The State filters.
  * @param update - The update object.
  * @param session - Optional mongoose session.
  * @returns {Promise<IState>} Promise object containing the updated State.
+ * @throws {ServerError} If State not found.
  */
 const updateState = async (filters: IStateFilters, update: IUpdateState, session?: ClientSession): Promise<IState> => {
     const result = await StateModel.findOneAndUpdate(filters, { $set: update }, { new: true, session }).exec();
@@ -68,7 +69,7 @@ const updateState = async (filters: IStateFilters, update: IUpdateState, session
 };
 
 /**
- * Update States. Throws if failed to update.
+ * Update States.
  * @param filters - The State filters.
  * @param update - The update object.
  * @param session - Optional mongoose session.
@@ -81,10 +82,11 @@ const updateStates = async (filters: IStateFilters, update: IUpdateState, sessio
 };
 
 /**
- * Delete State. Throws if no State is found.
+ * Delete State.
  * @param filters - The State filters.
  * @param session - Optional mongoose session.
  * @returns {Promise<IState>} Promise object containing the deleted State.
+ * @throws {ServerError} If State not found.
  */
 const deleteState = async (filters: IStateFilters, session?: ClientSession): Promise<IState> => {
     const result = await StateModel.findOneAndDelete(filters, { session }).exec();
@@ -93,7 +95,7 @@ const deleteState = async (filters: IStateFilters, session?: ClientSession): Pro
 };
 
 /**
- * Delete States. Throws if failed to delete.
+ * Delete States.
  * @param filters - The State filters.
  * @param session - Optional mongoose session.
  * @returns {Promise<number>} Promise object containing the amount of deleted States.
