@@ -371,55 +371,31 @@ export const getFsObjectHierarchy = async (userId: string, fsObjectId: ObjectId)
     const [fileAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
     if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
 
-    const fullHierarchy = await apiRepository.getFsObjectHierarchy(fsObjectId);
-    const fullHierarchyIds = fullHierarchy.map((folder) => folder._id);
-    const foldersAndStatesHierarchy = await apiRepository.aggregateStatesFsObjects({
-        userId,
-        fsObjectId: { $in: fullHierarchyIds },
-    });
+    const hierarchyWithRoots = await apiRepository.getUsersFsObjectHierarchy(userId, fsObjectId);
 
-    for (let rootIndex = fullHierarchy.length - 1; rootIndex > 0; rootIndex--) {
-        const isRoot = foldersAndStatesHierarchy.some(
-            (folderAndState) => folderAndState.fsObjectId.equals(fullHierarchy[rootIndex]._id) && folderAndState.root,
-        );
-        if (isRoot) {
-            return fullHierarchy.slice(rootIndex, fullHierarchy.length);
-        }
+    const hierarchy: IFolder[] = [];
+    for (let i = hierarchyWithRoots.length - 1; i >= 0; i--) {
+        const { root, ...folder } = hierarchyWithRoots[i];
+        hierarchy.unshift(folder);
+        if (root) break;
     }
-
-    return fullHierarchy;
+    return hierarchy;
 };
 
 /**
- * Get Folder's children. Return only Files and Folders including depth field.
+ * Get Folder's children. Return only Files and Folders including depth field that are accessible by user from given folder.
  * @param userId - The user id.
  * @param fsObjectId - The FsObject id.
  * @returns {Promise<IFolder[]>} Promise object containing array of all Files and Folders in Folder.
  * @throws {ServerError} If object is not found for user.
  */
-export const getFolderChildren = async (
-    userId: string,
-    fsObjectId: ObjectId,
-): Promise<
-    ((IFolder | IFile) & {
-        depth: number;
-    })[]
-> => {
+export const getFolderChildren = async (userId: string, fsObjectId: ObjectId): Promise<(IFolder | IFile)[]> => {
     const [fileAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
     if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
 
-    const allFsObjectsUnderFolder = await apiRepository.getAllFsObjectsUnderFolder(fsObjectId, {
+    const userFsObjectsUnderFolder = await apiRepository.getAllUsersFsObjectsUnderFolder(userId, fsObjectId, {
         type: { $nin: ['shortcut'] },
     });
-    const allFsObjectsUnderFolderIds = allFsObjectsUnderFolder.map((fsObject) => fsObject._id);
-    const userFsObjectIdsUnderFolder = await statesRepository.getStateFsObjectIds({
-        userId,
-        fsObjectId: { $in: allFsObjectsUnderFolderIds },
-    });
-
-    const userFsObjectsUnderFolder = userFsObjectIdsUnderFolder.map(
-        (id) => allFsObjectsUnderFolder.find((fsObject) => fsObject._id.equals(id))!,
-    );
 
     return docBfs(userFsObjectsUnderFolder, fsObjectId, '_id', 'parent');
 };
