@@ -94,6 +94,14 @@ export const aggregateFsObjectsStatesRequestSchema = apiValidator.aggregateFsObj
     params: apiUserActionParamsRequestSchema,
 });
 
+export const searchFsObjectsStatesRequestSchema = Joi.object({
+    query: {
+        query: Joi.string().required(),
+    },
+    params: apiUserActionParamsRequestSchema,
+    body: {},
+});
+
 export const getQuotaByUserIdRequestSchema = Joi.object({
     query: {},
     params: apiUserActionParamsRequestSchema,

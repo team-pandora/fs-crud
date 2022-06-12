@@ -59,6 +59,9 @@ const ShortcutSchema = new mongoose.Schema<IShortcut & mongoose.Document>({
     },
 });
 
+FsObjectSchema.index({ name: 'text' });
+FsObjectSchema.index({ name: 1 });
+
 setDefaultSettings(FsObjectSchema);
 setDefaultSettings(FileSchema);
 setDefaultSettings(FolderSchema);

@@ -73,12 +73,17 @@ usersRouter.get(
 );
 
 usersRouter.get(
+    '/:userId/fsObjects/states/search',
+    ValidateRequest(usersValidator.searchFsObjectsStatesRequestSchema),
+    wrapMiddleware(usersController.searchFsObjectsStates),
+);
+
+usersRouter.get(
     '/:userId/fs/:fsObjectId/hierarchy',
     ValidateRequest(usersValidator.getFsObjectHierarchyRequestSchema),
     wrapMiddleware(usersController.getFsObjectHierarchy),
 );
 
-// TODO: complete this
 usersRouter.get(
     '/:userId/fs/folder/:fsObjectId/children',
     ValidateRequest(usersValidator.getFolderChildrenRequestSchema),
