@@ -48,6 +48,10 @@ export const aggregateFsObjectsStates = async (req: Request<IUserFsActionParams>
     res.json(await usersManager.aggregateFsObjectsStates(req.params.userId, req.query));
 };
 
+export const searchFsObjectsStates = async (req: Request<IUserFsActionParams>, res: Response) => {
+    res.json(await usersManager.searchFsObjectsStates(req.params.userId, req.query.query as string));
+};
+
 export const getQuotaByUserId = async (req: Request<IUserActionParams>, res: Response) => {
     res.json(await usersManager.getQuotaByUserId(req.params.userId));
 };

@@ -352,6 +352,16 @@ export const aggregateFsObjectsStates = async (
 };
 
 /**
+ * Search and aggregate FsObjects and States of user.
+ * @param userId - The user id.
+ * @param query - The State and FsObject filters.
+ * @returns {Promise<FsObjectAndState[]>} Promise object containing the States and FsObjects.
+ */
+export const searchFsObjectsStates = async (userId: string, query: string): Promise<FsObjectAndState[]> => {
+    return apiRepository.searchFsObjectsStates(userId, query);
+};
+
+/**
  * Get Quota.
  * @param userId - The user id.
  * @returns {Promise<IQuota>} Promise object containing the quota.
