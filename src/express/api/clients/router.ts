@@ -7,49 +7,55 @@ import * as apiValidator from './validator.schema';
 const clientsRouter: Router = Router();
 
 clientsRouter.post(
-    '/:clientId/fs/file',
+    '/:client/fs/file',
     ValidateRequest(apiValidator.createFileRequestSchema),
     wrapMiddleware(apiController.createFile),
 );
 
 clientsRouter.post(
-    '/:clientId/fs/file/:fsObjectId/share',
+    '/:client/fs/file/:fsObjectId/share',
     ValidateRequest(apiValidator.shareFileRequestSchema),
     wrapMiddleware(apiController.shareFile),
 );
 
 clientsRouter.get(
-    '/:clientId/states/fsObjects',
+    '/:client/states/fsObjects',
     ValidateRequest(apiValidator.aggregateStatesFsObjectsRequestSchema),
     wrapMiddleware(apiController.aggregateStatesFsObjects),
 );
 
 clientsRouter.get(
-    '/:clientId/fsObjects/states',
+    '/:client/fsObjects/states',
     ValidateRequest(apiValidator.aggregateFsObjectsStatesRequestSchema),
     wrapMiddleware(apiController.aggregateFsObjectsStates),
 );
 
+clientsRouter.get(
+    '/:client/fs/files',
+    ValidateRequest(apiValidator.getFilesRequestSchema),
+    wrapMiddleware(apiController.getFiles),
+);
+
 clientsRouter.patch(
-    '/:clientId/fs/file/:fsObjectId',
+    '/:client/fs/file/:fsObjectId',
     ValidateRequest(apiValidator.updateFileRequestSchema),
     wrapMiddleware(apiController.updateFile),
 );
 
 clientsRouter.patch(
-    '/:clientId/fs/file/:fsObjectId/permission',
+    '/:client/fs/file/:fsObjectId/permission',
     ValidateRequest(apiValidator.updateFilePermissionRequestSchema),
     wrapMiddleware(apiController.updateFilePermission),
 );
 
 clientsRouter.delete(
-    '/:clientId/fs/file/:fsObjectId/share',
+    '/:client/fs/file/:fsObjectId/share',
     ValidateRequest(apiValidator.unshareFileRequestSchema),
     wrapMiddleware(apiController.unshareFile),
 );
 
 clientsRouter.delete(
-    '/:clientId/fs/file/:fsObjectId',
+    '/:client/fs/file/:fsObjectId',
     ValidateRequest(apiValidator.deleteFileRequestSchema),
     wrapMiddleware(apiController.deleteFile),
 );

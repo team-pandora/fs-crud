@@ -40,7 +40,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: '62655a5dd681ae7e5f9eafe0',
                     name: 'file',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     public: true,
@@ -53,7 +52,6 @@ describe('Clients tests:', () => {
                 .post('/api/clients/drive/fs/file')
                 .send({
                     name: 'abc',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                 })
@@ -77,7 +75,6 @@ describe('Clients tests:', () => {
                 .post('/api/clients/drive/fs/file')
                 .send({
                     name: 'file',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                 })
@@ -100,7 +97,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file3',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -119,7 +115,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file12',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -140,7 +135,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file1',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -152,7 +146,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file2',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -173,7 +166,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file2',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -185,7 +177,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file1',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -208,7 +199,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file3',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -227,7 +217,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file3',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -239,7 +228,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file2',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -260,7 +248,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file3',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -272,7 +259,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file2',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -293,7 +279,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file3',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -305,7 +290,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file2',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -328,7 +312,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file1',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -348,7 +331,6 @@ describe('Clients tests:', () => {
                 .send({
                     parent: null,
                     name: 'file1',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                     client: 'drive',
@@ -384,7 +366,6 @@ describe('Clients tests:', () => {
                 .post('/api/clients/drive/fs/file')
                 .send({
                     name: 'file',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                 })
@@ -414,7 +395,6 @@ describe('Clients tests:', () => {
                 .post('/api/clients/drive/fs/file')
                 .send({
                     name: 'file',
-                    key: '123',
                     bucket: '123',
                     size: 123,
                 })

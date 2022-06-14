@@ -20,7 +20,6 @@ export const aggregateStatesFsObjectsRequestSchema = Joi.object({
             .optional(),
 
         // FsObject filters
-        key: Joi.string().optional(),
         bucket: Joi.string().optional(),
         client: Joi.string().optional(),
         size: Joi.number().optional(),

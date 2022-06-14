@@ -11,7 +11,7 @@ import QuotaModel from './model';
  * @param session - Optional mongoose session.
  * @returns {Promise<IQuota>} Promise object containing the Quota.
  */
-const getQuotaByUserId = (userId: string, session?: ClientSession): Promise<IQuota> => {
+export const getQuotaByUserId = (userId: string, session?: ClientSession): Promise<IQuota> => {
     return QuotaModel.findOneAndUpdate(
         { userId },
         { $setOnInsert: defaultNewQuota },
@@ -27,7 +27,7 @@ const getQuotaByUserId = (userId: string, session?: ClientSession): Promise<IQuo
  * @returns {Promise<IQuota>} Promise object containing the updated Quota.
  * @throws {ServerError} If new used value is greater than limit.
  */
-const changeQuotaUsed = async (userId: string, difference: number, session?: ClientSession): Promise<IQuota> => {
+export const changeQuotaUsed = async (userId: string, difference: number, session?: ClientSession): Promise<IQuota> => {
     const quota = await getQuotaByUserId(userId, session);
     if (!difference) return quota;
 
@@ -45,5 +45,3 @@ const changeQuotaUsed = async (userId: string, difference: number, session?: Cli
 
     return result;
 };
-
-export { getQuotaByUserId, changeQuotaUsed };

@@ -12,7 +12,7 @@ import StateModel from './model';
  * @param session - Optional mongoose session.
  * @returns {Promise<IState>} Promise object containing the created State.
  */
-const createState = async (state: INewState, session?: ClientSession): Promise<IState> => {
+export const createState = async (state: INewState, session?: ClientSession): Promise<IState> => {
     return (await StateModel.create([{ ...defaultNewState, ...state }], { session }))[0];
 };
 
@@ -22,7 +22,7 @@ const createState = async (state: INewState, session?: ClientSession): Promise<I
  * @param session - Optional mongoose session.
  * @returns {Promise<IState[]>} Promise object containing the created States.
  */
-const createStates = async (states: INewState[], session?: ClientSession): Promise<IState[]> => {
+export const createStates = async (states: INewState[], session?: ClientSession): Promise<IState[]> => {
     const formattedStates = states.map((state) => ({ ...defaultNewState, ...state }));
     return StateModel.create(formattedStates, { session });
 };
@@ -32,7 +32,7 @@ const createStates = async (states: INewState[], session?: ClientSession): Promi
  * @param filters - The State filters.
  * @returns {Promise<IState>} Promise object containing the State.
  */
-const getState = async (filters: IStateFilters): Promise<IState | null> => {
+export const getState = async (filters: IStateFilters): Promise<IState | null> => {
     return StateModel.findOne(filters).exec();
 };
 
@@ -41,7 +41,7 @@ const getState = async (filters: IStateFilters): Promise<IState | null> => {
  * @param filters - The State filters.
  * @returns {Promise<IState[]>} Promise object containing the States.
  */
-const getStates = async (filters: IStateFilters): Promise<IState[]> => {
+export const getStates = async (filters: IStateFilters): Promise<IState[]> => {
     return StateModel.find(filters).exec();
 };
 
@@ -50,7 +50,7 @@ const getStates = async (filters: IStateFilters): Promise<IState[]> => {
  * @param filters - The State filters.
  * @returns {Promise<ObjectId[]>} Promise object containing the FsObject ids.
  */
-const getStateFsObjectIds = async (filters: IStateFilters): Promise<ObjectId[]> => {
+export const getStateFsObjectIds = async (filters: IStateFilters): Promise<ObjectId[]> => {
     return (await StateModel.find(filters).exec()).map((state) => state.fsObjectId);
 };
 
@@ -62,7 +62,11 @@ const getStateFsObjectIds = async (filters: IStateFilters): Promise<ObjectId[]> 
  * @returns {Promise<IState>} Promise object containing the updated State.
  * @throws {ServerError} If State not found.
  */
-const updateState = async (filters: IStateFilters, update: IUpdateState, session?: ClientSession): Promise<IState> => {
+export const updateState = async (
+    filters: IStateFilters,
+    update: IUpdateState,
+    session?: ClientSession,
+): Promise<IState> => {
     const result = await StateModel.findOneAndUpdate(filters, { $set: update }, { new: true, session }).exec();
     if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'State not found');
     return result;
@@ -75,7 +79,11 @@ const updateState = async (filters: IStateFilters, update: IUpdateState, session
  * @param session - Optional mongoose session.
  * @returns {Promise<number>} Promise object containing the amount of updated States.
  */
-const updateStates = async (filters: IStateFilters, update: IUpdateState, session?: ClientSession): Promise<number> => {
+export const updateStates = async (
+    filters: IStateFilters,
+    update: IUpdateState,
+    session?: ClientSession,
+): Promise<number> => {
     const result = await StateModel.updateMany(filters, { $set: update }, { session }).exec();
     if (!result.acknowledged) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to update states');
     return result.modifiedCount;
@@ -88,7 +96,7 @@ const updateStates = async (filters: IStateFilters, update: IUpdateState, sessio
  * @returns {Promise<IState>} Promise object containing the deleted State.
  * @throws {ServerError} If State not found.
  */
-const deleteState = async (filters: IStateFilters, session?: ClientSession): Promise<IState> => {
+export const deleteState = async (filters: IStateFilters, session?: ClientSession): Promise<IState> => {
     const result = await StateModel.findOneAndDelete(filters, { session }).exec();
     if (result === null) throw new ServerError(StatusCodes.NOT_FOUND, 'State not found');
     return result;
@@ -100,20 +108,8 @@ const deleteState = async (filters: IStateFilters, session?: ClientSession): Pro
  * @param session - Optional mongoose session.
  * @returns {Promise<number>} Promise object containing the amount of deleted States.
  */
-const deleteStates = async (filters: IStateFilters, session?: ClientSession): Promise<number> => {
+export const deleteStates = async (filters: IStateFilters, session?: ClientSession): Promise<number> => {
     const result = await StateModel.deleteMany(filters, { session }).exec();
     if (!result.acknowledged) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to delete states');
     return result.deletedCount;
-};
-
-export {
-    createState,
-    createStates,
-    getState,
-    getStates,
-    getStateFsObjectIds,
-    updateState,
-    updateStates,
-    deleteState,
-    deleteStates,
 };

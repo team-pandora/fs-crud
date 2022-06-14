@@ -20,7 +20,6 @@ const config = {
         maxFileSizeInBytes: env.get('FS_MAX_FILE_SIZE_IN_BYTES').default('107374182400').asInt(),
         minFileSizeInBytes: env.get('FS_MIN_FILE_SIZE_IN_BYTES').default('0').asInt(),
         nameRegex: env.get('FS_OBJECT_NAME_REGEX').default('^[a-zA-Z0-9s._-]{1,100}$').asRegExp(),
-        fileKeyRegex: env.get('FS_FILE_KEY_REGEX').default('^[a-zA-Z0-9s._-]{1,100}$').asRegExp(),
         fileBucketRegex: env.get('FS_FILE_BUCKET_REGEX').default('^[a-zA-Z0-9s._-]{1,100}$').asRegExp(),
     },
     user: {
@@ -28,7 +27,6 @@ const config = {
     },
     constants: {
         fsObjectTypes: ['file', 'folder', 'shortcut'] as const,
-        clients: ['dropbox', 'drive', 'falcon'] as const,
         permissions: ['read', 'write', 'owner'] as const,
         permissionPriority: {
             read: 0,

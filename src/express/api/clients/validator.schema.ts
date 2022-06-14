@@ -3,14 +3,12 @@ import config from '../../../config';
 import { JoiObjectId } from '../../../utils/joi';
 import * as apiValidator from '../validator.schema';
 
-const { nameRegex, fileKeyRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
-const { clients, permissions } = config.constants;
+const { nameRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
+const { permissions } = config.constants;
 const { idRegex } = config.user;
 
 const apiClientActionParamsRequestSchema = Joi.object({
-    clientId: Joi.string()
-        .valid(...clients)
-        .required(),
+    client: Joi.string().required(),
 });
 
 const apiClientFsActionParamsRequestSchema = apiClientActionParamsRequestSchema.keys({
@@ -22,7 +20,6 @@ export const createFileRequestSchema = Joi.object({
     params: apiClientActionParamsRequestSchema,
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        key: Joi.string().regex(fileKeyRegex).required(),
         bucket: Joi.string().regex(fileBucketRegex).required(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
 
@@ -31,6 +28,19 @@ export const createFileRequestSchema = Joi.object({
 });
 
 export const aggregateStatesFsObjectsRequestSchema = apiValidator.aggregateStatesFsObjectsRequestSchema.keys({
+    params: apiClientActionParamsRequestSchema,
+});
+
+export const getFilesRequestSchema = Joi.object({
+    query: Joi.object({
+        _id: JoiObjectId.optional(),
+        bucket: Joi.string().optional(),
+        client: Joi.string().optional(),
+        size: Joi.number().optional(),
+        public: Joi.boolean().optional(),
+        name: Joi.string().optional(),
+        parent: Joi.alternatives().try(JoiObjectId, Joi.string().valid('null').empty('null').default(null)).optional(),
+    }).min(1),
     params: apiClientActionParamsRequestSchema,
 });
 
@@ -65,7 +75,6 @@ export const updateFileRequestSchema = Joi.object({
     params: apiClientFsActionParamsRequestSchema,
     body: Joi.object({
         name: Joi.string().regex(nameRegex).optional(),
-        key: Joi.string().regex(fileKeyRegex).optional(),
         bucket: Joi.string().regex(fileBucketRegex).optional(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).optional(),
         public: Joi.boolean().optional(),

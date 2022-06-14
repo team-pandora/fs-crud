@@ -43,6 +43,15 @@ const getFile = async (filters: IFileFilters): Promise<IFile> => {
 };
 
 /**
+ * Get Files.
+ * @param filters - The File filters.
+ * @returns {Promise<IFile[]>} Promise object containing the Files.
+ */
+const getFiles = async (filters: IFileFilters): Promise<IFile[]> => {
+    return FileModel.find(filters).exec();
+};
+
+/**
  * Check if FsObject parent exists.
  * @param parent - The FsObject parent id.
  * @returns {Promise<void>} Empty Promise.
@@ -243,6 +252,7 @@ export {
     createShortcut,
     getFsObject,
     getFile,
+    getFiles,
     updateFileById,
     updateFolderById,
     updateShortcutById,
