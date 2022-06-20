@@ -27,6 +27,24 @@ export const createFileRequestSchema = Joi.object({
     },
 });
 
+export const moveFileToTrashRequestSchema = Joi.object({
+    query: {},
+    params: apiUserFsActionParamsRequestSchema,
+    body: {},
+});
+
+export const moveFolderToTrashRequestSchema = Joi.object({
+    query: {},
+    params: apiUserFsActionParamsRequestSchema,
+    body: {},
+});
+
+export const moveShortcutToTrashRequestSchema = Joi.object({
+    query: {},
+    params: apiUserFsActionParamsRequestSchema,
+    body: {},
+});
+
 export const createFolderRequestSchema = Joi.object({
     query: {},
     params: apiUserActionParamsRequestSchema,
@@ -166,19 +184,25 @@ export const unshareFsObjectRequestSchema = Joi.object({
     },
 });
 
-export const deleteFileRequestSchema = Joi.object({
+export const unfavoriteFsObjectRequestSchema = Joi.object({
     query: {},
     params: apiUserFsActionParamsRequestSchema,
     body: {},
 });
 
-export const deleteFolderRequestSchema = Joi.object({
+export const deleteFileFromTrashRequestSchema = Joi.object({
     query: {},
     params: apiUserFsActionParamsRequestSchema,
     body: {},
 });
 
-export const deleteShortcutRequestSchema = Joi.object({
+export const deleteFolderFromTrashRequestSchema = Joi.object({
+    query: {},
+    params: apiUserFsActionParamsRequestSchema,
+    body: {},
+});
+
+export const deleteShortcutFromTrashRequestSchema = Joi.object({
     query: {},
     params: apiUserFsActionParamsRequestSchema,
     body: {},

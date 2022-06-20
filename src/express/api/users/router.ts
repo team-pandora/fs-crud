@@ -25,6 +25,24 @@ usersRouter.post(
 );
 
 usersRouter.post(
+    '/:userId/fs/file/:fsObjectId/trash',
+    ValidateRequest(usersValidator.moveFileToTrashRequestSchema),
+    wrapMiddleware(usersController.moveFileToTrash),
+);
+
+usersRouter.post(
+    '/:userId/fs/folder/:fsObjectId/trash',
+    ValidateRequest(usersValidator.moveFolderToTrashRequestSchema),
+    wrapMiddleware(usersController.moveFolderToTrash),
+);
+
+usersRouter.post(
+    '/:userId/fs/shortcut/:fsObjectId/trash',
+    ValidateRequest(usersValidator.moveShortcutToTrashRequestSchema),
+    wrapMiddleware(usersController.moveShortcutToTrash),
+);
+
+usersRouter.post(
     '/:userId/fs/file/:fsObjectId/restore',
     ValidateRequest(usersValidator.restoreFileFromTrashRequestSchema),
     wrapMiddleware(usersController.restoreFileFromTrash),
@@ -122,26 +140,26 @@ usersRouter.delete(
 
 usersRouter.delete(
     '/:userId/fs/:fsObjectId/favorite',
-    ValidateRequest(usersValidator.deleteFileRequestSchema),
+    ValidateRequest(usersValidator.unfavoriteFsObjectRequestSchema),
     wrapMiddleware(usersController.unfavoriteFsObject),
 );
 
 usersRouter.delete(
     '/:userId/fs/file/:fsObjectId',
-    ValidateRequest(usersValidator.deleteFileRequestSchema),
-    wrapMiddleware(usersController.deleteFile),
+    ValidateRequest(usersValidator.deleteFileFromTrashRequestSchema),
+    wrapMiddleware(usersController.deleteFileFromTrash),
 );
 
 usersRouter.delete(
     '/:userId/fs/folder/:fsObjectId',
-    ValidateRequest(usersValidator.deleteFolderRequestSchema),
-    wrapMiddleware(usersController.deleteFolder),
+    ValidateRequest(usersValidator.deleteFolderFromTrashRequestSchema),
+    wrapMiddleware(usersController.deleteFolderFromTrash),
 );
 
 usersRouter.delete(
     '/:userId/fs/shortcut/:fsObjectId',
-    ValidateRequest(usersValidator.deleteShortcutRequestSchema),
-    wrapMiddleware(usersController.deleteShortcut),
+    ValidateRequest(usersValidator.deleteShortcutFromTrashRequestSchema),
+    wrapMiddleware(usersController.deleteShortcutFromTrash),
 );
 
 export default usersRouter;
