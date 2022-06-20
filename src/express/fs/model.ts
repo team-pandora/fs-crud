@@ -25,10 +25,6 @@ const FsObjectSchema = new mongoose.Schema<IFsObject & mongoose.Document>(
 
 const FileSchema = new mongoose.Schema<IFile & mongoose.Document>(
     {
-        key: {
-            type: String,
-            required: true,
-        },
         bucket: {
             type: String,
             required: true,
@@ -72,12 +68,10 @@ setErrorHandler(FileSchema);
 setErrorHandler(FolderSchema);
 setErrorHandler(ShortcutSchema);
 
-const FsObjectModel = mongoose.model<IFsObject & mongoose.Document>(
+export const FsObjectModel = mongoose.model<IFsObject & mongoose.Document>(
     config.mongo.fsObjectsCollectionName,
     FsObjectSchema,
 );
-const FileModel = FsObjectModel.discriminator<IFile & mongoose.Document>('file', FileSchema);
-const FolderModel = FsObjectModel.discriminator<IFolder & mongoose.Document>('folder', FolderSchema);
-const ShortcutModel = FsObjectModel.discriminator<IShortcut & mongoose.Document>('shortcut', ShortcutSchema);
-
-export { FsObjectModel, FileModel, FolderModel, ShortcutModel };
+export const FileModel = FsObjectModel.discriminator<IFile & mongoose.Document>('file', FileSchema);
+export const FolderModel = FsObjectModel.discriminator<IFolder & mongoose.Document>('folder', FolderSchema);
+export const ShortcutModel = FsObjectModel.discriminator<IShortcut & mongoose.Document>('shortcut', ShortcutSchema);

@@ -46,7 +46,6 @@ export const aggregateStatesFsObjects = async (
         {
             $match: removeUndefinedFields({
                 'fsObject.parent': query.parent,
-                'fsObject.key': query.key,
                 'fsObject.bucket': query.bucket,
                 'fsObject.client': query.client,
                 'fsObject.size': query.size,
@@ -72,7 +71,6 @@ export const aggregateStatesFsObjects = async (
                 permission: 1,
                 stateCreatedAt: '$createdAt',
                 stateUpdatedAt: '$updatedAt',
-                key: '$fsObject.key',
                 bucket: '$fsObject.bucket',
                 client: '$fsObject.client',
                 size: '$fsObject.size',
@@ -125,7 +123,6 @@ export const aggregateFsObjectsStates = async (
             $match: removeUndefinedFields({
                 _id: query.fsObjectId,
                 parent: query.parent,
-                key: query.key,
                 bucket: query.bucket,
                 client: query.client,
                 size: query.size,
@@ -170,7 +167,6 @@ export const aggregateFsObjectsStates = async (
                 permission: '$state.permission',
                 stateCreatedAt: '$state.createdAt',
                 stateUpdatedAt: '$state.updatedAt',
-                key: '$key',
                 bucket: '$bucket',
                 client: '$client',
                 size: '$size',
@@ -249,7 +245,6 @@ export const searchFsObjectsStates = async (userId: string, query: string): Prom
                 permission: '$state.permission',
                 stateCreatedAt: '$state.createdAt',
                 stateUpdatedAt: '$state.updatedAt',
-                key: '$key',
                 bucket: '$bucket',
                 client: '$client',
                 size: '$size',
@@ -416,7 +411,6 @@ export const getAllUsersFsObjectsUnderFolder = async (
                 createdAt: 1,
                 updatedAt: 1,
                 type: 1,
-                key: 1,
                 bucket: 1,
                 size: 1,
                 public: 1,

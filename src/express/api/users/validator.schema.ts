@@ -3,8 +3,7 @@ import config from '../../../config';
 import { JoiObjectId } from '../../../utils/joi';
 import * as apiValidator from '../validator.schema';
 
-const { clients } = config.constants;
-const { nameRegex, fileKeyRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
+const { nameRegex, fileBucketRegex, minFileSizeInBytes, maxFileSizeInBytes } = config.fs;
 
 const apiUserActionParamsRequestSchema = Joi.object({
     userId: Joi.string().regex(config.user.idRegex).required(),
@@ -20,12 +19,9 @@ export const createFileRequestSchema = Joi.object({
     body: {
         name: Joi.string().regex(nameRegex).required(),
         parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
-        key: Joi.string().regex(fileKeyRegex).required(),
         bucket: Joi.string().regex(fileBucketRegex).required(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
-        client: Joi.string()
-            .valid(...clients)
-            .required(),
+        client: Joi.string().required(),
 
         public: Joi.boolean().optional(),
     },
@@ -126,7 +122,6 @@ export const updateFileRequestSchema = Joi.object({
     body: Joi.object({
         name: Joi.string().regex(nameRegex).optional(),
         parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).optional(),
-        key: Joi.string().regex(fileKeyRegex).optional(),
         bucket: Joi.string().regex(fileBucketRegex).optional(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).optional(),
         public: Joi.boolean().optional(),

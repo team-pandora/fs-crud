@@ -1,8 +1,7 @@
-import { client } from '../../fs/interface';
 import { IFsActionParams } from '../interface';
 
 export interface IClientActionParams {
-    clientId: client;
+    client: string;
 }
 
 export type IClientFsActionParams = IClientActionParams & IFsActionParams;

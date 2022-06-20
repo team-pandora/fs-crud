@@ -1,6 +1,6 @@
 import config from '../../config';
 import { ObjectId } from '../../utils/mongoose';
-import { client, fsObjectType, IFile, IFolder, IShortcut } from '../fs/interface';
+import { fsObjectType, IFile, IFolder, IShortcut } from '../fs/interface';
 import { IState, permission } from '../states/interface';
 
 export type AggregateStatesAndFsObjectsSortField =
@@ -25,7 +25,6 @@ export interface IAggregateStatesAndFsObjectsQuery {
     permission?: permission | { $in: Array<permission> } | { $nin: Array<permission> };
 
     // FsObject filters
-    key?: string;
     bucket?: string;
     client?: string;
     size?: number | { $gt: number };
@@ -65,11 +64,9 @@ export class FsObjectAndState {
 
     public stateUpdatedAt: Date;
 
-    public key?: string;
-
     public bucket?: string;
 
-    public client?: client;
+    public client?: string;
 
     public size?: number;
 
@@ -107,7 +104,6 @@ export class FsObjectAndState {
 
         if (fsObject.type === 'file') {
             const file = fsObject as IFile;
-            this.key = file.key;
             this.bucket = file.bucket;
             this.size = file.size;
             this.public = file.public;

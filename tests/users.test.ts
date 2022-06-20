@@ -40,7 +40,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 123,
                     parent: 'abc',
-                    key: 123,
                     bucket: 123,
                     size: 107374182401,
                     public: null,
@@ -54,7 +53,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file1',
                     parent: null,
-                    key: '123',
                     bucket: '123',
                     size: 20000,
                     public: false,
@@ -67,7 +65,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file2',
                     parent: null,
-                    key: '123',
                     bucket: '123',
                     size: 10737418240,
                     public: false,
@@ -82,7 +79,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file1',
                     parent: '62655a5dd681ae7e5f9eafe0',
-                    key: '123',
                     bucket: '123',
                     size: 500,
                     public: false,
@@ -109,7 +105,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file1',
                     parent: createdFolder.fsObjectId,
-                    key: '123',
                     bucket: '123',
                     size: 500,
                     public: false,
@@ -140,7 +135,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file1',
                     parent: createdFolder.fsObjectId,
-                    key: '123',
                     bucket: '123',
                     size: 500,
                     public: false,
@@ -154,7 +148,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -171,7 +164,6 @@ describe('Users tests:', () => {
                         .send({
                             name: `file-test-${i}`,
                             parent: null,
-                            key: 'string',
                             bucket: 'string',
                             size: 50,
                             public: false,
@@ -238,7 +230,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -269,7 +260,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -410,7 +400,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -450,7 +439,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -497,7 +485,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: folder.fsObjectId,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -528,7 +515,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -555,7 +541,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -578,7 +563,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -606,7 +590,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -660,7 +643,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: folderTwo.fsObjectId,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -683,7 +665,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -697,7 +678,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -727,7 +707,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -826,7 +805,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -870,7 +848,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -892,7 +869,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -937,7 +913,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: createdFolder.fsObjectId,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -1011,7 +986,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -1030,7 +1004,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -1099,7 +1072,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: createdFolder.fsObjectId,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -1146,7 +1118,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -1174,7 +1145,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -1222,7 +1192,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -1282,7 +1251,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -1352,7 +1320,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: createdFolder.fsObjectId,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -1395,7 +1362,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: createdFolder.fsObjectId,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -1454,7 +1420,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,
@@ -1557,7 +1522,6 @@ describe('Users tests:', () => {
                 .send({
                     name: 'file-test',
                     parent: null,
-                    key: 'string',
                     bucket: 'string',
                     size: 50,
                     public: false,

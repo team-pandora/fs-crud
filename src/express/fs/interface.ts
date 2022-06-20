@@ -3,8 +3,6 @@ import { ObjectId } from '../../utils/mongoose';
 
 export type fsObjectType = typeof config.constants.fsObjectTypes[number];
 
-export type client = typeof config.constants.clients[number];
-
 export interface IFsObject {
     _id: ObjectId;
     name: string;
@@ -15,11 +13,10 @@ export interface IFsObject {
 }
 
 export interface IFile extends IFsObject {
-    key: string;
     bucket: string;
     size: number;
     public: boolean;
-    client: client;
+    client: string;
 }
 
 export interface IFolder extends IFsObject {}
@@ -35,11 +32,10 @@ export interface IFsObjectFilters {
 }
 
 export interface IFileFilters extends IFsObjectFilters {
-    key?: string;
     bucket?: string;
     size?: number;
     public?: boolean;
-    client?: client;
+    client?: string;
 }
 
 export interface IFolderFilters extends IFsObjectFilters {}
@@ -51,10 +47,9 @@ export interface IShortcutFilters extends IFsObjectFilters {
 export interface INewFile {
     name: string;
     parent: ObjectId | null;
-    key: string;
     bucket: string;
     size: number;
-    client: client;
+    client: string;
 
     public?: boolean;
 }
@@ -73,7 +68,6 @@ export interface INewShortcut {
 export interface IUpdateFile {
     name?: string;
     parent?: ObjectId | null;
-    key?: string;
     bucket?: string;
     size?: number;
     public?: boolean;
