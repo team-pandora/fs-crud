@@ -207,3 +207,21 @@ export const deleteShortcutFromTrashRequestSchema = Joi.object({
     params: apiUserFsActionParamsRequestSchema,
     body: {},
 });
+
+export const deleteFileRequestSchema = Joi.object({
+    query: {},
+    params: apiUserFsActionParamsRequestSchema,
+    body: {},
+});
+
+export const deleteFolderRequestSchema = Joi.object({
+    query: {},
+    params: apiUserFsActionParamsRequestSchema,
+    body: {},
+});
+
+export const deleteShortcutRequestSchema = Joi.object({
+    query: {},
+    params: apiUserFsActionParamsRequestSchema,
+    body: {},
+});

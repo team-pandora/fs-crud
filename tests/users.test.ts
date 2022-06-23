@@ -1340,11 +1340,11 @@ describe('Users tests:', () => {
                 .expect(200);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}/trash`)
                 .expect(404);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder2.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder2.fsObjectId}/trash`)
                 .expect(404);
         });
 
@@ -1382,7 +1382,7 @@ describe('Users tests:', () => {
                 .expect(200);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/folder/${createdFolder.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/folder/${createdFolder.fsObjectId}/trash`)
                 .expect(200);
 
             await request(app)
@@ -1401,7 +1401,7 @@ describe('Users tests:', () => {
             expect(result[1].trashRoot).toBe(false);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}/trash`)
                 .expect(200);
 
             const { body: result2 } = await request(app)
@@ -1458,7 +1458,7 @@ describe('Users tests:', () => {
             expect(result[0].trash).toBe(true);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/file/${sharedFile.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe1/fs/file/${sharedFile.fsObjectId}/trash`)
                 .expect(200);
 
             const { body: result2 } = await request(app)
@@ -1475,7 +1475,7 @@ describe('Users tests:', () => {
                 .expect(200);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/file/${createdFile.fsObjectId}/trash`)
                 .expect(200);
         });
 
@@ -1503,7 +1503,7 @@ describe('Users tests:', () => {
             expect(result[0].trash).toBe(true);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/folder/${createdFolder.fsObjectId}/trash`)
                 .expect(200);
 
             const { body: result2 } = await request(app)
@@ -1554,7 +1554,7 @@ describe('Users tests:', () => {
             expect(result[0].trash).toBe(true);
 
             await request(app)
-                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/${createdShortcut.fsObjectId}`)
+                .delete(`/api/users/62655a5dd681ae7e5f9eafe0/fs/shortcut/${createdShortcut.fsObjectId}/trash`)
                 .expect(200);
 
             const { body: result2 } = await request(app)

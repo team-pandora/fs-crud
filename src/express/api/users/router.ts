@@ -145,21 +145,38 @@ usersRouter.delete(
 );
 
 usersRouter.delete(
-    '/:userId/fs/file/:fsObjectId',
+    '/:userId/fs/file/:fsObjectId/trash',
     ValidateRequest(usersValidator.deleteFileFromTrashRequestSchema),
     wrapMiddleware(usersController.deleteFileFromTrash),
 );
 
 usersRouter.delete(
-    '/:userId/fs/folder/:fsObjectId',
+    '/:userId/fs/folder/:fsObjectId/trash',
     ValidateRequest(usersValidator.deleteFolderFromTrashRequestSchema),
     wrapMiddleware(usersController.deleteFolderFromTrash),
 );
 
 usersRouter.delete(
-    '/:userId/fs/shortcut/:fsObjectId',
+    '/:userId/fs/shortcut/:fsObjectId/trash',
     ValidateRequest(usersValidator.deleteShortcutFromTrashRequestSchema),
     wrapMiddleware(usersController.deleteShortcutFromTrash),
 );
 
+usersRouter.delete(
+    '/:userId/fs/file/:fsObjectId',
+    ValidateRequest(usersValidator.deleteFileRequestSchema),
+    wrapMiddleware(usersController.deleteFile),
+);
+
+usersRouter.delete(
+    '/:userId/fs/folder/:fsObjectId',
+    ValidateRequest(usersValidator.deleteFolderRequestSchema),
+    wrapMiddleware(usersController.deleteFolder),
+);
+
+usersRouter.delete(
+    '/:userId/fs/shortcut/:fsObjectId',
+    ValidateRequest(usersValidator.deleteShortcutRequestSchema),
+    wrapMiddleware(usersController.deleteShortcut),
+);
 export default usersRouter;

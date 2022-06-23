@@ -629,8 +629,8 @@ export const moveFileToTrash = async (userId: string, fsObjectId: ObjectId): Pro
 
 /**
  * Delete File from trash.
- * 1) If user is owner of File, delete all users' States on File, delete fsObject, and lower quota.
- * 2) Delete user's State on File.
+ *  1) If user is owner of File, delete all users' States on File, delete fsObject, and lower quota.
+ *  2) Delete user's State on File.
  * @param userId - The user id.
  * @param fsObjectId - The File id.
  * @returns {Promise<IState>} Promise object containing deleted State.
@@ -690,10 +690,47 @@ export const restoreFileFromTrash = async (userId: string, fsObjectId: ObjectId)
 };
 
 /**
+ * Delete File.
+ *  1) If user is owner of File, delete all users' States on File, delete fsObject, and lower quota.
+ *  2) Delete user's State on File.
+ *  3) Delete FsObjects and States of user's Shortcuts pointing to the File. If user is owner of File, delete all States and FsObjects of all Shortcuts pointing to the File.
+ * @param userId - The user id.
+ * @param fsObjectId - The File id.
+ * @returns {Promise<IState>} Promise object containing deleted State.
+ * @throws {ServerError} If object is not found for user.
+ */
+export const deleteFile = async (userId: string, fsObjectId: ObjectId): Promise<IState> => {
+    const [fileAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'file' });
+    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
+
+    let fileShortcutIds = await apiRepository.getFsObjectShortcutIds(fsObjectId);
+
+    return makeTransaction(async (session) => {
+        if (fileAndState.permission === 'owner') {
+            await statesRepository.deleteStates({ userId: { $nin: [userId] }, fsObjectId }, session);
+            await fsRepository.deleteFileById(fsObjectId, session);
+            if (fileAndState.size) {
+                await quotasRepository.changeQuotaUsed(userId, -fileAndState.size, session);
+            }
+        } else {
+            fileShortcutIds = await statesRepository.getStateFsObjectIds({
+                userId,
+                fsObjectId: { $in: fileShortcutIds },
+            });
+        }
+
+        await statesRepository.deleteStates({ fsObjectId: { $in: fileShortcutIds } }, session);
+        await fsRepository.deleteFsObjects({ _id: { $in: fileShortcutIds } }, session);
+
+        return statesRepository.deleteState({ userId, fsObjectId }, session);
+    });
+};
+
+/**
  * Move Folder to trash.
  *  1) Update user's State on all Folder's children to trash. If user is owner of Folder, update all users' States on Folder and its children to trash.
- *  1) Update user's State on Folder to trash and trash root.
- *  2) Delete FsObjects and States of user's Shortcuts pointing to the Folder. If user is owner of Folder, delete all States and FsObjects of all Shortcuts pointing to the Folder.
+ *  2) Update user's State on Folder to trash and trash root.
+ *  3) Delete FsObjects and States of user's Shortcuts pointing to the Folder. If user is owner of Folder, delete all States and FsObjects of all Shortcuts pointing to the Folder.
  * @param userId - The user id.
  * @param fsObjectId - The Folder id.
  * @returns {Promise<IState>} Promise object containing updated State.
@@ -741,8 +778,8 @@ export const moveFolderToTrash = async (userId: string, fsObjectId: ObjectId): P
 
 /**
  * Delete Folder from trash.
- * 1) If user is owner of Folder, delete all users' States on Folder and its children, delete FsObjects, and lower quotas.
- * 2) Delete user's State on Folder.
+ *  1) If user is owner of Folder, delete all users' States on Folder and its children, delete FsObjects, and lower quotas.
+ *  2) Delete user's State on Folder.
  * @param userId - The user id.
  * @param fsObjectId - The Folder id.
  * @returns {Promise<IState>} Promise object containing deleted State.
@@ -814,6 +851,54 @@ export const restoreFolderFromTrash = async (userId: string, fsObjectId: ObjectI
 };
 
 /**
+ * Delete Folder.
+ *  1) If user is owner of Folder, delete all users' States on Folder and its children, delete FsObjects, and lower quotas.
+ *  2) Delete user's State on Folder.
+ *  3) Delete FsObjects and States of user's Shortcuts pointing to the Folder. If user is owner of Folder, delete all States and FsObjects of all Shortcuts pointing to the Folder.
+ * @param userId - The user id.
+ * @param fsObjectId - The Folder id.
+ * @returns {Promise<IState>} Promise object containing deleted State.
+ * @throws {ServerError} If Folder is not found for user or Folder is not in trash.
+ */
+export const deleteFolder = async (userId: string, fsObjectId: ObjectId): Promise<IState> => {
+    const [folderAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'folder' });
+    if (!folderAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
+
+    const fsObjectIdsUnderFolder = await apiRepository.getAllFsObjectIdsUnderFolder(fsObjectId);
+    const fsObjectIds = [fsObjectId, ...fsObjectIdsUnderFolder];
+    let shortcutIds = await apiRepository.getFsObjectsShortcutIds(fsObjectIds);
+
+    return makeTransaction(async (session) => {
+        if (folderAndState.permission === 'owner') {
+            const ownerFilesAndStates = await apiRepository.aggregateStatesFsObjects({
+                fsObjectId: { $in: fsObjectIdsUnderFolder },
+                permission: 'owner',
+                type: 'file',
+                size: { $gt: 0 },
+            });
+
+            await statesRepository.deleteStates({ fsObjectId: { $in: fsObjectIdsUnderFolder } }, session);
+            await fsRepository.deleteFsObjects({ _id: { $in: [fsObjectId, ...fsObjectIdsUnderFolder] } }, session);
+            await Promise.all(
+                ownerFilesAndStates.map((fileAndState) =>
+                    quotasRepository.changeQuotaUsed(fileAndState.userId, -fileAndState.size!, session),
+                ),
+            );
+        } else {
+            shortcutIds = await statesRepository.getStateFsObjectIds({
+                fsObjectId: { $in: shortcutIds },
+                userId,
+            });
+        }
+
+        await statesRepository.deleteStates({ fsObjectId: { $in: shortcutIds } }, session);
+        await fsRepository.deleteFsObjects({ _id: { $in: shortcutIds } }, session);
+
+        return statesRepository.deleteState({ userId, fsObjectId }, session);
+    });
+};
+
+/**
  * Move Shortcut to trash.
  * @param userId - The user id.
  * @param fsObjectId - The Shortcut id.
@@ -873,4 +958,21 @@ export const restoreShortcutFromTrash = async (userId: string, fsObjectId: Objec
     if (!shortcutAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found in trash');
 
     return statesRepository.updateState({ userId, fsObjectId }, { trash: false, trashRoot: false });
+};
+
+/**
+ * Delete Shortcut.
+ * @param userId - The user id.
+ * @param fsObjectId - The Shortcut id.
+ * @returns {Promise<IState>} Promise object containing deleted State.
+ * @throws {ServerError} If object is not found for user or object is not in trash.
+ */
+export const deleteShortcut = async (userId: string, fsObjectId: ObjectId): Promise<IState> => {
+    const [shortcutAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'shortcut' });
+    if (!shortcutAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Shortcut not found');
+
+    return makeTransaction(async (session) => {
+        await fsRepository.deleteShortcutById(fsObjectId, session);
+        return statesRepository.deleteState({ userId, fsObjectId }, session);
+    });
 };

@@ -126,3 +126,18 @@ export const deleteShortcutFromTrash = async (req: Request<IUserFsActionParams>,
     const { userId, fsObjectId } = req.params;
     res.json(await usersManager.deleteShortcutFromTrash(userId, fsObjectId));
 };
+
+export const deleteFile = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.deleteFile(userId, fsObjectId));
+};
+
+export const deleteFolder = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.deleteFolder(userId, fsObjectId));
+};
+
+export const deleteShortcut = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.deleteShortcut(userId, fsObjectId));
+};
