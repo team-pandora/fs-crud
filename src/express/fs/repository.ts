@@ -83,7 +83,7 @@ const createFile = async (file: INewFile, session?: ClientSession): Promise<IFil
     await fsObjectParentCheck(file.parent);
     await fsObjectNameCheck(file.parent, file.name);
 
-    return (await FileModel.create([{ ...defaultNewFile, ...file }], { session }))[0];
+    return (await FileModel.create([{ ...defaultNewFile, ...file }], { session }))[0] as IFile;
 };
 
 /**

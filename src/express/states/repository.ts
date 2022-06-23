@@ -13,7 +13,7 @@ import StateModel from './model';
  * @returns {Promise<IState>} Promise object containing the created State.
  */
 export const createState = async (state: INewState, session?: ClientSession): Promise<IState> => {
-    return (await StateModel.create([{ ...defaultNewState, ...state }], { session }))[0];
+    return (await StateModel.create([{ ...defaultNewState, ...state }], { session }))[0] as IState;
 };
 
 /**
@@ -24,7 +24,7 @@ export const createState = async (state: INewState, session?: ClientSession): Pr
  */
 export const createStates = async (states: INewState[], session?: ClientSession): Promise<IState[]> => {
     const formattedStates = states.map((state) => ({ ...defaultNewState, ...state }));
-    return StateModel.create(formattedStates, { session });
+    return StateModel.create(formattedStates, { session }) as Promise<IState[]>;
 };
 
 /**
