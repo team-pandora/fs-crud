@@ -179,4 +179,5 @@ usersRouter.delete(
     ValidateRequest(usersValidator.deleteShortcutRequestSchema),
     wrapMiddleware(usersController.deleteShortcut),
 );
+
 export default usersRouter;
