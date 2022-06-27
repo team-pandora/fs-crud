@@ -15,8 +15,8 @@ export const subtractObjectFields = (obj1: object, obj2: object): object => {
  * @param {Object} obj - The object.
  * @returns {Object} The object without undefined fields.
  */
-export const removeUndefinedFields = (obj: object): object => {
-    const newObject = {};
+export const removeUndefinedFields = <Type>(obj: Type): Partial<Type> => {
+    const newObject: Partial<Type> = {};
     const objectEntries = Object.entries(obj);
     for (let index = 0; index < objectEntries.length; index += 1) {
         const [key, value] = objectEntries[index];

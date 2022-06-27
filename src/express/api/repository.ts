@@ -33,7 +33,7 @@ export const aggregateStatesFsObjects = async (
                 trashRoot: query.trashRoot,
                 root: query.root,
                 permission: query.permission,
-            }),
+            }) as any,
         },
         {
             $lookup: {
@@ -53,7 +53,7 @@ export const aggregateStatesFsObjects = async (
                 'fsObject.name': query.name,
                 'fsObject.type': query.type,
                 'fsObject.ref': query.ref,
-            }),
+            }) as any,
         },
         {
             $unwind: '$fsObject',
@@ -130,7 +130,7 @@ export const aggregateFsObjectsStates = async (
                 name: query.name,
                 type: query.type,
                 ref: query.ref,
-            }),
+            }) as any,
         },
         {
             $lookup: {
@@ -152,7 +152,7 @@ export const aggregateFsObjectsStates = async (
                 'state.trashRoot': query.trashRoot,
                 'state.root': query.root,
                 'state.permission': query.permission && { $in: query.permission },
-            }),
+            }) as any,
         },
         {
             $project: {
@@ -216,7 +216,7 @@ export const searchFsObjectsStates = async (userId: string, query: string): Prom
         {
             $match: {
                 $or: [{ $text: { $search: query } }, { name: { $regex: query, $options: 'i' } }],
-            },
+            } as any,
         },
         {
             $lookup: {
@@ -278,7 +278,7 @@ export const getAllFsObjectsUnderFolder = async (
         {
             $match: {
                 _id: folderId,
-            },
+            } as any,
         },
         {
             $graphLookup: {
@@ -315,7 +315,7 @@ export const getAllFsObjectIdsUnderFolder = async (
         {
             $match: {
                 _id: folderId,
-            },
+            } as any,
         },
         {
             $graphLookup: {
@@ -365,7 +365,7 @@ export const getAllUsersFsObjectsUnderFolder = async (
         {
             $match: {
                 _id: folderId,
-            },
+            } as any,
         },
         {
             $graphLookup: {
@@ -434,7 +434,7 @@ export const getFsObjectHierarchy = async (fsObjectId: ObjectId): Promise<IFolde
         {
             $match: {
                 _id: fsObjectId,
-            },
+            } as any,
         },
         {
             $graphLookup: {
@@ -480,7 +480,7 @@ export const getUsersFsObjectHierarchy = async (
         {
             $match: {
                 _id: fsObjectId,
-            },
+            } as any,
         },
         {
             $graphLookup: {
@@ -605,7 +605,7 @@ export const getFsObjectShortcutIds = async (fsObjectId: ObjectId): Promise<Obje
         {
             $match: {
                 _id: fsObjectId,
-            },
+            } as any,
         },
         {
             $lookup: {

@@ -14,6 +14,21 @@ export const createShortcut = async (req: Request<IUserActionParams>, res: Respo
     res.json(await usersManager.createShortcut(req.params.userId, req.body));
 };
 
+export const moveFileToTrash = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.moveFileToTrash(userId, fsObjectId));
+};
+
+export const moveFolderToTrash = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.moveFolderToTrash(userId, fsObjectId));
+};
+
+export const moveShortcutToTrash = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.moveShortcutToTrash(userId, fsObjectId));
+};
+
 export const restoreFileFromTrash = async (req: Request<IUserFsActionParams>, res: Response) => {
     const { userId, fsObjectId } = req.params;
     res.json(await usersManager.restoreFileFromTrash(userId, fsObjectId));
@@ -95,6 +110,21 @@ export const unshareFsObject = async (req: Request<IUserFsActionParams>, res: Re
 export const unfavoriteFsObject = async (req: Request<IUserFsActionParams>, res: Response) => {
     const { userId, fsObjectId } = req.params;
     res.json(await usersManager.unfavoriteFsObject(userId, fsObjectId));
+};
+
+export const deleteFileFromTrash = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.deleteFileFromTrash(userId, fsObjectId));
+};
+
+export const deleteFolderFromTrash = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.deleteFolderFromTrash(userId, fsObjectId));
+};
+
+export const deleteShortcutFromTrash = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.deleteShortcutFromTrash(userId, fsObjectId));
 };
 
 export const deleteFile = async (req: Request<IUserFsActionParams>, res: Response) => {
