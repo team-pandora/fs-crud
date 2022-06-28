@@ -400,8 +400,8 @@ export const getFsObjectHierarchy = async (userId: string, fsObjectId: ObjectId)
  * @throws {ServerError} If object is not found for user.
  */
 export const getFolderChildren = async (userId: string, fsObjectId: ObjectId): Promise<(IFolder | IFile)[]> => {
-    const [fileAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
-    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
+    const [folderAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'folder' });
+    if (!folderAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
 
     const userFsObjectsUnderFolder = await apiRepository.getAllUsersFsObjectsUnderFolder(userId, fsObjectId, {
         type: { $nin: ['shortcut'] },
