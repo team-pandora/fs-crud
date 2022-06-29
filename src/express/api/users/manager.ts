@@ -400,8 +400,8 @@ export const getFsObjectHierarchy = async (userId: string, fsObjectId: ObjectId)
  * @throws {ServerError} If object is not found for user.
  */
 export const getFolderChildren = async (userId: string, fsObjectId: ObjectId): Promise<(IFolder | IFile)[]> => {
-    const [fileAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
-    if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
+    const [folderAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'folder' });
+    if (!folderAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
 
     const userFsObjectsUnderFolder = await apiRepository.getAllUsersFsObjectsUnderFolder(userId, fsObjectId, {
         type: { $nin: ['shortcut'] },
@@ -786,7 +786,10 @@ export const moveFolderToTrash = async (userId: string, fsObjectId: ObjectId): P
  * @returns {Promise<IState>} Promise object containing deleted State.
  * @throws {ServerError} If Folder is not found for user or Folder is not in trash.
  */
-export const deleteFolderFromTrash = async (userId: string, fsObjectId: ObjectId): Promise<IState> => {
+export const deleteFolderFromTrash = async (
+    userId: string,
+    fsObjectId: ObjectId,
+): Promise<{ deletedFolder: IState; deletedFiles: IFile[] }> => {
     const [folderAndState] = await apiRepository.aggregateStatesFsObjects({
         userId,
         fsObjectId,
@@ -800,9 +803,12 @@ export const deleteFolderFromTrash = async (userId: string, fsObjectId: ObjectId
     const fsObjectIds = [fsObjectId, ...fsObjectIdsUnderFolder];
 
     return makeTransaction(async (session) => {
-        const result = await statesRepository.deleteState({ userId, fsObjectId }, session);
+        const deletedFolder = await statesRepository.deleteState({ userId, fsObjectId }, session);
+        const deletedFiles: IFile[] = [];
 
         if (folderAndState.permission === 'owner') {
+            deletedFiles.push(...(await fsRepository.getFiles({ _id: { $in: fsObjectIdsUnderFolder } })));
+
             const ownerFilesAndStates = await apiRepository.aggregateStatesFsObjects({
                 fsObjectId: { $in: fsObjectIdsUnderFolder },
                 permission: 'owner',
@@ -824,7 +830,7 @@ export const deleteFolderFromTrash = async (userId: string, fsObjectId: ObjectId
             );
         }
 
-        return result;
+        return { deletedFolder, deletedFiles };
     });
 };
 
@@ -871,7 +877,10 @@ export const restoreFolderFromTrash = async (userId: string, fsObjectId: ObjectI
  * @returns {Promise<IState>} Promise object containing deleted State.
  * @throws {ServerError} If Folder is not found for user or Folder is not in trash.
  */
-export const deleteFolder = async (userId: string, fsObjectId: ObjectId): Promise<IState> => {
+export const deleteFolder = async (
+    userId: string,
+    fsObjectId: ObjectId,
+): Promise<{ deletedFolder: IState; deletedFiles: IFile[] }> => {
     const [folderAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'folder' });
     if (!folderAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Folder not found');
 
@@ -880,9 +889,12 @@ export const deleteFolder = async (userId: string, fsObjectId: ObjectId): Promis
     let shortcutIds = await apiRepository.getFsObjectsShortcutIds(fsObjectIds);
 
     return makeTransaction(async (session) => {
-        const result = await statesRepository.deleteState({ userId, fsObjectId }, session);
+        const deletedFolder = await statesRepository.deleteState({ userId, fsObjectId }, session);
+        const deletedFiles: IFile[] = [];
 
         if (folderAndState.permission === 'owner') {
+            deletedFiles.push(...(await fsRepository.getFiles({ _id: { $in: fsObjectIdsUnderFolder } })));
+
             const ownerFilesAndStates = await apiRepository.aggregateStatesFsObjects({
                 fsObjectId: { $in: fsObjectIdsUnderFolder },
                 permission: 'owner',
@@ -912,7 +924,7 @@ export const deleteFolder = async (userId: string, fsObjectId: ObjectId): Promis
         await statesRepository.deleteStates({ fsObjectId: { $in: shortcutIds } }, session);
         await fsRepository.deleteFsObjects({ _id: { $in: shortcutIds } }, session);
 
-        return result;
+        return { deletedFolder, deletedFiles };
     });
 };
 
