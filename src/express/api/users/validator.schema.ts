@@ -18,11 +18,10 @@ export const createFileRequestSchema = Joi.object({
     params: apiUserActionParamsRequestSchema,
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
+        parent: JoiObjectId.allow(null).required(),
         bucket: Joi.string().regex(fileBucketRegex).required(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).required(),
         client: Joi.string().required(),
-
         public: Joi.boolean().optional(),
     },
 });
@@ -50,7 +49,7 @@ export const createFolderRequestSchema = Joi.object({
     params: apiUserActionParamsRequestSchema,
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
+        parent: JoiObjectId.allow(null).required(),
     },
 });
 
@@ -59,7 +58,7 @@ export const createShortcutRequestSchema = Joi.object({
     params: apiUserActionParamsRequestSchema,
     body: {
         name: Joi.string().regex(nameRegex).required(),
-        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).required(),
+        parent: JoiObjectId.allow(null).required(),
         ref: JoiObjectId.required(),
     },
 });
@@ -139,7 +138,7 @@ export const updateFileRequestSchema = Joi.object({
     params: apiUserFsActionParamsRequestSchema,
     body: Joi.object({
         name: Joi.string().regex(nameRegex).optional(),
-        parent: Joi.alternatives().try(JoiObjectId, Joi.any().valid(null)).optional(),
+        parent: JoiObjectId.allow(null).optional(),
         bucket: Joi.string().regex(fileBucketRegex).optional(),
         size: Joi.number().min(minFileSizeInBytes).max(maxFileSizeInBytes).optional(),
         public: Joi.boolean().optional(),
@@ -151,7 +150,7 @@ export const updateFolderRequestSchema = Joi.object({
     params: apiUserFsActionParamsRequestSchema,
     body: Joi.object({
         name: Joi.string().regex(nameRegex).optional(),
-        parent: JoiObjectId.optional(),
+        parent: JoiObjectId.allow(null).optional(),
     }).min(1),
 });
 
@@ -160,7 +159,7 @@ export const updateShortcutRequestSchema = Joi.object({
     params: apiUserFsActionParamsRequestSchema,
     body: Joi.object({
         name: Joi.string().regex(nameRegex).optional(),
-        parent: JoiObjectId.optional(),
+        parent: JoiObjectId.allow(null).optional(),
     }).min(1),
 });
 
