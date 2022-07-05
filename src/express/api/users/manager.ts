@@ -423,7 +423,11 @@ export const getFolderChildren = async (userId: string, fsObjectId: ObjectId): P
  * @throws {ServerError} If user has no permission to update File.
  * @throws {ServerError} If parent validations fail.
  */
-export const updateFile = async (userId: string, fsObjectId: ObjectId, update: IUpdateFile): Promise<IFile> => {
+export const updateFile = async (
+    userId: string,
+    fsObjectId: ObjectId,
+    update: IUpdateFile,
+): Promise<FsObjectAndState> => {
     const [fileAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'file' });
     if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
 
@@ -443,7 +447,9 @@ export const updateFile = async (userId: string, fsObjectId: ObjectId, update: I
             await quotasRepository.changeQuotaUsed(ownerState.userId, sizeDiff, session);
         }
 
-        return fsRepository.updateFileById(fsObjectId, update, session);
+        await fsRepository.updateFileById(fsObjectId, update, session);
+
+        return (await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId }))[0];
     });
 };
 
@@ -636,7 +642,7 @@ export const moveFileToTrash = async (userId: string, fsObjectId: ObjectId): Pro
  * @returns {Promise<IState>} Promise object containing deleted State.
  * @throws {ServerError} If object is not found for user or if file is not in trash.
  */
-export const deleteFileFromTrash = async (userId: string, fsObjectId: ObjectId): Promise<IState> => {
+export const deleteFileFromTrash = async (userId: string, fsObjectId: ObjectId): Promise<FsObjectAndState> => {
     const [fileAndState] = await apiRepository.aggregateStatesFsObjects({
         userId,
         fsObjectId,
@@ -655,7 +661,9 @@ export const deleteFileFromTrash = async (userId: string, fsObjectId: ObjectId):
             }
         }
 
-        return statesRepository.deleteState({ userId, fsObjectId }, session);
+        await statesRepository.deleteState({ userId, fsObjectId }, session);
+
+        return fileAndState;
     });
 };
 
@@ -699,7 +707,7 @@ export const restoreFileFromTrash = async (userId: string, fsObjectId: ObjectId)
  * @returns {Promise<IState>} Promise object containing deleted State.
  * @throws {ServerError} If object is not found for user.
  */
-export const deleteFile = async (userId: string, fsObjectId: ObjectId): Promise<IState> => {
+export const deleteFile = async (userId: string, fsObjectId: ObjectId): Promise<FsObjectAndState> => {
     const [fileAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId, type: 'file' });
     if (!fileAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'File not found');
 
@@ -722,7 +730,9 @@ export const deleteFile = async (userId: string, fsObjectId: ObjectId): Promise<
         await statesRepository.deleteStates({ fsObjectId: { $in: fileShortcutIds } }, session);
         await fsRepository.deleteFsObjects({ _id: { $in: fileShortcutIds } }, session);
 
-        return statesRepository.deleteState({ userId, fsObjectId }, session);
+        await statesRepository.deleteState({ userId, fsObjectId }, session);
+
+        return fileAndState;
     });
 };
 
