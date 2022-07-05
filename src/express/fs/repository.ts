@@ -158,7 +158,7 @@ const updateFileById = async (fileId: ObjectId, update: IUpdateFile, session?: C
     const result = await FileModel.findOneAndUpdate({ _id: fileId }, { $set: update }, { new: true, session }).exec();
     if (!result) throw new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'Failed to update file');
 
-    return result;
+    return result.toObject();
 };
 
 /**

@@ -447,9 +447,19 @@ export const updateFile = async (
             await quotasRepository.changeQuotaUsed(ownerState.userId, sizeDiff, session);
         }
 
-        await fsRepository.updateFileById(fsObjectId, update, session);
+        const { _id, createdAt, updatedAt, ...newFile } = await fsRepository.updateFileById(
+            fsObjectId,
+            update,
+            session,
+        );
 
-        return (await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId }))[0];
+        return {
+            ...fileAndState,
+            ...newFile,
+            fsObjectId: _id,
+            fsObjectCreatedAt: createdAt,
+            fsObjectUpdatedAt: updatedAt,
+        };
     });
 };
 
