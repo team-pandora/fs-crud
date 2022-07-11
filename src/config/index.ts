@@ -19,8 +19,13 @@ const config = {
     fs: {
         maxFileSizeInBytes: env.get('FS_MAX_FILE_SIZE_IN_BYTES').default('107374182400').asInt(),
         minFileSizeInBytes: env.get('FS_MIN_FILE_SIZE_IN_BYTES').default('0').asInt(),
-        nameRegex: env.get('FS_OBJECT_NAME_REGEX').default('^[a-zA-Z0-9s._-]{1,100}$').asRegExp(),
-        fileBucketRegex: env.get('FS_FILE_BUCKET_REGEX').default('^[a-zA-Z0-9s._-]{1,100}$').asRegExp(),
+        nameRegex: env
+            .get('FS_OBJECT_NAME_REGEX')
+            .default(
+                "^(?!.{256,})(?!(aux|clock\\$|con|nul|prn|com[1-9]|lpt[1-9])(?:$|\\.))[^ ][ \\.א-ת\\w-$()+=[\\];#@~,&amp;']+[^\\. ]$",
+            )
+            .asRegExp(),
+        fileBucketRegex: env.get('FS_FILE_BUCKET_REGEX').default('^[a-zA-Z0-9s._@-]{1,100}$').asRegExp(),
     },
     user: {
         idRegex: env.get('USER_ID_REGEX').default('^[a-zA-Z0-9s._@-]{1,100}$').asRegExp(),
