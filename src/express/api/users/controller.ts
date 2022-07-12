@@ -81,6 +81,11 @@ export const getFolderChildren = async (req: Request<IUserFsActionParams>, res: 
     res.json(await usersManager.getFolderChildren(userId, fsObjectId));
 };
 
+export const getSharedUsers = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.getSharedUsers(userId, fsObjectId));
+};
+
 export const updateFile = async (req: Request<IUserFsActionParams>, res: Response) => {
     const { userId, fsObjectId } = req.params;
     res.json(await usersManager.updateFile(userId, fsObjectId, req.body));

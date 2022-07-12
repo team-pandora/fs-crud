@@ -133,6 +133,12 @@ export const getFolderChildrenRequestSchema = Joi.object({
     body: {},
 });
 
+export const getSharedUsersRequestSchema = Joi.object({
+    query: {},
+    params: apiUserFsActionParamsRequestSchema,
+    body: {},
+});
+
 export const updateFileRequestSchema = Joi.object({
     query: {},
     params: apiUserFsActionParamsRequestSchema,

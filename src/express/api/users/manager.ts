@@ -411,6 +411,20 @@ export const getFolderChildren = async (userId: string, fsObjectId: ObjectId): P
 };
 
 /**
+ * Get FsObject's shared States.
+ * @param userId - The user id.
+ * @param fsObjectId - The FsObject id.
+ * @returns {Promise<IState[]>} Promise object containing array of all shared States.
+ * @throws {ServerError} If object is not found for user.
+ */
+export const getSharedUsers = async (userId: string, fsObjectId: ObjectId): Promise<IState[]> => {
+    const [fsObjectAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
+    if (!fsObjectAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
+
+    return statesRepository.getStates({ fsObjectId });
+};
+
+/**
  * TODO: maybe split into: moveFile, renameFile, resizeFile, etc...
  * Update File.
  *  1) If File size is changed: Update owner's quota.

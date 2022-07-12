@@ -108,6 +108,12 @@ usersRouter.get(
     wrapMiddleware(usersController.getFolderChildren),
 );
 
+usersRouter.get(
+    '/:userId/fs/:fsObjectId/shared',
+    ValidateRequest(usersValidator.getSharedUsersRequestSchema),
+    wrapMiddleware(usersController.getSharedUsers),
+);
+
 usersRouter.patch(
     '/:userId/fs/file/:fsObjectId',
     ValidateRequest(usersValidator.updateFileRequestSchema),
