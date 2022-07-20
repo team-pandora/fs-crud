@@ -114,6 +114,12 @@ usersRouter.get(
     wrapMiddleware(usersController.getSharedUsers),
 );
 
+usersRouter.get(
+    '/:userId/fs/:fsObjectId/owner',
+    ValidateRequest(usersValidator.getFsObjectOwnerRequestSchema),
+    wrapMiddleware(usersController.getFsObjectOwner),
+);
+
 usersRouter.patch(
     '/:userId/fs/file/:fsObjectId',
     ValidateRequest(usersValidator.updateFileRequestSchema),

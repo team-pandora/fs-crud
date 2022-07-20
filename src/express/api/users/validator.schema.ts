@@ -139,6 +139,12 @@ export const getSharedUsersRequestSchema = Joi.object({
     body: {},
 });
 
+export const getFsObjectOwnerRequestSchema = Joi.object({
+    query: {},
+    params: apiUserFsActionParamsRequestSchema,
+    body: {},
+});
+
 export const updateFileRequestSchema = Joi.object({
     query: {},
     params: apiUserFsActionParamsRequestSchema,

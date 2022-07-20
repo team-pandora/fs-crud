@@ -425,6 +425,23 @@ export const getSharedUsers = async (userId: string, fsObjectId: ObjectId): Prom
 };
 
 /**
+ * Get FsObject's owner's State.
+ * @param userId - The user id.
+ * @param fsObjectId - The FsObject id.
+ * @returns {Promise<IState[]>} Promise object containing the owner's State.
+ * @throws {ServerError} If object is not found for user.
+ */
+export const getFsObjectOwner = async (userId: string, fsObjectId: ObjectId): Promise<IState> => {
+    const [fsObjectAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
+    if (!fsObjectAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
+
+    const state = await statesRepository.getState({ fsObjectId, permission: 'owner' });
+    if (!state) throw new ServerError(StatusCodes.NOT_FOUND, 'Owner not found');
+
+    return state;
+};
+
+/**
  * TODO: maybe split into: moveFile, renameFile, resizeFile, etc...
  * Update File.
  *  1) If File size is changed: Update owner's quota.
