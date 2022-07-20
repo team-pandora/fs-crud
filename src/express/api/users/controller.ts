@@ -86,6 +86,11 @@ export const getSharedUsers = async (req: Request<IUserFsActionParams>, res: Res
     res.json(await usersManager.getSharedUsers(userId, fsObjectId));
 };
 
+export const getFsObjectOwner = async (req: Request<IUserFsActionParams>, res: Response) => {
+    const { userId, fsObjectId } = req.params;
+    res.json(await usersManager.getFsObjectOwner(userId, fsObjectId));
+};
+
 export const updateFile = async (req: Request<IUserFsActionParams>, res: Response) => {
     const { userId, fsObjectId } = req.params;
     res.json(await usersManager.updateFile(userId, fsObjectId, req.body));
