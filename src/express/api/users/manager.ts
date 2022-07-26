@@ -322,7 +322,7 @@ export const favoriteFsObject = async (userId: string, fsObjectId: ObjectId): Pr
     const [fsObjectAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
     if (!fsObjectAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
 
-    return statesRepository.updateState(fsObjectAndState.stateId, { favorite: true });
+    return statesRepository.updateState({_id: fsObjectAndState.stateId}, { favorite: true });
 };
 
 /**
@@ -630,7 +630,7 @@ export const unfavoriteFsObject = async (userId: string, fsObjectId: ObjectId): 
     const [fsObjectAndState] = await apiRepository.aggregateStatesFsObjects({ userId, fsObjectId });
     if (!fsObjectAndState) throw new ServerError(StatusCodes.NOT_FOUND, 'Object not found');
 
-    return statesRepository.updateState(fsObjectAndState.stateId, { favorite: false });
+    return statesRepository.updateState({_id: fsObjectAndState.stateId}, { favorite: false });
 };
 
 /**
